@@ -1,3 +1,4 @@
+import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
 import 'package:flutter/material.dart';
@@ -183,7 +184,8 @@ class ResultsPageState extends State<ResultsPage> {
           ),
           Positioned.fill(
             top: null,
-            child: ResultsPageBookBar(),
+            child: ResultsPageBookBar(flights["outbound"]["price"],
+                flights["return"]["price"], accommodation["price"]),
           ),
         ],
       ),
@@ -192,6 +194,21 @@ class ResultsPageState extends State<ResultsPage> {
 }
 
 class ResultsPageBookBar extends StatelessWidget {
+  Map outboundFlightPrice;
+  Map returnFlightPrice;
+  Map accommodationPrice;
+  double totalPrice;
+  String currency;
+  ResultsPageBookBar(
+      Map outboundFlightPrice, Map returnFlightPrice, Map accommodationPrice) {
+    this.outboundFlightPrice = outboundFlightPrice;
+    this.returnFlightPrice = returnFlightPrice;
+    this.accommodationPrice = accommodationPrice;
+    this.totalPrice = outboundFlightPrice["amount"] +
+        returnFlightPrice["amount"] +
+        accommodationPrice["amount"];
+    this.currency = outboundFlightPrice["currency"];
+  }
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -226,7 +243,11 @@ class ResultsPageBookBar extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.only(top: 10),
                       child: Text(
-                        "£450.00",
+                        NumberFormat.currency(
+                                name: currency,
+                                symbol: getCurrencySuggestions()[currency]
+                                    ["symbol"])
+                            .format(totalPrice),
                         style: Theme.of(context).textTheme.headline4,
                         textAlign: TextAlign.left,
                       ),
@@ -514,11 +535,17 @@ Widget getActivityRows(Map itinerary, int index, List<int> indexesOfDayTitles) {
     dayIndex = i;
     withinDayIndex = index - indexesOfDayTitles[i] - 1;
   }
+  String description = itinerary[dayIndex.toString()][withinDayIndex]
+          ["description"] ??
+      "POI Description...";
+  String bestPhotoURL = itinerary[dayIndex.toString()][withinDayIndex]
+          ["bestPhoto"] ??
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Buckingham_Palace_UK.jpg/2560px-Buckingham_Palace_UK.jpg";
+
   return ActivityOption(
       activity: itinerary[dayIndex.toString()][withinDayIndex]["name"],
-      description: itinerary[dayIndex.toString()][withinDayIndex]
-          ["description"],
-      bestPhotoURL: itinerary[dayIndex.toString()][withinDayIndex]["bestPhoto"],
+      description: description,
+      bestPhotoURL: bestPhotoURL,
       time: getActivityTime(
           itinerary[dayIndex.toString()][withinDayIndex]["startTime"],
           itinerary[dayIndex.toString()][withinDayIndex]["duration"]));

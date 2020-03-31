@@ -2,22 +2,24 @@ import 'model/preferences.dart';
 import 'model/properties.dart';
 
 List<Constraint> constraintsConfig = [
+  Constraint("trip_type", "Return"),
   Constraint("origin", {"type": "city", "id": 2988507}),
   Constraint("departure_date", "2020-04-27"),
   Constraint("return_date", "2020-04-30"),
-  Constraint(
-      "travellers", Travellers(adults: 2, children: 0, students: 0, oap: 0)),
+  Constraint("travellers",
+      Travellers(adults: 2, children: 0, students: 0, oap: 0, infants: 0)),
   Constraint("travel_method", "plane"),
   Constraint("travel_class", "economy"),
   Constraint("accommodation_type", "hotel"),
-  Constraint("accommodation_stars", [3, 4, 5]),
+  Constraint("accommodation_stars", 3),
   // Constraint("accommodation_location",
   //     LocationCircle(latitude: 2.3, longitude: 2.4, radius: 1000)),
-  Constraint("accommodation_amenities", ["wifi"]),
+  Constraint("accommodation_amenities", ["WIFI_IN_ROOM"]),
   Constraint("essential_activities", [Activity("museum")]),
   // Constraint("restaurant_time", TimeBounds(1900, 30)),
-  Constraint("budget_leq", Money(600, Currency.gbp)),
-  Constraint("budget_geq", Money(300, Currency.gbp))
+  Constraint("budget_leq", 600),
+  Constraint("budget_geq", 300),
+  Constraint("budget_currency", "GBP"),
 ];
 
 List<SoftPreference> softPrefConfig = [

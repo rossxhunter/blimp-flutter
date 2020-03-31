@@ -1,3 +1,4 @@
+import 'package:blimp/services/suggestions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_xlider/flutter_xlider.dart';
@@ -248,6 +249,44 @@ class BudgetSelectorState extends State<BudgetSelector> {
           widget.callback(_lowerValue, _upperValue);
         });
       },
+    );
+  }
+}
+
+class BudgetCurrencySelector extends StatefulWidget {
+  final String initialCurrency;
+  final Function callback;
+
+  BudgetCurrencySelector({this.callback, this.initialCurrency});
+
+  @override
+  State<StatefulWidget> createState() {
+    return BudgetCurrencySelectorState(currency: initialCurrency);
+  }
+}
+
+class BudgetCurrencySelectorState extends State<BudgetCurrencySelector> {
+  String currency;
+  BudgetCurrencySelectorState({this.currency});
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: currency,
+      icon: Icon(Icons.arrow_drop_down),
+      elevation: 16,
+      style: Theme.of(context).textTheme.bodyText1,
+      onChanged: (String newValue) {
+        setState(() {
+          currency = newValue;
+          widget.callback("budgetCurrency", newValue);
+        });
+      },
+      items: getCurrencySuggestions().keys.map((v) {
+        return DropdownMenuItem<String>(
+          value: v,
+          child: Text(v),
+        );
+      }).toList(),
     );
   }
 }

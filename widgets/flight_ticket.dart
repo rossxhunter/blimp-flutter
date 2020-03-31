@@ -1,3 +1,4 @@
+import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -55,7 +56,8 @@ class FlightTicketDetails extends StatelessWidget {
               Text(
                 NumberFormat.currency(
                         name: ticketDetails["price"]["currency"],
-                        symbol: ticketDetails["price"]["symbol"])
+                        symbol: getCurrencySuggestions()[ticketDetails["price"]
+                            ["currency"]]["symbol"])
                     .format(ticketDetails["price"]["amount"]),
                 style: textThemes["ticket_header_1"],
               ),

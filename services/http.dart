@@ -11,36 +11,20 @@ String encodePrefs(List prefs) {
   return jsonEncode(finalMap);
 }
 
-Future<Map> getItinerary(Preferences prefs, int destId) async {
-  String constraints = encodePrefs(prefs.constraints);
-  String softPrefs = encodePrefs(prefs.softPreferences);
-  String prefScores = jsonEncode(prefs.preferenceScores);
-  String params =
-      "destination=$destId&constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores";
-  var itinerary;
-  try {
-    itinerary = await makeGetRequest("itinerary", params);
-  } on Exception catch (e) {
-    print(e);
-    throw e;
-  }
-  return json.decode(itinerary);
-}
-
-Future<Map> getDestination(Preferences prefs) async {
+Future<Map> getHoliday(Preferences prefs) async {
   String constraints = encodePrefs(prefs.constraints);
   String softPrefs = encodePrefs(prefs.softPreferences);
   String prefScores = jsonEncode(prefs.preferenceScores);
   String params =
       "constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores";
-  String destination;
+  var itinerary;
   try {
-    destination = await makeGetRequest('destination', params);
+    itinerary = await makeGetRequest("holiday", params);
   } on Exception catch (e) {
     print(e);
     throw e;
   }
-  return json.decode(destination);
+  return json.decode(itinerary);
 }
 
 Future<String> makeGetRequest(String path, String params) async {
@@ -51,7 +35,11 @@ Future<String> makeGetRequest(String path, String params) async {
     throw e;
   });
   if (response.statusCode != 200) {
-    throw Exception(json.decode(response.body)["message"]);
+    try {
+      throw Exception(json.decode(response.body)["message"]);
+    } on Exception {
+      throw Exception("Unexpected error");
+    }
   }
   return response.body;
 }

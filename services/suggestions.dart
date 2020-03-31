@@ -1,18 +1,23 @@
 import 'dart:convert';
 
+import 'package:async/async.dart';
 import 'package:blimp/services/http.dart';
 
 List destinationSuggestions;
 List activitySuggestions;
+Map currencySuggestions;
 
-void getSuggestions() async {
+Future<void> getSuggestions() async {
   try {
     String destinationSuggestionsResponse =
         await makeGetRequest("suggestions", "suggestion=destinations");
     String activitySuggestionsResponse =
         await makeGetRequest("suggestions", "suggestion=activities");
+    String currencySuggestionsResponse =
+        await makeGetRequest("suggestions", "suggestion=currencies");
     destinationSuggestions = json.decode(destinationSuggestionsResponse);
     activitySuggestions = json.decode(activitySuggestionsResponse);
+    currencySuggestions = json.decode(currencySuggestionsResponse);
   } on Exception catch (e) {
     print(e);
     throw e;
@@ -38,4 +43,8 @@ List getActivitySuggestionsForQuery(String query) {
     }
   });
   return sug;
+}
+
+Map getCurrencySuggestions() {
+  return currencySuggestions;
 }

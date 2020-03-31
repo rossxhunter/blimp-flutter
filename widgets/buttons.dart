@@ -64,18 +64,25 @@ class CircularCheckbox extends StatelessWidget {
 }
 
 class SwitchButton extends StatelessWidget {
+  final Function callback;
+  SwitchButton({this.callback});
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color.fromRGBO(230, 230, 230, 0.8),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(15),
-        child: Icon(
-          Icons.swap_vert,
-          color: Theme.of(context).primaryColor,
+    return GestureDetector(
+      onTap: () {
+        callback();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color.fromRGBO(230, 230, 230, 0.8),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(15),
+          child: Icon(
+            Icons.swap_vert,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       ),
     );

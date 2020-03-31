@@ -18,7 +18,6 @@ import 'package:date_range_picker/date_range_picker.dart' as DateRagePicker;
 class SearchPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    getSuggestions();
     return SearchPageState();
   }
 }
@@ -29,6 +28,7 @@ const INITIAL_BUDGET_GEQ = 300;
 const INITIAL_BUDGET_LEQ = 600;
 const INITIAL_ACCOMMODATION_TYPE = "Hotel";
 const INITIAL_ACCOMMODATION_STARS = 3.0;
+const INITIAL_BUDGET_CURRENCY = "GBP";
 DateTime initialOutboundDate = DateTime.utc(2020, 4, 27);
 DateTime initialReturnDate = DateTime.utc(2020, 4, 30);
 
@@ -42,15 +42,26 @@ class SearchPageState extends State<SearchPage> {
     "returnDate": initialReturnDate,
     "accommodationType": INITIAL_ACCOMMODATION_TYPE,
     "accommodationStars": INITIAL_ACCOMMODATION_STARS,
+    "accommodationAmenities": [],
     "preferredActivities": [],
     "essentialActivities": [],
     "budgetGEQ": INITIAL_BUDGET_GEQ,
     "budgetLEQ": INITIAL_BUDGET_LEQ,
+    "budgetCurrency": INITIAL_BUDGET_CURRENCY,
   };
 
   //CALLBACK
   void updateSearchFields(String field, var value) {
-    searchFields[field] = value;
+    setState(() {
+      searchFields[field] = value;
+    });
+    print(searchFields);
+  }
+
+  void switchOriginDest() {
+    var origin = searchFields["origin"];
+    searchFields["origin"] = searchFields["destination"];
+    searchFields["destination"] = origin;
     print(searchFields);
   }
 
@@ -71,6 +82,7 @@ class SearchPageState extends State<SearchPage> {
       );
       var formatter = DateFormat('yyyy-MM-dd');
       List<Constraint> constraints = [
+        Constraint("trip_type", searchFields["tripType"]),
         Constraint("origin", searchFields["origin"]),
         Constraint(
             "travellers", Travellers(adults: searchFields["travellers"])),
@@ -83,6 +95,9 @@ class SearchPageState extends State<SearchPage> {
         Constraint(
             "accommodation_stars", searchFields["accommodationStars"].round()),
         Constraint("essential_activities", searchFields["essentialActivities"]),
+        Constraint("budget_currency", searchFields["budgetCurrency"]),
+        Constraint(
+            "accommodation_amenities", searchFields["accommodationAmenities"])
       ];
       if (searchFields["destination"].length > 0) {
         constraints.add(Constraint("destination", searchFields["destination"]));
@@ -96,40 +111,28 @@ class SearchPageState extends State<SearchPage> {
       Preferences preferences =
           Preferences(constraints, softPreferences, prefScores);
 
-      getDestination(preferences).then((d) {
-        getItinerary(preferences, d["destId"]).then((i) {
-          print(i);
-          Navigator.pop(context);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ResultsPage(
-                name: d["name"],
-                wiki: d["wiki"],
-                itinerary: i["itinerary"],
-                flights: i["travel"],
-                accommodation: i["accommodation"],
-              ),
+      getHoliday(preferences).then((holiday) {
+        print(holiday);
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultsPage(
+              name: holiday["name"],
+              wiki: holiday["wiki"],
+              itinerary: holiday["itinerary"],
+              flights: holiday["travel"],
+              accommodation: holiday["accommodation"],
             ),
-          );
-        }).catchError((e) {
-          Navigator.pop(context);
-          showDialog(
-            context: context,
-            builder: (BuildContext context) => CustomDialog(
-              title: "Error",
-              description: "Unable to fetch itinerary :(",
-            ),
-          );
-        });
+          ),
+        );
       }).catchError((e) {
-        print(e);
         Navigator.pop(context);
         showDialog(
           context: context,
           builder: (BuildContext context) => CustomDialog(
             title: "Error",
-            description: e.toString(),
+            description: "Unable to fetch holiday :(",
           ),
         );
       });
@@ -177,6 +180,7 @@ class SearchPageState extends State<SearchPage> {
                             padding: EdgeInsets.only(top: 30),
                             child: OriginDestFields(
                               callback: updateSearchFields,
+                              switchCallback: switchOriginDest,
                             ),
                           ),
                           Padding(
@@ -223,14 +227,24 @@ class SearchPageState extends State<SearchPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.only(top: 30),
-                            child: SearchSectionTitle(
-                              title: "Budget",
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                SearchSectionTitle(
+                                  title: "Budget",
+                                ),
+                                BudgetCurrencySelector(
+                                  callback: updateSearchFields,
+                                  initialCurrency: INITIAL_BUDGET_CURRENCY,
+                                ),
+                              ],
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.only(top: 30),
                             child: Budget(
                               callback: updateSearchFields,
+                              currency: searchFields["budgetCurrency"],
                             ),
                           ),
                         ],
@@ -407,7 +421,8 @@ class ActivitiesState extends State<Activities> {
 
 class Budget extends StatefulWidget {
   final Function callback;
-  Budget({this.callback});
+  final String currency;
+  Budget({this.callback, this.currency});
   @override
   State<StatefulWidget> createState() {
     return BudgetState();
@@ -437,10 +452,16 @@ class BudgetState extends State<Budget> {
         Padding(
           padding: EdgeInsets.only(top: 10),
           child: Text(
-            NumberFormat.currency(name: "GBP", symbol: "£")
+            NumberFormat.currency(
+                        name: widget.currency,
+                        symbol: getCurrencySuggestions()[widget.currency]
+                            ["symbol"])
                     .format(_lowerValue) +
                 " - " +
-                NumberFormat.currency(name: "GBP", symbol: "£")
+                NumberFormat.currency(
+                        name: widget.currency,
+                        symbol: getCurrencySuggestions()[widget.currency]
+                            ["symbol"])
                     .format(_upperValue),
             style: Theme.of(context).textTheme.bodyText1,
           ),
@@ -619,9 +640,19 @@ class TravellersRowState extends State<TravellersRow> {
   }
 }
 
-class OriginDestFields extends StatelessWidget {
+class OriginDestFields extends StatefulWidget {
   final Function callback;
-  OriginDestFields({this.callback});
+  final Function switchCallback;
+  OriginDestFields({this.callback, this.switchCallback});
+  @override
+  State<StatefulWidget> createState() {
+    return OriginDestFieldsState();
+  }
+}
+
+class OriginDestFieldsState extends State<OriginDestFields> {
+  TextEditingController originController = TextEditingController();
+  TextEditingController destinationController = TextEditingController();
 
   void updateSearchFields(String point, Map value) {
     Map state;
@@ -631,10 +662,19 @@ class OriginDestFields extends StatelessWidget {
       state = {"type": value["type"], "id": value["id"]};
     }
     if (point == "From") {
-      callback("origin", state);
+      widget.callback("origin", state);
     } else if (point == "Destination") {
-      callback("destination", state);
+      widget.callback("destination", state);
     }
+  }
+
+  void switchFields() {
+    setState(() {
+      String originText = originController.text;
+      originController.text = destinationController.text;
+      destinationController.text = originText;
+      widget.switchCallback();
+    });
   }
 
   @override
@@ -646,14 +686,14 @@ class OriginDestFields extends StatelessWidget {
             SearchField(
               point: "From",
               callback: updateSearchFields,
-              controller: TextEditingController(),
+              controller: originController,
             ),
             Padding(
               padding: EdgeInsets.only(top: 10),
               child: SearchField(
                 point: "Destination",
                 callback: updateSearchFields,
-                controller: TextEditingController(),
+                controller: destinationController,
               ),
             ),
           ],
@@ -663,7 +703,7 @@ class OriginDestFields extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Padding(
               padding: EdgeInsets.only(right: 20),
-              child: SwitchButton(),
+              child: SwitchButton(callback: switchFields),
             ),
           ),
         ),

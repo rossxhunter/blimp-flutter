@@ -1,6 +1,8 @@
+import 'package:async/async.dart';
 import 'package:blimp/screens/explore.dart';
 import 'package:blimp/screens/search.dart';
 import 'package:blimp/screens/settings.dart';
+import 'package:blimp/services/suggestions.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(BlimpApp());
@@ -15,6 +17,40 @@ class BlimpApp extends StatefulWidget {
 }
 
 class BlimpAppState extends State<BlimpApp> {
+  Future<void> _future;
+
+  initState() {
+    super.initState();
+    _future = getSuggestions();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _future,
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+            return Center(
+              child: Text('Waiting', textDirection: TextDirection.ltr),
+            );
+          case ConnectionState.waiting:
+            return Center(
+              child: Text('Loading Data...', textDirection: TextDirection.ltr),
+            );
+          default:
+            if (snapshot.hasError)
+              return Text('Error: ${snapshot.error}',
+                  textDirection: TextDirection.ltr);
+            else
+              return BlimpMaterialApp();
+        }
+      },
+    );
+  }
+}
+
+class BlimpMaterialApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

@@ -183,39 +183,28 @@ class RandomHolidayButton extends StatelessWidget {
               return loadingIndicator;
             });
         Preferences prefs = prefsConfig[0];
-        getDestination(prefs).then((d) {
-          getItinerary(prefs, d["destId"]).then((i) {
-            print(i);
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ResultsPage(
-                  name: d["name"],
-                  wiki: d["wiki"],
-                  itinerary: i["itinerary"],
-                  flights: i["travel"],
-                  accommodation: i["accommodation"],
-                ),
+        getHoliday(prefs).then((holiday) {
+          print(holiday);
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResultsPage(
+                name: holiday["name"],
+                wiki: holiday["wiki"],
+                itinerary: holiday["itinerary"],
+                flights: holiday["travel"],
+                accommodation: holiday["accommodation"],
               ),
-            );
-          }).catchError((e) {
-            Navigator.pop(context);
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => CustomDialog(
-                title: "Error",
-                description: "Unable to fetch itinerary :(",
-              ),
-            );
-          });
+            ),
+          );
         }).catchError((e) {
           Navigator.pop(context);
           showDialog(
             context: context,
             builder: (BuildContext context) => CustomDialog(
               title: "Error",
-              description: "Unable to fetch destination :(",
+              description: "Unable to fetch itinerary :(",
             ),
           );
         });

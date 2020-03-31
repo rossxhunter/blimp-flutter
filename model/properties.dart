@@ -7,7 +7,7 @@ class Place {
 
   Place({this.name, this.id, this.type});
 
-  Map<String, String> toJson() => {'type': type, "id": id.toString()};
+  Map<String, dynamic> toJson() => {'type': type, "id": id};
 }
 
 class DateRange {
@@ -28,17 +28,23 @@ class DateRange {
 class Travellers {
   int adults;
   int children;
+  int infants;
   int students;
   int oap;
 
   Travellers(
-      {this.adults = 0, this.children = 0, this.students = 0, this.oap = 0});
+      {this.adults = 0,
+      this.children = 0,
+      this.infants,
+      this.students = 0,
+      this.oap = 0});
 
-  Map<String, String> toJson() => {
-        'adults': adults.toString(),
-        'children': children.toString(),
-        'students': students.toString(),
-        'oap': oap.toString(),
+  Map<String, int> toJson() => {
+        'adults': adults,
+        'children': children,
+        'infants': infants,
+        'students': students,
+        'oap': oap,
       };
 }
 
@@ -55,11 +61,8 @@ class LocationCircle {
 
   LocationCircle({this.latitude, this.longitude, this.radius});
 
-  Map<String, String> toJson() => {
-        'latitude': latitude.toString(),
-        'latitude': longitude.toString(),
-        'radius': radius.toString()
-      };
+  Map<String, dynamic> toJson() =>
+      {'latitude': latitude, 'latitude': longitude, 'radius': radius};
 }
 
 class SpecificLocation {
@@ -87,22 +90,21 @@ class TimeBounds {
     this.margin = margin;
   }
 
-  Map<String, String> toJson() =>
-      {'time': time.toString(), 'margin': margin.toString()};
+  Map<String, int> toJson() => {'time': time, 'margin': margin};
 }
 
 enum Currency { gbp, usb, eur }
 
 class Money {
   int amount;
-  Currency currency;
+  String currency;
 
-  Money(int amount, Currency currency) {
+  Money(int amount, String currency) {
     this.amount = amount;
     this.currency = currency;
   }
 
-  Map<String, String> toJson() =>
+  Map<String, dynamic> toJson() =>
       {'amount': amount.toString(), 'currency': currency.toString()};
 }
 
