@@ -1,4 +1,5 @@
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/styles/colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_typeahead/flutter_typeahead.dart';
@@ -29,8 +30,8 @@ class SearchFieldState extends State<SearchField> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: Color.fromRGBO(230, 230, 230, 0.8),
-          width: 2,
+          color: CustomColors.lightGrey,
+          width: 3,
         ),
       ),
       child: LayoutBuilder(

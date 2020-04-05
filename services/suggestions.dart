@@ -6,6 +6,7 @@ import 'package:blimp/services/http.dart';
 List destinationSuggestions;
 List activitySuggestions;
 Map currencySuggestions;
+List exploreSuggestions;
 
 Future<void> getSuggestions() async {
   try {
@@ -15,9 +16,12 @@ Future<void> getSuggestions() async {
         await makeGetRequest("suggestions", "suggestion=activities");
     String currencySuggestionsResponse =
         await makeGetRequest("suggestions", "suggestion=currencies");
+    String exploreSuggestionsResponse =
+        await makeGetRequest("suggestions", "suggestion=explore");
     destinationSuggestions = json.decode(destinationSuggestionsResponse);
     activitySuggestions = json.decode(activitySuggestionsResponse);
     currencySuggestions = json.decode(currencySuggestionsResponse);
+    exploreSuggestions = json.decode(exploreSuggestionsResponse);
   } on Exception catch (e) {
     print(e);
     throw e;
@@ -47,4 +51,8 @@ List getActivitySuggestionsForQuery(String query) {
 
 Map getCurrencySuggestions() {
   return currencySuggestions;
+}
+
+List getExploreSuggestions() {
+  return exploreSuggestions;
 }

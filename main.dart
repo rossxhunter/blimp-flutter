@@ -57,7 +57,7 @@ class BlimpMaterialApp extends StatelessWidget {
       title: 'Blimp',
       theme: ThemeData(
         primarySwatch: Theme.of(context).primaryColor,
-        primaryColor: Colors.pink,
+        primaryColor: Color.fromRGBO(230, 20, 60, 1),
         highlightColor: Colors.transparent,
         splashColor: Colors.transparent,
         textTheme: TextTheme(
@@ -66,6 +66,12 @@ class BlimpMaterialApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
             fontFamily: "Helvetica",
             fontSize: 30,
+          ),
+          headline3: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontFamily: "Open Sans",
+            fontSize: 20,
           ),
           headline2: TextStyle(
             color: Colors.black87,
@@ -115,7 +121,7 @@ class BlimpScaffoldState extends State<BlimpScaffold> {
         index: _currentIndex,
         children: _children,
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: Color.fromRGBO(250, 250, 250, 1),
       bottomNavigationBar: BottomNavigationBar(
         onTap: onTabTapped, // new
         backgroundColor: Colors.white,

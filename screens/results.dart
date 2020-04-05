@@ -1,186 +1,200 @@
+import 'package:blimp/services/images.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_multi_carousel/carousel.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:intl/intl.dart';
+import 'package:stretchy_header/stretchy_header.dart';
 
-final List<String> _tabsString = <String>[
-  "Destination",
-  "Flights",
-  "Accommodation",
-  "Activities",
-  "Eating",
-];
-
-List<Widget> _tabs = [
-  Tab(
-    child: Align(
-      alignment: Alignment.center,
-      child: Text(_tabsString[0]),
-    ),
-  ),
-  Tab(
-    child: Align(
-      alignment: Alignment.center,
-      child: Text(_tabsString[1]),
-    ),
-  ),
-  Tab(
-    child: Align(
-      alignment: Alignment.center,
-      child: Text(_tabsString[2]),
-    ),
-  ),
-  Tab(
-    child: Align(
-      alignment: Alignment.center,
-      child: Text(_tabsString[3]),
-    ),
-  ),
-  Tab(
-    child: Align(
-      alignment: Alignment.center,
-      child: Text(_tabsString[4]),
-    ),
-  ),
-];
+List<String> imgList = ["assets/images/paris.jpg", "assets/images/paris.jpg"];
 
 class ResultsPage extends StatefulWidget {
-  final String name;
-  final String wiki;
-  final Map itinerary;
   final Map flights;
   final Map accommodation;
-  ResultsPage(
-      {this.name, this.wiki, this.itinerary, this.flights, this.accommodation});
+  final Map itinerary;
+  final String wiki;
+  final String name;
+
+  ResultsPage({
+    this.flights,
+    this.accommodation,
+    this.itinerary,
+    this.wiki,
+    this.name,
+  });
   @override
   State<StatefulWidget> createState() {
     return ResultsPageState(
-        name: name,
-        wiki: wiki,
-        itinerary: itinerary,
-        flights: flights,
-        accommodation: accommodation);
+      flights: flights,
+      accommodation: accommodation,
+      itinerary: itinerary,
+      wiki: wiki,
+      name: name,
+    );
   }
 }
 
 class ResultsPageState extends State<ResultsPage> {
-  final String name;
-  final String wiki;
-  final Map itinerary;
   final Map flights;
   final Map accommodation;
-  ResultsPageState(
-      {this.name, this.wiki, this.itinerary, this.flights, this.accommodation});
+  final Map itinerary;
+  final String wiki;
+  final String name;
+
+  ScrollController _scrollController;
+  double kExpandedHeight = 300;
+
+  ResultsPageState({
+    this.flights,
+    this.accommodation,
+    this.itinerary,
+    this.wiki,
+    this.name,
+  });
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController = ScrollController()..addListener(() => setState(() {}));
+  }
+
+  bool get _showTitle {
+    return _scrollController.hasClients &&
+        _scrollController.offset > kExpandedHeight - kToolbarHeight;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: CustomColors.greyBackground,
       body: Stack(
         children: <Widget>[
-          DefaultTabController(
-            length: _tabs.length,
-            child: NestedScrollView(
-              physics: BouncingScrollPhysics(),
-              headerSliverBuilder:
-                  (BuildContext context, bool innerBoxIsScrolled) {
-                return <Widget>[
-                  SliverOverlapAbsorber(
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                        context),
-                    child: SliverSafeArea(
-                      top: false,
-                      bottom: false,
-                      sliver: SliverAppBar(
-                        backgroundColor: Colors.white,
-                        floating: false,
-                        pinned: true,
-                        snap: false,
-                        primary: true,
-                        stretch: true,
-                        centerTitle: false,
-                        expandedHeight: 300,
-                        elevation: 0,
-                        titleSpacing: 0,
-                        leading: Padding(
-                          padding: EdgeInsets.only(left: 10),
-                          child: BackPageButton(),
+          CustomScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            slivers: <Widget>[
+              SliverAppBar(
+                shape: ContinuousRectangleBorder(
+                  side: _showTitle
+                      ? BorderSide(color: CustomColors.lightGrey, width: 4)
+                      : BorderSide.none,
+                ),
+                leading: _showTitle
+                    ? IconButton(
+                        icon: Icon(Icons.arrow_back,
+                            color: Theme.of(context).primaryColor),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      )
+                    : null,
+                actions: _showTitle
+                    ? <Widget>[
+                        IconButton(
+                          icon: Icon(Icons.refresh,
+                              color: Theme.of(context).primaryColor),
+                          onPressed: () {},
                         ),
-                        flexibleSpace: FlexibleSpaceBar(
-                          stretchModes: <StretchMode>[
-                            // StretchMode.zoomBackground,
-                            // StretchMode.blurBackground,
-                            // StretchMode.fadeTitle,
-                          ],
-                          centerTitle: false,
-                          titlePadding: EdgeInsets.only(left: 50),
-                          background: Stack(
-                            children: <Widget>[
-                              ClipRRect(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(30)),
-                                child: Image(
-                                  image: AssetImage('assets/images/paris.jpg'),
-                                  fit: BoxFit.cover,
-                                  width: 10000,
-                                ),
-                              ),
-                              Center(
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 200),
-                                  child: DestinationQuickInfoBox(
-                                    name: name,
-                                  ),
-                                ),
-                              ),
-                            ],
+                        IconButton(
+                          icon: Icon(Icons.sort,
+                              color: Theme.of(context).primaryColor),
+                          onPressed: () {},
+                        ),
+                      ]
+                    : null,
+                backgroundColor: Colors.white,
+                stretch: true,
+                elevation: 0,
+                pinned: true,
+                floating: false,
+                onStretchTrigger: () {
+                  // Function callback for stretch
+                  return;
+                },
+                expandedHeight: kExpandedHeight,
+                flexibleSpace: Stack(
+                  children: <Widget>[
+                    FlexibleSpaceBar(
+                      stretchModes: <StretchMode>[
+                        StretchMode.zoomBackground,
+                        StretchMode.fadeTitle,
+                      ],
+                      centerTitle: true,
+                      title: _showTitle
+                          ? Text(
+                              name,
+                              style: Theme.of(context).textTheme.headline2,
+                            )
+                          : null,
+                      collapseMode: CollapseMode.parallax,
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(
+                            'assets/images/paris.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -5,
+                      left: 0,
+                      right: 0,
+                      child: Visibility(
+                        visible: !_showTitle,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30)),
+                          child: Container(
+                            height: 30,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      // bottom:
                     ),
-                  ),
-                ];
-              },
-              body: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
+                  ],
                 ),
+              ),
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.only(left: 10, right: 10, top: 0),
-                  child: Column(
-                    children: <Widget>[
-                      TabBar(
-                        isScrollable: true,
-                        unselectedLabelColor: Colors.redAccent,
-                        labelStyle: Theme.of(context).textTheme.body2,
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        indicator: BoxDecoration(
-                          gradient: LinearGradient(
-                              colors: [Colors.redAccent, Colors.pinkAccent]),
-                          borderRadius: BorderRadius.circular(30),
-                          color: Colors.redAccent,
-                        ),
-                        tabs: _tabs,
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 100),
-                          child: ResultsPageTabView(
-                            wiki: wiki,
-                            itinerary: itinerary,
+                  padding: EdgeInsets.only(bottom: 100),
+                  child: Container(
+                    color: CustomColors.greyBackground,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        DestinationInfo(name: name, wiki: wiki),
+                        Padding(
+                          padding: EdgeInsets.only(top: 10),
+                          child: FlightsSection(
                             flights: flights,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 10),
+                          child: AccommodationSection(
                             accommodation: accommodation,
                           ),
                         ),
-                      ),
-                    ],
+                        Padding(
+                          padding: EdgeInsets.only(top: 10),
+                          child: ActivitiesSection(
+                            itinerary: itinerary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
           Positioned.fill(
             top: null,
@@ -218,14 +232,10 @@ class ResultsPageBookBar extends StatelessWidget {
           width: 1000,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey,
-                blurRadius: 15.0,
-                // offset: Offset.fromDirection(200),
-              ),
-            ],
+            border: Border.all(
+              color: CustomColors.lightGrey,
+              width: 3,
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.only(top: 10, bottom: 10, left: 30, right: 30),
@@ -266,13 +276,6 @@ class ResultsPageBookBar extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Theme.of(context).primaryColor,
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey,
-                        blurRadius: 15.0,
-                        // offset: Offset.fromDirection(200),
-                      ),
-                    ],
                   ),
                 )
               ],
@@ -280,285 +283,6 @@ class ResultsPageBookBar extends StatelessWidget {
           ),
         )
       ],
-    );
-  }
-}
-
-class ResultsPageTabView extends StatelessWidget {
-  final String wiki;
-  final Map itinerary;
-  final Map flights;
-  final Map accommodation;
-  ResultsPageTabView(
-      {this.wiki, this.itinerary, this.flights, this.accommodation});
-  @override
-  Widget build(BuildContext context) {
-    return TabBarView(
-      physics: AlwaysScrollableScrollPhysics(),
-      children: _tabsString.map((String tabName) {
-        return SafeArea(
-          top: false,
-          bottom: false,
-          child: Builder(
-            builder: (BuildContext context) {
-              return Padding(
-                  padding: EdgeInsets.only(top: 16),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: <Widget>[
-                        ResultsTab(
-                          tabName: tabName,
-                          wiki: wiki,
-                          itinerary: itinerary,
-                          flights: flights,
-                          accommodation: accommodation,
-                        ),
-                      ],
-                    ),
-                  ));
-            },
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class DestinationQuickInfoBox extends StatelessWidget {
-  final String name;
-  DestinationQuickInfoBox({this.name});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey,
-            blurRadius: 15.0,
-            // offset: Offset.fromDirection(200),
-          ),
-        ],
-      ),
-      height: 120,
-      width: 300,
-      child: Padding(
-        padding: EdgeInsets.all(25),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Text(
-                  name,
-                  style: Theme.of(context).textTheme.headline4,
-                ),
-              ],
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Column(
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Text(
-                            "4",
-                            style: Theme.of(context).textTheme.headline1,
-                          ),
-                          Icon(
-                            Icons.star,
-                            color: Colors.black54,
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                  Column(
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Icon(
-                            Icons.cloud,
-                            color: Colors.black54,
-                          ),
-                          Text(
-                            " 27",
-                            style: Theme.of(context).textTheme.headline1,
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                  Column(
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Icon(
-                            Icons.local_airport,
-                            color: Colors.black54,
-                          ),
-                          Text(
-                            " 1hr",
-                            style: Theme.of(context).textTheme.headline1,
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class BackPageButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      backgroundColor: Color.fromRGBO(230, 230, 230, 0.8),
-      elevation: 0,
-      mini: false,
-      highlightElevation: 1,
-      child: Icon(
-        Icons.arrow_back,
-        color: Theme.of(context).primaryColor,
-        size: 20,
-      ),
-      onPressed: () {
-        Navigator.of(context).pop();
-      },
-    );
-  }
-}
-
-class ResultsTab extends StatelessWidget {
-  final String tabName;
-  final String wiki;
-  final Map itinerary;
-  final Map flights;
-  final Map accommodation;
-  int numDays;
-  ResultsTab(
-      {this.tabName,
-      this.wiki,
-      this.itinerary,
-      this.flights,
-      this.accommodation});
-  @override
-  Widget build(BuildContext context) {
-    numDays = itinerary.values.length;
-    List<int> indexesOfDayTitles = List<int>();
-    indexesOfDayTitles.add(0);
-    for (int i = 0; i < numDays; i++) {
-      if (indexesOfDayTitles.length > 0) {
-        indexesOfDayTitles
-            .add(itinerary[i.toString()].length + indexesOfDayTitles[i] + 1);
-      } else {
-        indexesOfDayTitles.add(itinerary[i.toString()].length);
-      }
-    }
-    if (tabName == "Destination") {
-      return Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 10),
-        child: Text(
-          wiki,
-          textAlign: TextAlign.justify,
-        ),
-      );
-    } else if (tabName == "Flights") {
-      return Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 10),
-        child: Column(
-          children: <Widget>[
-            FlightTicket(
-              ticketDetails: flights["outbound"],
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 10),
-              child: FlightTicket(
-                ticketDetails: flights["return"],
-              ),
-            ),
-          ],
-        ),
-      );
-    } else if (tabName == "Accommodation") {
-      return Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 10),
-          child: HotelOption(hotelDetails: accommodation));
-    } else if (tabName == "Activities") {
-      int itemCount = 0;
-      for (List day in itinerary.values) {
-        itemCount += day.length + 1;
-      }
-      return Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 10),
-        child: ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: itemCount,
-            primary: false,
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemBuilder: (BuildContext context, int index) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: getActivityRows(itinerary, index, indexesOfDayTitles),
-              );
-            }),
-      );
-    } else {
-      return Text("Placeholder");
-    }
-  }
-}
-
-Widget getActivityRows(Map itinerary, int index, List<int> indexesOfDayTitles) {
-  if (indexesOfDayTitles.contains(index)) {
-    return ActivityDayTitle(
-        day: (indexesOfDayTitles.indexOf(index) + 1).toString());
-  }
-  int dayIndex = 0;
-  int withinDayIndex = 0;
-
-  for (int i = 0; i < indexesOfDayTitles.length; i++) {
-    if (indexesOfDayTitles[i] > index) {
-      break;
-    }
-    dayIndex = i;
-    withinDayIndex = index - indexesOfDayTitles[i] - 1;
-  }
-  String description = itinerary[dayIndex.toString()][withinDayIndex]
-          ["description"] ??
-      "POI Description...";
-  String bestPhotoURL = itinerary[dayIndex.toString()][withinDayIndex]
-          ["bestPhoto"] ??
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Buckingham_Palace_UK.jpg/2560px-Buckingham_Palace_UK.jpg";
-
-  return ActivityOption(
-      activity: itinerary[dayIndex.toString()][withinDayIndex]["name"],
-      description: description,
-      bestPhotoURL: bestPhotoURL,
-      time: getActivityTime(
-          itinerary[dayIndex.toString()][withinDayIndex]["startTime"],
-          itinerary[dayIndex.toString()][withinDayIndex]["duration"]));
-}
-
-class ActivityDayTitle extends StatelessWidget {
-  final String day;
-  ActivityDayTitle({this.day});
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      "Day " + day,
-      style: Theme.of(context).textTheme.headline4,
     );
   }
 }
@@ -578,6 +302,43 @@ String getActivityTime(num startTime, num duration) {
   return formattedStart + " - " + formattedEnd;
 }
 
+class ActivityDayTitle extends StatelessWidget {
+  final String day;
+  ActivityDayTitle({this.day});
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      "Day " + day,
+      style: Theme.of(context).textTheme.headline3,
+    );
+  }
+}
+
+List<Widget> getActivityRows(Map itinerary, int day) {
+  List<Widget> rows = [];
+  for (int index = 0; index < itinerary[day.toString()].length; index++) {
+    String description =
+        itinerary[day.toString()][index]["description"] ?? "POI Description...";
+    String bestPhotoURL = itinerary[day.toString()][index]["bestPhoto"] ??
+        getDefaultActivityImageURL();
+
+    rows.add(
+      Padding(
+        padding: EdgeInsets.only(top: 20),
+        child: ActivityOption(
+          activity: itinerary[day.toString()][index]["name"],
+          description: description,
+          bestPhotoURL: bestPhotoURL,
+          time: getActivityTime(itinerary[day.toString()][index]["startTime"],
+              itinerary[day.toString()][index]["duration"]),
+        ),
+      ),
+    );
+  }
+
+  return rows;
+}
+
 class ActivityOption extends StatelessWidget {
   final String activity;
   final String time;
@@ -592,8 +353,7 @@ class ActivityOption extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.all(Radius.circular(15)),
           child: Container(
-            decoration:
-                BoxDecoration(color: Color.fromRGBO(240, 240, 240, 0.8)),
+            decoration: BoxDecoration(color: CustomColors.lightGrey),
           ),
         ),
         ClipRRect(
@@ -648,5 +408,305 @@ class ActivityOption extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class ActivitiesSection extends StatelessWidget {
+  final Map itinerary;
+  ActivitiesSection({this.itinerary});
+  @override
+  Widget build(BuildContext context) {
+    int numDays = itinerary.values.length;
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              "Activities",
+              style: Theme.of(context).textTheme.headline3,
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 30),
+              child: Container(
+                height: 350,
+                child: Swiper(
+                  itemWidth: 3000,
+                  // itemHeight: 400,
+                  itemBuilder: (BuildContext context, int day) {
+                    return Column(
+                      children: <Widget>[
+                        Text(
+                          "Day " + (day + 1).toString(),
+                          style: Theme.of(context).textTheme.headline3,
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 20),
+                            child: SingleChildScrollView(
+                              // primary: false,
+                              physics: BouncingScrollPhysics(),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: getActivityRows(itinerary, day),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  itemCount: numDays,
+                  viewportFraction: 0.9,
+                  scale: 0.5,
+                  control: SwiperControl(
+                    padding: EdgeInsets.only(bottom: 5000),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20, left: 20, right: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Color.fromRGBO(220, 220, 220, 1),
+                    width: 2,
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text(
+                      "Change Activities",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyText1
+                          .copyWith(color: Theme.of(context).primaryColor),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AccommodationSection extends StatelessWidget {
+  final Map accommodation;
+
+  AccommodationSection({this.accommodation});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              "Accommodation",
+              style: Theme.of(context).textTheme.headline3,
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: HotelOption(hotelDetails: accommodation),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 30, left: 20, right: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Color.fromRGBO(220, 220, 220, 1),
+                    width: 2,
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text(
+                      "See All Accommodation",
+                      style: Theme.of(context).textTheme.bodyText1.copyWith(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FlightsSection extends StatelessWidget {
+  final Map flights;
+
+  FlightsSection({this.flights});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              "Flights",
+              style: Theme.of(context).textTheme.headline3,
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: FlightTicket(
+                ticketDetails: flights["outbound"],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: FlightTicket(
+                ticketDetails: flights["return"],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 30, left: 20, right: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Color.fromRGBO(220, 220, 220, 1),
+                    width: 2,
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text(
+                      "See All Flights",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyText1
+                          .copyWith(color: Theme.of(context).primaryColor),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DestinationInfo extends StatelessWidget {
+  final String name;
+  final String wiki;
+
+  DestinationInfo({this.name, this.wiki});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.only(left: 30, right: 30, bottom: 30, top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              name,
+              style: Theme.of(context).textTheme.headline4,
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Text(
+                wiki,
+                style: Theme.of(context).textTheme.bodyText2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final List child = imgList.map(
+  (path) {
+    return Container(
+      child: ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(0.0)),
+        child: Image.asset(
+          path,
+          fit: BoxFit.cover,
+          width: 1000.0,
+        ),
+      ),
+    );
+  },
+).toList();
+
+class CarouselWithIndicator extends StatefulWidget {
+  final BuildContext originalContext;
+  CarouselWithIndicator({this.originalContext});
+  @override
+  _CarouselWithIndicatorState createState() =>
+      _CarouselWithIndicatorState(originalContext: originalContext);
+}
+
+class _CarouselWithIndicatorState extends State<CarouselWithIndicator> {
+  int _current = 0;
+  final BuildContext originalContext;
+
+  _CarouselWithIndicatorState({this.originalContext});
+
+  @override
+  Widget build(BuildContext context) {
+    return CarouselSlider(
+      items: child,
+      autoPlay: true,
+      viewportFraction: 1.0,
+      aspectRatio: 1,
+      onPageChanged: (index) {
+        setState(() {
+          _current = index;
+        });
+      },
+    );
+    // Positioned(
+    //   child: Align(
+    //     alignment: Alignment.bottomCenter,
+    //     child: Row(
+    //       mainAxisAlignment: MainAxisAlignment.center,
+    //       children: [0, 1].map(
+    //         (index) {
+    //           return Container(
+    //             width: 8.0,
+    //             height: 8.0,
+    //             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
+    //             decoration: BoxDecoration(
+    //                 shape: BoxShape.circle,
+    //                 color: _current == index
+    //                     ? Color.fromRGBO(0, 0, 0, 0.9)
+    //                     : Color.fromRGBO(0, 0, 0, 0.4)),
+    //           );
+    //         },
+    //       ).toList(),
+    //     ),
+    //   ),
+    // ),
   }
 }

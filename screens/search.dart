@@ -3,6 +3,7 @@ import 'package:blimp/model/properties.dart';
 import 'package:blimp/screens/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/fields.dart';
@@ -77,7 +78,7 @@ class SearchPageState extends State<SearchPage> {
       showDialog(
         context: context,
         builder: (BuildContext context) {
-          return loadingIndicator;
+          return LoadingIndicator();
         },
       );
       var formatter = DateFormat('yyyy-MM-dd');
@@ -132,7 +133,7 @@ class SearchPageState extends State<SearchPage> {
           context: context,
           builder: (BuildContext context) => CustomDialog(
             title: "Error",
-            description: "Unable to fetch holiday :(",
+            description: "Unable to fetch holiday - " + e.toString(),
           ),
         );
       });
@@ -147,125 +148,192 @@ class SearchPageState extends State<SearchPage> {
         onTap: () {
           FocusScope.of(context).requestFocus(new FocusNode());
         },
-        child: Stack(
-          children: <Widget>[
-            Padding(
-              padding:
-                  EdgeInsets.only(left: 15, right: 15, bottom: 80, top: 20),
-              child: CustomScrollView(
-                slivers: <Widget>[
-                  SliverAppBar(
-                    elevation: 0,
-                    centerTitle: false,
-                    floating: true,
-                    pinned: true,
-                    snap: true,
-                    backgroundColor: Colors.white,
-                    title: Text(
-                      "Find Your Holiday",
-                      style: Theme.of(context).textTheme.headline4,
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.only(
-                        left: 20, right: 20, top: 10, bottom: 0),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          TripType(
-                            callback: updateSearchFields,
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: OriginDestFields(
-                              callback: updateSearchFields,
-                              switchCallback: switchOriginDest,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: TravellersRow(
-                              callback: updateSearchFields,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: Dates(
-                              callback: updateSearchFields,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: SearchSectionTitle(
-                              title: "Accommodation",
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: AccommodationType(
-                              callback: updateSearchFields,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: AccommodationStars(
-                              callback: updateSearchFields,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: SearchSectionTitle(
-                              title: "Activities",
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: Activities(
-                              callback: updateSearchFields,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: SafeArea(
+          child: Container(
+            child: Stack(
+              children: <Widget>[
+                Padding(
+                  padding:
+                      EdgeInsets.only(left: 0, right: 0, bottom: 20, top: 20),
+                  child: SingleChildScrollView(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Container(
+                          color: Colors.white,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                                left: 35, right: 35, top: 0, bottom: 20),
+                            child: Column(
                               children: <Widget>[
-                                SearchSectionTitle(
-                                  title: "Budget",
-                                ),
-                                BudgetCurrencySelector(
+                                TripType(
                                   callback: updateSearchFields,
-                                  initialCurrency: INITIAL_BUDGET_CURRENCY,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 30),
+                                  child: OriginDestFields(
+                                    callback: updateSearchFields,
+                                    switchCallback: switchOriginDest,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 30),
+                                  child: TravellersRow(
+                                    callback: updateSearchFields,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 30),
+                                  child: Dates(
+                                    callback: updateSearchFields,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 30),
-                            child: Budget(
-                              callback: updateSearchFields,
-                              currency: searchFields["budgetCurrency"],
-                            ),
+                        ),
+                        Container(
+                          color: CustomColors.greyBackground,
+                          child: Column(
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.only(top: 20),
+                                child: Container(
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                        left: 35,
+                                        right: 35,
+                                        top: 20,
+                                        bottom: 20),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 20),
+                                          child: SearchSectionTitle(
+                                            title: "Accommodation",
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 30),
+                                          child: AccommodationType(
+                                            callback: updateSearchFields,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 30),
+                                          child: AccommodationStars(
+                                            callback: updateSearchFields,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 20),
+                                child: Container(
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                        left: 35,
+                                        right: 35,
+                                        top: 10,
+                                        bottom: 20),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 30),
+                                          child: SearchSectionTitle(
+                                            title: "Activities",
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 30),
+                                          child: Activities(
+                                            callback: updateSearchFields,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 20, bottom: 20),
+                                child: Container(
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                        left: 35,
+                                        right: 35,
+                                        top: 10,
+                                        bottom: 20),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 30),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: <Widget>[
+                                              SearchSectionTitle(
+                                                title: "Budget",
+                                              ),
+                                              BudgetCurrencySelector(
+                                                callback: updateSearchFields,
+                                                initialCurrency:
+                                                    INITIAL_BUDGET_CURRENCY,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 30),
+                                          child: Budget(
+                                            callback: updateSearchFields,
+                                            currency:
+                                                searchFields["budgetCurrency"],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                height: 60,
+                                color: Colors.white,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            Positioned.fill(
-              top: null,
-              bottom: 0,
-              child: Container(
-                color: Colors.white,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 10, right: 10, bottom: 10),
-                  child: SearchButton(callback: searchButtonPressed),
                 ),
-              ),
+                Positioned.fill(
+                  top: null,
+                  bottom: 0,
+                  child: Container(
+                    color: Colors.transparent,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                      child: SearchButton(callback: searchButtonPressed),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -570,7 +638,7 @@ class DatesState extends State<Dates> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          // color: Colors.white,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
@@ -772,14 +840,17 @@ class SearchButton extends StatelessWidget {
         width: 200,
         decoration: BoxDecoration(
           color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
           padding: EdgeInsets.all(20),
           child: Center(
             child: Text(
               "SEARCH",
-              style: Theme.of(context).textTheme.button,
+              style: Theme.of(context)
+                  .textTheme
+                  .button
+                  .copyWith(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ),
         ),

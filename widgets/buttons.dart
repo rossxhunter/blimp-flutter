@@ -1,3 +1,4 @@
+import 'package:blimp/styles/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -58,7 +59,7 @@ class CircularCheckbox extends StatelessWidget {
     if (optionIndex == activeOption) {
       return Theme.of(context).primaryColor;
     } else {
-      return Color.fromRGBO(230, 230, 230, 0.6);
+      return CustomColors.redGrey;
     }
   }
 }
@@ -74,7 +75,7 @@ class SwitchButton extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Color.fromRGBO(230, 230, 230, 0.8),
+          color: CustomColors.redGrey,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Padding(
@@ -98,7 +99,7 @@ class AddButton extends StatelessWidget {
       onTap: callback,
       child: Container(
         decoration: BoxDecoration(
-          color: Color.fromRGBO(230, 230, 230, 0.8),
+          color: CustomColors.redGrey,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Padding(

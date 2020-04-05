@@ -20,7 +20,7 @@ Future<Map> getHoliday(Preferences prefs) async {
   var itinerary;
   try {
     itinerary = await makeGetRequest("holiday", params);
-  } on Exception catch (e) {
+  } catch (e) {
     print(e);
     throw e;
   }
@@ -35,11 +35,13 @@ Future<String> makeGetRequest(String path, String params) async {
     throw e;
   });
   if (response.statusCode != 200) {
+    Map decodedResponseBody;
     try {
-      throw Exception(json.decode(response.body)["message"]);
-    } on Exception {
-      throw Exception("Unexpected error");
+      decodedResponseBody = json.decode(response.body);
+    } catch (e) {
+      throw Exception("Unexpected Error");
     }
+    throw Exception(decodedResponseBody["message"]);
   }
   return response.body;
 }

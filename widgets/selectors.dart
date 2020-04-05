@@ -1,4 +1,5 @@
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/styles/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_xlider/flutter_xlider.dart';
@@ -57,7 +58,7 @@ class Incrementor extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: Color.fromRGBO(240, 240, 240, 0.8),
+          color: CustomColors.redGrey,
           shape: BoxShape.circle,
         ),
         child: Center(

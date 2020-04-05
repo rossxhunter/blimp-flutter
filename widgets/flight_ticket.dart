@@ -1,4 +1,5 @@
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/styles/colors.dart';
 import 'package:blimp/styles/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -14,7 +15,7 @@ class FlightTicket extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: Color.fromRGBO(230, 230, 230, 0.8),
+          color: CustomColors.lightGrey,
           width: 2,
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:blimp/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class IconBox extends StatelessWidget {
@@ -7,7 +8,7 @@ class IconBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Color.fromRGBO(240, 240, 240, 0.8),
+        color: CustomColors.redGrey,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Padding(
