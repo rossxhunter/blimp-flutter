@@ -46,7 +46,7 @@ class ResultsPageState extends State<ResultsPage> {
   final String name;
 
   ScrollController _scrollController;
-  double kExpandedHeight = 300;
+  double kExpandedHeight = 300.0;
 
   ResultsPageState({
     this.flights,
@@ -75,8 +75,9 @@ class ResultsPageState extends State<ResultsPage> {
       body: Stack(
         children: <Widget>[
           CustomScrollView(
+            primary: false,
             controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
+            physics: BouncingScrollPhysics(),
             slivers: <Widget>[
               SliverAppBar(
                 shape: ContinuousRectangleBorder(
@@ -143,7 +144,7 @@ class ResultsPageState extends State<ResultsPage> {
                       ),
                     ),
                     Positioned(
-                      bottom: -5,
+                      bottom: -1,
                       left: 0,
                       right: 0,
                       child: Visibility(
@@ -292,10 +293,8 @@ String getActivityTime(num startTime, num duration) {
   int startMinutes = ((startTime % 3600) / 60).floor();
   int endHours = startHours + ((duration / 3600).floor());
   int endMinutes = startMinutes + (((duration % 3600) / 60).floor());
-  DateTime startDT = DateTime.utc(2020, 3, 10, startHours, startMinutes)
-      .add(new Duration(hours: 8));
-  DateTime endDT = DateTime.utc(2020, 3, 10, endHours, endMinutes)
-      .add(new Duration(hours: 8));
+  DateTime startDT = DateTime.utc(2020, 3, 10, startHours, startMinutes);
+  DateTime endDT = DateTime.utc(2020, 3, 10, endHours, endMinutes);
   var formatter = new DateFormat('Hm');
   String formattedStart = formatter.format(startDT);
   String formattedEnd = formatter.format(endDT);
@@ -436,6 +435,8 @@ class ActivitiesSection extends StatelessWidget {
                   itemWidth: 3000,
                   // itemHeight: 400,
                   itemBuilder: (BuildContext context, int day) {
+                    List<Widget> rows = getActivityRows(itinerary, day);
+
                     return Column(
                       children: <Widget>[
                         Text(
@@ -445,14 +446,20 @@ class ActivitiesSection extends StatelessWidget {
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(top: 20),
-                            child: SingleChildScrollView(
-                              // primary: false,
-                              physics: BouncingScrollPhysics(),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: getActivityRows(itinerary, day),
-                              ),
-                            ),
+                            child: rows.length != 0
+                                ? SingleChildScrollView(
+                                    // primary: false,
+                                    physics: BouncingScrollPhysics(),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: rows,
+                                    ),
+                                  )
+                                : NoActivities(
+                                    numDays: numDays,
+                                    day: day,
+                                  ),
                           ),
                         ),
                       ],
@@ -494,6 +501,43 @@ class ActivitiesSection extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class NoActivities extends StatelessWidget {
+  final int numDays;
+  final int day;
+
+  NoActivities({this.numDays, this.day});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(
+            day == 0 ? Icons.flight_land : Icons.flight_takeoff,
+          ),
+          Text(
+            day == 0 ? "Arrival Day" : "Departure Day",
+            style: Theme.of(context)
+                .textTheme
+                .headline3
+                .copyWith(color: Theme.of(context).primaryColor),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: Text(
+              "No Activities",
+              style: Theme.of(context)
+                  .textTheme
+                  .headline2
+                  .copyWith(color: Theme.of(context).primaryColor),
+            ),
+          ),
+        ],
       ),
     );
   }
