@@ -75,9 +75,9 @@ class ExplorePage extends StatelessWidget {
                           left: 30, right: 30, bottom: 0, top: 0),
                       sliver: SliverAppBar(
                         backgroundColor: Colors.white,
-                        floating: true,
+                        // floating: true,
                         pinned: true,
-                        snap: true,
+                        // snap: true,
                         primary: true,
                         centerTitle: false,
                         title: Row(
@@ -106,7 +106,7 @@ class ExplorePage extends StatelessWidget {
                             ),
                           ],
                         ),
-                        expandedHeight: 120,
+                        // expandedHeight: 50,
                         elevation: 0,
                         titleSpacing: 0,
                         bottom: TabBar(
@@ -259,12 +259,13 @@ class RandomHolidayButton extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => ResultsPage(
-                name: holiday["name"],
-                wiki: holiday["wiki"],
-                itinerary: holiday["itinerary"],
-                flights: holiday["travel"],
-                accommodation: holiday["accommodation"],
-              ),
+                  name: holiday["name"],
+                  wiki: holiday["wiki"],
+                  itinerary: holiday["itinerary"],
+                  flights: holiday["travel"],
+                  accommodation: holiday["accommodation"],
+                  allFlights: holiday["all_travel"],
+                  allAccommodation: holiday["all_accommodation"]),
             ),
           );
         }).catchError((e) {

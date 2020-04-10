@@ -171,6 +171,8 @@ class SearchFieldState extends State<SearchField> {
       return Icons.flight_land;
     } else if (point == "Preferred Activities") {
       return Icons.beach_access;
+    } else if (point == "New Activity") {
+      return Icons.beach_access;
     }
   }
 }

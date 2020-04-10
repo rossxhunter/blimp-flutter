@@ -1,3 +1,8 @@
+import 'package:blimp/screens/accommodation.dart';
+import 'package:blimp/screens/activityDetails.dart';
+import 'package:blimp/screens/changeActivities.dart';
+import 'package:blimp/screens/feedback.dart';
+import 'package:blimp/screens/flights.dart';
 import 'package:blimp/services/images.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
@@ -8,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_multi_carousel/carousel.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:intl/intl.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:stretchy_header/stretchy_header.dart';
 
 List<String> imgList = ["assets/images/paris.jpg", "assets/images/paris.jpg"];
@@ -18,6 +24,8 @@ class ResultsPage extends StatefulWidget {
   final Map itinerary;
   final String wiki;
   final String name;
+  final List allFlights;
+  final List allAccommodation;
 
   ResultsPage({
     this.flights,
@@ -25,6 +33,8 @@ class ResultsPage extends StatefulWidget {
     this.itinerary,
     this.wiki,
     this.name,
+    this.allFlights,
+    this.allAccommodation,
   });
   @override
   State<StatefulWidget> createState() {
@@ -34,6 +44,8 @@ class ResultsPage extends StatefulWidget {
       itinerary: itinerary,
       wiki: wiki,
       name: name,
+      allFlights: allFlights,
+      allAccommodation: allAccommodation,
     );
   }
 }
@@ -44,6 +56,8 @@ class ResultsPageState extends State<ResultsPage> {
   final Map itinerary;
   final String wiki;
   final String name;
+  final List allFlights;
+  final List allAccommodation;
 
   ScrollController _scrollController;
   double kExpandedHeight = 300.0;
@@ -54,6 +68,8 @@ class ResultsPageState extends State<ResultsPage> {
     this.itinerary,
     this.wiki,
     this.name,
+    this.allFlights,
+    this.allAccommodation,
   });
 
   @override
@@ -99,7 +115,13 @@ class ResultsPageState extends State<ResultsPage> {
                         IconButton(
                           icon: Icon(Icons.refresh,
                               color: Theme.of(context).primaryColor),
-                          onPressed: () {},
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  FeedbackScreen(),
+                            );
+                          },
                         ),
                         IconButton(
                           icon: Icon(Icons.sort,
@@ -129,7 +151,7 @@ class ResultsPageState extends State<ResultsPage> {
                       title: _showTitle
                           ? Text(
                               name,
-                              style: Theme.of(context).textTheme.headline2,
+                              style: Theme.of(context).textTheme.headline3,
                             )
                           : null,
                       collapseMode: CollapseMode.parallax,
@@ -176,12 +198,14 @@ class ResultsPageState extends State<ResultsPage> {
                           padding: EdgeInsets.only(top: 10),
                           child: FlightsSection(
                             flights: flights,
+                            allFlights: allFlights,
                           ),
                         ),
                         Padding(
                           padding: EdgeInsets.only(top: 10),
                           child: AccommodationSection(
                             accommodation: accommodation,
+                            allAccommodation: allAccommodation,
                           ),
                         ),
                         Padding(
@@ -316,21 +340,10 @@ class ActivityDayTitle extends StatelessWidget {
 List<Widget> getActivityRows(Map itinerary, int day) {
   List<Widget> rows = [];
   for (int index = 0; index < itinerary[day.toString()].length; index++) {
-    String description =
-        itinerary[day.toString()][index]["description"] ?? "POI Description...";
-    String bestPhotoURL = itinerary[day.toString()][index]["bestPhoto"] ??
-        getDefaultActivityImageURL();
-
     rows.add(
       Padding(
         padding: EdgeInsets.only(top: 20),
-        child: ActivityOption(
-          activity: itinerary[day.toString()][index]["name"],
-          description: description,
-          bestPhotoURL: bestPhotoURL,
-          time: getActivityTime(itinerary[day.toString()][index]["startTime"],
-              itinerary[day.toString()][index]["duration"]),
-        ),
+        child: ActivityOption(itinerary[day.toString()][index]),
       ),
     );
   }
@@ -339,79 +352,109 @@ List<Widget> getActivityRows(Map itinerary, int day) {
 }
 
 class ActivityOption extends StatelessWidget {
-  final String activity;
-  final String time;
-  final String description;
-  final String bestPhotoURL;
-  ActivityOption(
-      {this.activity, this.time, this.description, this.bestPhotoURL});
+  Map activity;
+  String category;
+  String bestPhotoURL;
+  String name;
+  String time;
+
+  ActivityOption(Map activity) {
+    this.activity = activity;
+    category = activity["category"] ?? "Activity";
+    bestPhotoURL = activity["bestPhoto"] ?? getDefaultActivityImageURL();
+    name = activity["name"];
+    time = getActivityTime(activity["startTime"], activity["duration"]);
+  }
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
-          child: Container(
-            decoration: BoxDecoration(color: CustomColors.lightGrey),
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => ActivityDetails(
+            activity: activity,
           ),
-        ),
-        ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
-          child: Row(
-            children: <Widget>[
-              ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(15)),
-                child: Container(
-                  height: 100,
-                  width: 140,
-                  child: Image(
-                    image: NetworkImage(bestPhotoURL),
-                    fit: BoxFit.cover,
+        );
+      },
+      child: Stack(
+        children: <Widget>[
+          // ClipRRect(
+          //   borderRadius: BorderRadius.all(Radius.circular(15)),
+          //   child: Container(
+          //     decoration: BoxDecoration(color: CustomColors.lightGrey),
+          //   ),
+          // ),
+          ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(15)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                  child: Container(
+                    height: 100,
+                    width: 140,
+                    child: Image(
+                      image: NetworkImage(bestPhotoURL),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(left: 20, right: 10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        time,
-                        style: Theme.of(context).textTheme.headline1,
-                      ),
-                      Text(
-                        activity,
-                        style: Theme.of(context).textTheme.headline2,
-                      ),
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(
-                              description,
-                              overflow: TextOverflow.ellipsis,
-                              softWrap: true,
-                              maxLines: 2,
-                              style: Theme.of(context).textTheme.headline1,
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 20, right: 10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      // mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          time,
+                          style: Theme.of(context).textTheme.headline1,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Text(
+                            name,
+                            style: Theme.of(context).textTheme.headline2,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: CustomColors.redGrey,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                  top: 5, bottom: 5, left: 10, right: 10),
+                              child: Text(
+                                category,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
+                                maxLines: 2,
+                                style: Theme.of(context).textTheme.headline1,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 class ActivitiesSection extends StatelessWidget {
   final Map itinerary;
+  int _currentIndex = 0;
   ActivitiesSection({this.itinerary});
   @override
   Widget build(BuildContext context) {
@@ -432,6 +475,9 @@ class ActivitiesSection extends StatelessWidget {
               child: Container(
                 height: 350,
                 child: Swiper(
+                  onIndexChanged: (value) {
+                    _currentIndex = value;
+                  },
                   itemWidth: 3000,
                   // itemHeight: 400,
                   itemBuilder: (BuildContext context, int day) {
@@ -476,24 +522,38 @@ class ActivitiesSection extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(top: 20, left: 20, right: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Color.fromRGBO(220, 220, 220, 1),
-                    width: 2,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      type: PageTransitionType.downToUp,
+                      child: ChangeActivitiesScreen(
+                        itinerary: itinerary,
+                        day: _currentIndex,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Color.fromRGBO(220, 220, 220, 1),
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(
-                    child: Text(
-                      "Change Activities",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyText1
-                          .copyWith(color: Theme.of(context).primaryColor),
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        "Change Activities",
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText1
+                            .copyWith(color: Theme.of(context).primaryColor),
+                      ),
                     ),
                   ),
                 ),
@@ -545,8 +605,9 @@ class NoActivities extends StatelessWidget {
 
 class AccommodationSection extends StatelessWidget {
   final Map accommodation;
+  final List allAccommodation;
 
-  AccommodationSection({this.accommodation});
+  AccommodationSection({this.accommodation, this.allAccommodation});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -566,23 +627,36 @@ class AccommodationSection extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(top: 30, left: 20, right: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Color.fromRGBO(220, 220, 220, 1),
-                    width: 2,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      type: PageTransitionType.downToUp,
+                      child: AccommodationScreen(
+                        allAccommodation: allAccommodation,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Color.fromRGBO(220, 220, 220, 1),
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(
-                    child: Text(
-                      "See All Accommodation",
-                      style: Theme.of(context).textTheme.bodyText1.copyWith(
-                            color: Theme.of(context).primaryColor,
-                          ),
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        "See All Accommodation",
+                        style: Theme.of(context).textTheme.bodyText1.copyWith(
+                              color: Theme.of(context).primaryColor,
+                            ),
+                      ),
                     ),
                   ),
                 ),
@@ -597,8 +671,9 @@ class AccommodationSection extends StatelessWidget {
 
 class FlightsSection extends StatelessWidget {
   final Map flights;
+  final List allFlights;
 
-  FlightsSection({this.flights});
+  FlightsSection({this.flights, this.allFlights});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -626,24 +701,35 @@ class FlightsSection extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(top: 30, left: 20, right: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Color.fromRGBO(220, 220, 220, 1),
-                    width: 2,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      type: PageTransitionType.downToUp,
+                      child: FlightsScreen(allFlights: allFlights),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Color.fromRGBO(220, 220, 220, 1),
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(
-                    child: Text(
-                      "See All Flights",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyText1
-                          .copyWith(color: Theme.of(context).primaryColor),
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        "See All Flights",
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText1
+                            .copyWith(color: Theme.of(context).primaryColor),
+                      ),
                     ),
                   ),
                 ),

@@ -18,7 +18,8 @@ class HotelOption extends StatelessWidget {
             image: NetworkImage(
               hotelDetails["image_url"] ?? getDefaultAccommodationImageURL(),
             ),
-            width: 1000,
+            width: 10000,
+            height: 250,
             fit: BoxFit.cover,
           ),
         ),

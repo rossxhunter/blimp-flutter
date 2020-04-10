@@ -4,8 +4,8 @@ import 'model/properties.dart';
 List<Constraint> constraintsConfig = [
   Constraint("trip_type", "Return"),
   Constraint("origin", {"type": "city", "id": 2988507}),
-  Constraint("departure_date", "2020-04-27"),
-  Constraint("return_date", "2020-04-30"),
+  Constraint("departure_date", "2020-08-27"),
+  Constraint("return_date", "2020-08-30"),
   Constraint("travellers",
       Travellers(adults: 2, children: 0, students: 0, oap: 0, infants: 0)),
   Constraint("travel_method", "plane"),
@@ -17,7 +17,7 @@ List<Constraint> constraintsConfig = [
   Constraint("accommodation_amenities", ["WIFI_IN_ROOM"]),
   Constraint("essential_activities", [Activity("museum")]),
   // Constraint("restaurant_time", TimeBounds(1900, 30)),
-  Constraint("budget_leq", 600),
+  Constraint("budget_leq", 800),
   Constraint("budget_geq", 300),
   Constraint("budget_currency", "GBP"),
 ];

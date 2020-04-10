@@ -124,6 +124,8 @@ class SearchPageState extends State<SearchPage> {
               itinerary: holiday["itinerary"],
               flights: holiday["travel"],
               accommodation: holiday["accommodation"],
+              allFlights: holiday["all_travel"],
+              allAccommodation: holiday["all_accommodation"],
             ),
           ),
         );

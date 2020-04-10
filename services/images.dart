@@ -8,7 +8,7 @@ String getDefaultActivityImageURL() {
   return "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Buckingham_Palace_UK.jpg/2560px-Buckingham_Palace_UK.jpg";
 }
 
-void preloadImages(BuildContext context, Map accommodation, Map itinerary) {
+void preloadImages(BuildContext context, List allAccommodation, Map itinerary) {
   var configuration = createLocalImageConfiguration(context);
   List<String> urls = [];
 
@@ -18,9 +18,11 @@ void preloadImages(BuildContext context, Map accommodation, Map itinerary) {
   String defaultActivityURL = getDefaultActivityImageURL();
   urls.add(defaultActivityURL);
 
-  String accommodationImageURL = accommodation["image_url"];
-  if (accommodationImageURL != null) {
-    urls.add(accommodationImageURL);
+  for (Map acc in allAccommodation) {
+    String accommodationImageURL = acc["image_url"];
+    if (accommodationImageURL != null) {
+      urls.add(accommodationImageURL);
+    }
   }
 
   for (List day in itinerary.values) {
