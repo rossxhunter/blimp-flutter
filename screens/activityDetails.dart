@@ -108,11 +108,14 @@ class ActivityDetailsOption extends StatelessWidget {
                           color: Colors.lightGreen,
                           borderRadius: BorderRadius.circular(300),
                         ),
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Text(
-                            activity["rating"].toString(),
-                            style: Theme.of(context).textTheme.button,
+                        child: Visibility(
+                          visible: activity["rating"] != 0,
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Text(
+                              activity["rating"].toString(),
+                              style: Theme.of(context).textTheme.button,
+                            ),
                           ),
                         ),
                       ),
@@ -123,7 +126,7 @@ class ActivityDetailsOption extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: Text(
-                  activity["description"],
+                  activity["description"] ?? "",
                   style: Theme.of(context).textTheme.bodyText2,
                 ),
               ),

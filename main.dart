@@ -64,7 +64,7 @@ class BlimpMaterialApp extends StatelessWidget {
           headline4: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
-            fontFamily: "Helvetica",
+            fontFamily: "Futura",
             fontSize: 30,
           ),
           headline3: TextStyle(

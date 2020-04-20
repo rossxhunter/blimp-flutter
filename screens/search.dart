@@ -77,6 +77,7 @@ class SearchPageState extends State<SearchPage> {
     if (searchFieldsValid()) {
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return LoadingIndicator();
         },
@@ -119,13 +120,17 @@ class SearchPageState extends State<SearchPage> {
           context,
           MaterialPageRoute(
             builder: (context) => ResultsPage(
+              destId: holiday["destId"],
               name: holiday["name"],
               wiki: holiday["wiki"],
+              imageURL: holiday["imageURL"],
               itinerary: holiday["itinerary"],
               flights: holiday["travel"],
               accommodation: holiday["accommodation"],
               allFlights: holiday["all_travel"],
               allAccommodation: holiday["all_accommodation"],
+              allActivities: holiday["all_activities"],
+              preferences: preferences,
             ),
           ),
         );

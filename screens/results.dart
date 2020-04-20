@@ -1,3 +1,4 @@
+import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/accommodation.dart';
 import 'package:blimp/screens/activityDetails.dart';
 import 'package:blimp/screens/changeActivities.dart';
@@ -15,62 +16,86 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:stretchy_header/stretchy_header.dart';
+import 'package:http/http.dart';
 
 List<String> imgList = ["assets/images/paris.jpg", "assets/images/paris.jpg"];
 
 class ResultsPage extends StatefulWidget {
+  final int destId;
   final Map flights;
   final Map accommodation;
   final Map itinerary;
+  final String imageURL;
   final String wiki;
   final String name;
   final List allFlights;
   final List allAccommodation;
+  final List allActivities;
+  final Preferences preferences;
 
-  ResultsPage({
-    this.flights,
-    this.accommodation,
-    this.itinerary,
-    this.wiki,
-    this.name,
-    this.allFlights,
-    this.allAccommodation,
-  });
+  ResultsPage(
+      {this.destId,
+      this.flights,
+      this.accommodation,
+      this.itinerary,
+      this.wiki,
+      this.imageURL,
+      this.name,
+      this.allFlights,
+      this.allAccommodation,
+      this.allActivities,
+      this.preferences});
   @override
   State<StatefulWidget> createState() {
     return ResultsPageState(
-      flights: flights,
-      accommodation: accommodation,
-      itinerary: itinerary,
-      wiki: wiki,
-      name: name,
-      allFlights: allFlights,
-      allAccommodation: allAccommodation,
-    );
+        destId: destId,
+        flights: flights,
+        accommodation: accommodation,
+        itinerary: itinerary,
+        wiki: wiki,
+        imageURL: imageURL,
+        name: name,
+        allFlights: allFlights,
+        allAccommodation: allAccommodation,
+        allActivities: allActivities,
+        preferences: preferences);
   }
 }
 
 class ResultsPageState extends State<ResultsPage> {
+  final int destId;
   final Map flights;
   final Map accommodation;
   final Map itinerary;
+  String imageURL;
   final String wiki;
   final String name;
   final List allFlights;
   final List allAccommodation;
+  final List allActivities;
+  final Preferences preferences;
 
   ScrollController _scrollController;
   double kExpandedHeight = 300.0;
 
-  ResultsPageState({
-    this.flights,
-    this.accommodation,
-    this.itinerary,
-    this.wiki,
-    this.name,
-    this.allFlights,
-    this.allAccommodation,
-  });
+  double price;
+
+  ResultsPageState(
+      {this.destId,
+      this.flights,
+      this.accommodation,
+      this.itinerary,
+      this.wiki,
+      this.imageURL,
+      this.name,
+      this.allFlights,
+      this.allAccommodation,
+      this.allActivities,
+      this.preferences}) {
+    price = flights["outbound"]["price"]["amount"] +
+        flights["return"]["price"]["amount"] +
+        accommodation["price"]["amount"];
+  }
 
   @override
   void initState() {
@@ -84,8 +109,17 @@ class ResultsPageState extends State<ResultsPage> {
         _scrollController.offset > kExpandedHeight - kToolbarHeight;
   }
 
+  Future<void> getDestImageUrl() async {
+    final response = await get(imageURL);
+
+    if (response.statusCode != 200) {
+      imageURL = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    getDestImageUrl();
     return Scaffold(
       backgroundColor: CustomColors.greyBackground,
       body: Stack(
@@ -118,8 +152,12 @@ class ResultsPageState extends State<ResultsPage> {
                           onPressed: () {
                             showDialog(
                               context: context,
-                              builder: (BuildContext context) =>
-                                  FeedbackScreen(),
+                              barrierDismissible: false,
+                              builder: (BuildContext context) => FeedbackScreen(
+                                destId: destId,
+                                preferences: preferences,
+                                price: price,
+                              ),
                             );
                           },
                         ),
@@ -158,10 +196,19 @@ class ResultsPageState extends State<ResultsPage> {
                       background: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.asset(
-                            'assets/images/paris.jpg',
-                            fit: BoxFit.cover,
-                          ),
+                          // Image.asset(
+                          //   'assets/images/paris.jpg',
+                          //   fit: BoxFit.cover,
+                          // ),
+                          imageURL != null
+                              ? Image.network(
+                                  imageURL,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  'assets/images/paris.jpg',
+                                  fit: BoxFit.cover,
+                                ),
                         ],
                       ),
                     ),
@@ -212,6 +259,10 @@ class ResultsPageState extends State<ResultsPage> {
                           padding: EdgeInsets.only(top: 10),
                           child: ActivitiesSection(
                             itinerary: itinerary,
+                            allActivities: allActivities,
+                            travel: flights,
+                            accommodation: accommodation,
+                            preferences: preferences,
                           ),
                         ),
                       ],
@@ -452,10 +503,46 @@ class ActivityOption extends StatelessWidget {
   }
 }
 
-class ActivitiesSection extends StatelessWidget {
+class ActivitiesSection extends StatefulWidget {
   final Map itinerary;
-  int _currentIndex = 0;
-  ActivitiesSection({this.itinerary});
+  final List allActivities;
+  final Map travel;
+  final Map accommodation;
+  final Preferences preferences;
+
+  ActivitiesSection(
+      {this.itinerary,
+      this.allActivities,
+      this.travel,
+      this.accommodation,
+      this.preferences});
+  @override
+  State<StatefulWidget> createState() {
+    return ActivitiesSectionState(
+        itinerary: itinerary,
+        allActivities: allActivities,
+        travel: travel,
+        accommodation: accommodation,
+        preferences: preferences);
+  }
+}
+
+class ActivitiesSectionState extends State<ActivitiesSection> {
+  final Map itinerary;
+  final List allActivities;
+  final Map travel;
+  final Map accommodation;
+  final Preferences preferences;
+  int _currentIndex;
+  ActivitiesSectionState(
+      {this.itinerary,
+      this.allActivities,
+      this.travel,
+      this.accommodation,
+      this.preferences}) {
+    _currentIndex = 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     int numDays = itinerary.values.length;
@@ -531,9 +618,15 @@ class ActivitiesSection extends StatelessWidget {
                       child: ChangeActivitiesScreen(
                         itinerary: itinerary,
                         day: _currentIndex,
+                        allActivities: allActivities,
+                        travel: travel,
+                        accommodation: accommodation,
+                        preferences: preferences,
                       ),
                     ),
-                  );
+                  ).then((value) {
+                    setState(() {});
+                  });
                 },
                 child: Container(
                   decoration: BoxDecoration(

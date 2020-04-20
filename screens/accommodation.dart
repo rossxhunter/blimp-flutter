@@ -23,19 +23,23 @@ class AccommodationScreenState extends State<AccommodationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        shape: ContinuousRectangleBorder(
+          side: BorderSide(
+            color: CustomColors.lightGrey,
+            width: 4,
+          ),
+        ),
         title: Text(
           'Accommodation',
-          style: Theme.of(context)
-              .textTheme
-              .headline3
-              .copyWith(color: Colors.white),
+          style: Theme.of(context).textTheme.headline3,
         ),
         leading: Padding(
           padding: EdgeInsets.only(left: 10),
           child: IconButton(
             icon: Icon(Icons.close),
-            color: Colors.white,
+            color: Theme.of(context).primaryColor,
             iconSize: 30,
             onPressed: () {
               Navigator.pop(context);
@@ -47,7 +51,7 @@ class AccommodationScreenState extends State<AccommodationScreen> {
             padding: EdgeInsets.only(right: 10),
             child: IconButton(
               icon: Icon(Icons.sort),
-              color: Colors.white,
+              color: Theme.of(context).primaryColor,
               iconSize: 30,
               onPressed: () {},
             ),

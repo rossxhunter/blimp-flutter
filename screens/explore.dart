@@ -6,9 +6,11 @@ import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/loading.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:transparent_image/transparent_image.dart';
 
 final List<String> _tabsString = <String>[
   "For You",
@@ -155,7 +157,7 @@ class _CirclePainter extends BoxPainter {
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
     final Offset circleOffset =
-        offset + Offset(cfg.size.width / 2, cfg.size.height - radius);
+        offset + Offset(cfg.size.width / 2 - radius, cfg.size.height - radius);
     canvas.drawCircle(circleOffset, radius, _paint);
   }
 }
@@ -248,6 +250,7 @@ class RandomHolidayButton extends StatelessWidget {
       onPressed: () {
         showDialog(
             context: context,
+            barrierDismissible: false,
             builder: (BuildContext context) {
               return LoadingIndicator();
             });
@@ -259,13 +262,18 @@ class RandomHolidayButton extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => ResultsPage(
-                  name: holiday["name"],
-                  wiki: holiday["wiki"],
-                  itinerary: holiday["itinerary"],
-                  flights: holiday["travel"],
-                  accommodation: holiday["accommodation"],
-                  allFlights: holiday["all_travel"],
-                  allAccommodation: holiday["all_accommodation"]),
+                destId: holiday["destId"],
+                name: holiday["name"],
+                wiki: holiday["wiki"],
+                imageURL: holiday["imageURL"],
+                itinerary: holiday["itinerary"],
+                flights: holiday["travel"],
+                accommodation: holiday["accommodation"],
+                allFlights: holiday["all_travel"],
+                allAccommodation: holiday["all_accommodation"],
+                allActivities: holiday["all_activities"],
+                preferences: prefs,
+              ),
             ),
           );
         }).catchError((e) {
@@ -345,9 +353,19 @@ class ExploreOption extends StatelessWidget {
             child: Container(
               height: 120,
               width: 140,
-              child: Image(
-                image: AssetImage('assets/images/paris.jpg'),
+              //   child: Image.asset(
+              //     "assets/images/paris.jpg",
+              //     fit: BoxFit.cover,
+              //   ),
+              child: Image.network(
+                getExploreSuggestions()[index]["imageURL"],
                 fit: BoxFit.cover,
+                //   placeholder: (context, url) => Image.asset(
+                //     "assets/images/paris.jpg",
+                //     fit: BoxFit.cover,
+                //   ),
+                //   errorWidget: (context, url, error) => Icon(Icons.error),
+                // ),
               ),
             ),
           ),

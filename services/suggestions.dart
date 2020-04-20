@@ -49,6 +49,20 @@ List getActivitySuggestionsForQuery(String query) {
   return sug;
 }
 
+List getSpecificActivitySuggestionsForQuery(List activities, String query) {
+  if (query == "") {
+    return [];
+  }
+  List sug = [];
+  activities.forEach((actSug) {
+    if (actSug["name"].contains(RegExp(query, caseSensitive: false)) ||
+        actSug["category"].contains(RegExp(query, caseSensitive: false))) {
+      sug.add(actSug);
+    }
+  });
+  return sug;
+}
+
 Map getCurrencySuggestions() {
   return currencySuggestions;
 }

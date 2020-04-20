@@ -11,6 +11,43 @@ String encodePrefs(List prefs) {
   return jsonEncode(finalMap);
 }
 
+Future<List> getItineraryFromActivities(List<Map> activities, int day,
+    Map travel, Map accommodation, Preferences preferences) async {
+  String activitiesJson = jsonEncode(activities);
+  String travelJson = jsonEncode(travel);
+  String accommodationJson = jsonEncode(accommodation);
+  String constraints = encodePrefs(preferences.constraints);
+  String softPrefs = encodePrefs(preferences.softPreferences);
+  String prefScores = jsonEncode(preferences.preferenceScores);
+  String params =
+      "activities=$activitiesJson&day=$day&travel=$travelJson&accommodation=$accommodationJson&constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores";
+  var itinerary;
+  try {
+    itinerary = await makeGetRequest("itinerary", params);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(itinerary);
+}
+
+Future<Map> getHolidayWithFeedback(Preferences prefs, Map feedback) async {
+  String constraints = encodePrefs(prefs.constraints);
+  String softPrefs = encodePrefs(prefs.softPreferences);
+  String prefScores = jsonEncode(prefs.preferenceScores);
+  String feedbackJson = jsonEncode(feedback);
+  String params =
+      "constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores&feedback=$feedbackJson";
+  var itinerary;
+  try {
+    itinerary = await makeGetRequest("holiday_from_feedback", params);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(itinerary);
+}
+
 Future<Map> getHoliday(Preferences prefs) async {
   String constraints = encodePrefs(prefs.constraints);
   String softPrefs = encodePrefs(prefs.softPreferences);
