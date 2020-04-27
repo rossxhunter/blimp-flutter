@@ -113,3 +113,70 @@ class AddButton extends StatelessWidget {
     );
   }
 }
+
+class AnimatedButton extends StatefulWidget {
+  final Widget child;
+  final void Function() callback;
+  AnimatedButton({this.child, this.callback});
+  @override
+  _AnimatedButtonState createState() =>
+      _AnimatedButtonState(child: child, callback: callback);
+}
+
+class _AnimatedButtonState extends State<AnimatedButton>
+    with SingleTickerProviderStateMixin {
+  double _scale;
+  AnimationController _controller;
+  final Widget child;
+  final void Function() callback;
+
+  _AnimatedButtonState({this.child, this.callback});
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.1,
+    )..addListener(() {
+        setState(() {});
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+    callback();
+  }
+
+  void _onTapCancel() {
+    _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _scale = 1 - _controller.value;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: Transform.scale(
+        scale: _scale,
+        child: child,
+      ),
+    );
+  }
+}

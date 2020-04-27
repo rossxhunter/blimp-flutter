@@ -7,4 +7,5 @@ class CustomColors {
   static const lightGrey = Color.fromRGBO(240, 240, 240, 0.8);
   static const greyBackground = Color.fromRGBO(245, 245, 245, 1);
   static const optionBackground = Color.fromRGBO(255, 200, 200, 1);
+  static const dialogBackground = Color.fromRGBO(40, 40, 40, 0.2);
 }

@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/activitiesFeedback.dart';
 import 'package:blimp/screens/results.dart';
-import 'package:blimp/screens/vibeFeedback.dart';
 import 'package:blimp/services/http.dart';
+import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/loading.dart';
 import 'package:flutter/cupertino.dart';
@@ -30,6 +30,8 @@ class FeedbackScreenState extends State<FeedbackScreen> {
   final int destId;
   final double price;
 
+  bool _shouldShowBackButton = false;
+
   Widget _currentFeedbackWidget;
 
   FeedbackScreenState({this.preferences, this.destId, this.price}) {
@@ -49,85 +51,101 @@ class FeedbackScreenState extends State<FeedbackScreen> {
         callback: furtherOptionsButtonPressed,
         price: price,
       );
+      _shouldShowBackButton = false;
     });
   }
 
   void furtherOptionsButtonPressed(String option) {
-    if (option == "vibe") {
-      setState(() {
-        _currentFeedbackWidget = VibeFeedbackScreen(
-            preferences: preferences,
-            destId: destId,
-            callback: backButtonPressed);
-      });
-    } else if (option == "activities") {
+    if (option == "activities") {
       setState(() {
         _currentFeedbackWidget = ActivitiesFeedbackScreen(
             preferences: preferences,
             destId: destId,
             callback: backButtonPressed);
+        _shouldShowBackButton = true;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-      child: Stack(
-        children: [
-          Dialog(
-            shape: RoundedRectangleBorder(
+    return Stack(
+      children: [
+        Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: new BoxDecoration(
+              // color: Colors.white,
+              shape: BoxShape.rectangle,
               borderRadius: BorderRadius.circular(20),
+              // border: Border.all(
+              //   color: CustomColors.lightGrey,
+              //   width: 0,
+              // ),
             ),
-            elevation: 0.0,
-            backgroundColor: Colors.transparent,
-            child: Container(
-              padding: EdgeInsets.all(20),
-              decoration: new BoxDecoration(
-                // color: Colors.white,
-                shape: BoxShape.rectangle,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: AnimatedSwitcher(
-                duration: const Duration(seconds: 1),
-                //Enable this for ScaleTransition
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return ScaleTransition(
-                    child: child,
-                    scale: animation,
-                  );
-                },
-                //Enable this for RotationTransition
-                // transitionBuilder: (Widget child, Animation<double> animation) {
-                //   return RotationTransition(
-                //     child: child,
-                //     turns: animation,
-                //   );
-                // },
-                child: _currentFeedbackWidget,
-              ),
+            child: AnimatedSwitcher(
+              duration: Duration(microseconds: 300),
+              //Enable this for ScaleTransition
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return ScaleTransition(
+                  child: child,
+                  scale: animation,
+                );
+              },
+              //Enable this for RotationTransition
+              // transitionBuilder: (Widget child, Animation<double> animation) {
+              //   return RotationTransition(
+              //     child: child,
+              //     turns: animation,
+              //   );
+              // },
+              child: _currentFeedbackWidget,
             ),
           ),
-          Positioned(
-            left: 30,
-            top: 20,
+        ),
+        // Positioned(
+        //   right: 30,
+        //   top: 20,
+        //   child: Material(
+        //     color: Colors.transparent,
+        //     child: IconButton(
+        //       onPressed: () {
+        //         Navigator.pop(context);
+        //       },
+        //       icon: Icon(
+        //         Icons.close,
+        //         color: Theme.of(context).primaryColor,
+        //         size: 40,
+        //       ),
+        //     ),
+        //   ),
+        // ),
+        Positioned(
+          left: 30,
+          top: 20,
+          child: Visibility(
+            visible: _shouldShowBackButton,
             child: Material(
               color: Colors.transparent,
               child: IconButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  backButtonPressed();
                 },
                 icon: Icon(
-                  Icons.close,
+                  Icons.arrow_back,
                   color: Theme.of(context).primaryColor,
                   size: 40,
                 ),
               ),
             ),
-          )
-        ],
-      ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -216,21 +234,11 @@ class FeedbackMainScreenState extends State<FeedbackMainScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () => callback("vibe"),
-                child: FeedbackOption(
-                  text: "Different Vibe",
-                  iconData: Icons.vibration,
-                  color: Colors.green,
-                  preferences: preferences,
-                  destId: destId,
-                ),
-              ),
-              GestureDetector(
                 onTap: () => callback("activities"),
                 child: FeedbackOption(
                   text: "Different Activities",
                   iconData: Icons.beach_access,
-                  color: Colors.lightBlue,
+                  color: Colors.green,
                 ),
               ),
               GestureDetector(

@@ -189,27 +189,62 @@ class AccommodationStarsSelector extends StatelessWidget {
   }
 }
 
-class BudgetSelector extends StatefulWidget {
-  Function(double, double) callback;
-  BudgetSelector({this.callback});
+class DoubleSlider extends StatefulWidget {
+  final Function(double, double) callback;
+  final double lowerValue;
+  final double upperValue;
+  final double min;
+  final double max;
+  final double step;
+  final double minDistance;
+  DoubleSlider(
+      {this.callback,
+      this.lowerValue,
+      this.upperValue,
+      this.max,
+      this.min,
+      this.minDistance,
+      this.step});
   @override
   State<StatefulWidget> createState() {
-    return BudgetSelectorState();
+    return DoubleSliderState(
+        initialLowerValue: lowerValue,
+        initialUpperValue: upperValue,
+        max: max,
+        min: min,
+        minDistance: minDistance,
+        step: step);
   }
 }
 
-class BudgetSelectorState extends State<BudgetSelector> {
-  double _lowerValue = 300;
-  double _upperValue = 600;
+class DoubleSliderState extends State<DoubleSlider> {
+  final double initialLowerValue;
+  final double initialUpperValue;
+  final double min;
+  final double max;
+  final double step;
+  final double minDistance;
+  double _lowerValue;
+  double _upperValue;
+  DoubleSliderState(
+      {this.initialLowerValue,
+      this.initialUpperValue,
+      this.min,
+      this.max,
+      this.step,
+      this.minDistance}) {
+    _lowerValue = initialLowerValue;
+    _upperValue = initialUpperValue;
+  }
   @override
   Widget build(BuildContext context) {
     return FlutterSlider(
-      values: [300, 600],
+      values: [_lowerValue, _upperValue],
       rangeSlider: true,
-      min: 0,
-      max: 1500,
-      step: 50,
-      minimumDistance: 150,
+      min: min,
+      max: max,
+      step: step,
+      minimumDistance: minDistance,
       selectByTap: false,
       trackBar: FlutterSliderTrackBar(
         inactiveTrackBar: BoxDecoration(
@@ -243,12 +278,23 @@ class BudgetSelectorState extends State<BudgetSelector> {
           ),
         ),
       ),
+      onDragStarted: (handlerIndex, lowerValue, upperValue) {
+        _lowerValue = lowerValue;
+        _upperValue = upperValue;
+        // setState(() {});
+        widget.callback(lowerValue, upperValue);
+      },
+      onDragCompleted: (handlerIndex, lowerValue, upperValue) {
+        _lowerValue = lowerValue;
+        _upperValue = upperValue;
+        // setState(() {});
+        widget.callback(lowerValue, upperValue);
+      },
       onDragging: (handlerIndex, lowerValue, upperValue) {
         _lowerValue = lowerValue;
         _upperValue = upperValue;
-        setState(() {
-          widget.callback(_lowerValue, _upperValue);
-        });
+        // setState(() {});
+        widget.callback(lowerValue, upperValue);
       },
     );
   }

@@ -24,21 +24,14 @@ class ActivityDetailsDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-      elevation: 0.0,
+      elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
         padding: EdgeInsets.only(bottom: 20),
-        decoration: new BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.rectangle,
           borderRadius: BorderRadius.circular(20),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: Colors.black26,
-          //     blurRadius: 10.0,
-          //     offset: const Offset(0.0, 10.0),
-          //   ),
-          // ],
         ),
         child: ActivityDetailsOption(
           activity: activity,
@@ -69,70 +62,92 @@ class ActivityDetailsOption extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                activity["name"],
-                style: Theme.of(context).textTheme.headline3,
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        color: CustomColors.redGrey,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            top: 5, bottom: 5, left: 10, right: 10),
-                        child: Text(
-                          activity["category"],
-                          overflow: TextOverflow.ellipsis,
-                          softWrap: true,
-                          maxLines: 2,
-                          style: Theme.of(context).textTheme.headline1,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 20),
-                      child: Container(
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20)),
+            // border: Border.all(
+            //   color: CustomColors.lightGrey,
+            //   width: 4,
+            // ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  activity["name"],
+                  style: Theme.of(context).textTheme.headline3,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Container(
                         decoration: BoxDecoration(
-                          color: Colors.lightGreen,
-                          borderRadius: BorderRadius.circular(300),
+                          color: CustomColors.redGrey,
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                        child: Visibility(
-                          visible: activity["rating"] != 0,
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Text(
-                              activity["rating"].toString(),
-                              style: Theme.of(context).textTheme.button,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              top: 5, bottom: 5, left: 10, right: 10),
+                          child: Text(
+                            activity["category"],
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: true,
+                            maxLines: 2,
+                            style: Theme.of(context).textTheme.headline1,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 20),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.lightGreen,
+                            borderRadius: BorderRadius.circular(300),
+                          ),
+                          child: Visibility(
+                            visible: activity["rating"] != 0,
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Text(
+                                activity["rating"].toString(),
+                                style: Theme.of(context).textTheme.button,
+                              ),
                             ),
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 20),
+                  child: ConstrainedBox(
+                    constraints: new BoxConstraints(
+                      minHeight: 0,
+                      maxHeight: 100,
                     ),
-                  ],
+                    child: SingleChildScrollView(
+                      child: Text(
+                        activity["description"] ??
+                            activity["name"] + " is a " + activity["category"],
+                        style: Theme.of(context).textTheme.bodyText2,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: Text(
-                  activity["description"] ?? "",
-                  style: Theme.of(context).textTheme.bodyText2,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        )
+        ),
       ],
     );
   }

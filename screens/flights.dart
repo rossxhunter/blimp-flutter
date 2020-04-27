@@ -1,7 +1,9 @@
+import 'package:blimp/screens/filterFlights.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
 
 class FlightsScreen extends StatefulWidget {
   final List allFlights;
@@ -15,9 +17,36 @@ class FlightsScreen extends StatefulWidget {
 
 class FlightsScreenState extends State<FlightsScreen> {
   final List allFlights;
+  List shownFlights;
   int _selectedFlight = 0;
+  List<double> _outboundTimes = [6.0, 18.0];
+  List<double> _returnTimes = [6.0, 18.0];
 
-  FlightsScreenState({this.allFlights});
+  FlightsScreenState({this.allFlights}) {
+    shownFlights = List.from(allFlights);
+  }
+
+  void filterFlights(List outboundTimes, List returnTimes) {
+    _outboundTimes = outboundTimes;
+    _returnTimes = returnTimes;
+    shownFlights = List.from(allFlights);
+
+    setState(() {
+      shownFlights.removeWhere((e) {
+        DateTime outboundDepartureTime =
+            DateFormat("h:m").parse(e["outbound"]["departure"]["time"]);
+        DateTime returnDepartureTime =
+            DateFormat("h:m").parse(e["return"]["departure"]["time"]);
+        bool outsideOutboundTimes =
+            outboundDepartureTime.hour < outboundTimes[0] ||
+                outboundDepartureTime.hour > outboundTimes[1];
+        bool outsideReturnTimes = returnDepartureTime.hour < returnTimes[0] ||
+            returnDepartureTime.hour > returnTimes[1];
+
+        return outsideOutboundTimes || outsideReturnTimes;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +61,20 @@ class FlightsScreenState extends State<FlightsScreen> {
             width: 4,
           ),
         ),
-        title: Text(
-          'Flights',
-          style: Theme.of(context).textTheme.headline3,
+        title: Column(
+          children: [
+            Text(
+              'Flights',
+              style: Theme.of(context).textTheme.headline3,
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 5, bottom: 5),
+              child: Text(
+                shownFlights.length.toString() + " options",
+                style: Theme.of(context).textTheme.headline1,
+              ),
+            ),
+          ],
         ),
         leading: Padding(
           padding: EdgeInsets.only(left: 10),
@@ -54,7 +94,17 @@ class FlightsScreenState extends State<FlightsScreen> {
               icon: Icon(Icons.sort),
               color: Theme.of(context).primaryColor,
               iconSize: 30,
-              onPressed: () {},
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  barrierColor: CustomColors.dialogBackground,
+                  builder: (BuildContext context) => FilterFlights(
+                    callback: filterFlights,
+                    outboundTimes: _outboundTimes,
+                    returnTimes: _returnTimes,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -64,7 +114,7 @@ class FlightsScreenState extends State<FlightsScreen> {
           Container(
             color: CustomColors.greyBackground,
             child: ListView.builder(
-              itemCount: allFlights.length,
+              itemCount: shownFlights.length,
               itemBuilder: (BuildContext context, int index) {
                 return Padding(
                   padding: EdgeInsets.only(top: 20),
@@ -84,12 +134,14 @@ class FlightsScreenState extends State<FlightsScreen> {
                             child: Column(
                               children: <Widget>[
                                 FlightTicket(
-                                  ticketDetails: allFlights[index]["outbound"],
+                                  ticketDetails: shownFlights[index]
+                                      ["outbound"],
                                 ),
                                 Padding(
                                   padding: EdgeInsets.only(top: 10),
                                   child: FlightTicket(
-                                    ticketDetails: allFlights[index]["return"],
+                                    ticketDetails: shownFlights[index]
+                                        ["return"],
                                   ),
                                 ),
                               ],

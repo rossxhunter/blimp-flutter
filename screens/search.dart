@@ -11,6 +11,7 @@ import 'package:blimp/widgets/icons.dart';
 import 'package:blimp/widgets/loading.dart';
 import 'package:blimp/widgets/selectors.dart';
 import 'package:blimp/widgets/text_displays.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
@@ -273,7 +274,7 @@ class SearchPageState extends State<SearchPage> {
                                 ),
                               ),
                               Padding(
-                                padding: EdgeInsets.only(top: 20, bottom: 20),
+                                padding: EdgeInsets.only(top: 20),
                                 child: Container(
                                   color: Colors.white,
                                   child: Padding(
@@ -316,6 +317,35 @@ class SearchPageState extends State<SearchPage> {
                                   ),
                                 ),
                               ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 20, bottom: 20),
+                                child: Container(
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                        left: 35,
+                                        right: 35,
+                                        top: 10,
+                                        bottom: 20),
+                                    child: Stack(
+                                      // crossAxisAlignment:
+                                      //     CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 30),
+                                          child: SearchSectionTitle(
+                                            title: "Preferences",
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 25),
+                                          child: PreferenceScoresSection(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                               Container(
                                 height: 60,
                                 color: Colors.white,
@@ -343,6 +373,55 @@ class SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class PreferenceScoresSection extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return PreferenceScoresSectionState();
+  }
+}
+
+class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
+  Map preferenceScores = {"culture": 3.0, "learn": 3.0, "relax": 3.0};
+  @override
+  Widget build(BuildContext context) {
+    return ExpansionTile(
+      title: SearchSectionTitle(
+        title: "",
+      ),
+      children: [
+        ListView.builder(
+            itemCount: preferenceScores.keys.length,
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemBuilder: (BuildContext context, int index) {
+              String pref = preferenceScores.keys.toList()[index];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    pref,
+                    style: Theme.of(context).textTheme.headline2,
+                    textAlign: TextAlign.center,
+                  ),
+                  CupertinoSlider(
+                    value: preferenceScores[pref],
+                    min: 1.0,
+                    max: 5.0,
+                    activeColor: Theme.of(context).primaryColor,
+                    onChanged: (value) {
+                      setState(() {
+                        preferenceScores[pref] = value;
+                      });
+                    },
+                  ),
+                ],
+              );
+            })
+      ],
     );
   }
 }
@@ -521,8 +600,14 @@ class BudgetState extends State<Budget> {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        BudgetSelector(
+        DoubleSlider(
           callback: getUpdatedValues,
+          min: 0,
+          max: 1500,
+          step: 50,
+          minDistance: 150,
+          lowerValue: 300,
+          upperValue: 600,
         ),
         Padding(
           padding: EdgeInsets.only(top: 10),
@@ -559,7 +644,7 @@ class AccommodationStars extends StatelessWidget {
     return Row(
       children: <Widget>[
         IconBox(
-          icon: "Minimum Stars",
+          icon: Icons.star,
         ),
         Padding(
           padding: EdgeInsets.only(left: 20),
@@ -585,7 +670,7 @@ class AccommodationType extends StatelessWidget {
     return Row(
       children: <Widget>[
         IconBox(
-          icon: "Accommodation Type",
+          icon: Icons.hotel,
         ),
         Padding(
           padding: EdgeInsets.only(left: 20),
@@ -651,7 +736,7 @@ class DatesState extends State<Dates> {
         child: Row(
           children: <Widget>[
             IconBox(
-              icon: "Dates",
+              icon: Icons.calendar_today,
             ),
             Padding(
               padding: EdgeInsets.only(left: 20),
@@ -701,7 +786,7 @@ class TravellersRowState extends State<TravellersRow> {
     return Row(
       children: <Widget>[
         IconBox(
-          icon: "Travellers",
+          icon: Icons.people,
         ),
         Padding(
           padding: EdgeInsets.only(left: 20),

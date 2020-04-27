@@ -1,14 +1,19 @@
+import 'dart:ui';
+
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/accommodation.dart';
 import 'package:blimp/screens/activityDetails.dart';
 import 'package:blimp/screens/changeActivities.dart';
 import 'package:blimp/screens/feedback.dart';
 import 'package:blimp/screens/flights.dart';
+import 'package:blimp/services/http.dart';
 import 'package:blimp/services/images.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
+import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
+import 'package:bouncing_widget/bouncing_widget.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_carousel/carousel.dart';
@@ -119,7 +124,7 @@ class ResultsPageState extends State<ResultsPage> {
 
   @override
   Widget build(BuildContext context) {
-    getDestImageUrl();
+    // getDestImageUrl();
     return Scaffold(
       backgroundColor: CustomColors.greyBackground,
       body: Stack(
@@ -150,14 +155,23 @@ class ResultsPageState extends State<ResultsPage> {
                           icon: Icon(Icons.refresh,
                               color: Theme.of(context).primaryColor),
                           onPressed: () {
-                            showDialog(
+                            showGeneralDialog(
                               context: context,
-                              barrierDismissible: false,
-                              builder: (BuildContext context) => FeedbackScreen(
-                                destId: destId,
-                                preferences: preferences,
-                                price: price,
-                              ),
+                              barrierColor: CustomColors.dialogBackground,
+                              transitionDuration: Duration(milliseconds: 100),
+                              barrierDismissible: true,
+                              barrierLabel: '',
+                              transitionBuilder: (context, a1, a2, widget) {
+                                return Transform.scale(
+                                  scale: a1.value,
+                                  child: FeedbackScreen(
+                                    destId: destId,
+                                    preferences: preferences,
+                                    price: price,
+                                  ),
+                                );
+                              },
+                              pageBuilder: (context, animation1, animation2) {},
                             );
                           },
                         ),
@@ -196,19 +210,28 @@ class ResultsPageState extends State<ResultsPage> {
                       background: Stack(
                         fit: StackFit.expand,
                         children: [
+                          FadeInImage(
+                            fit: BoxFit.cover,
+                            image: NetworkImage(
+                                "https://blimp-resources.s3.eu-west-2.amazonaws.com/images/destinations/" +
+                                    destId.toString() +
+                                    "/1.jpg"),
+                            placeholder:
+                                AssetImage("assets/images/mountains.jpg"),
+                          ),
                           // Image.asset(
                           //   'assets/images/paris.jpg',
                           //   fit: BoxFit.cover,
                           // ),
-                          imageURL != null
-                              ? Image.network(
-                                  imageURL,
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.asset(
-                                  'assets/images/paris.jpg',
-                                  fit: BoxFit.cover,
-                                ),
+                          // imageURL != null
+                          //     ? Image.network(
+                          //         imageURL,
+                          //         fit: BoxFit.cover,
+                          //       )
+                          //     : Image.asset(
+                          //         'assets/images/paris.jpg',
+                          //         fit: BoxFit.cover,
+                          //       ),
                         ],
                       ),
                     ),
@@ -364,16 +387,20 @@ class ResultsPageBookBar extends StatelessWidget {
 }
 
 String getActivityTime(num startTime, num duration) {
-  int startHours = (startTime / 3600).floor();
-  int startMinutes = ((startTime % 3600) / 60).floor();
-  int endHours = startHours + ((duration / 3600).floor());
-  int endMinutes = startMinutes + (((duration % 3600) / 60).floor());
-  DateTime startDT = DateTime.utc(2020, 3, 10, startHours, startMinutes);
-  DateTime endDT = DateTime.utc(2020, 3, 10, endHours, endMinutes);
-  var formatter = new DateFormat('Hm');
-  String formattedStart = formatter.format(startDT);
-  String formattedEnd = formatter.format(endDT);
-  return formattedStart + " - " + formattedEnd;
+  if (startTime == -1) {
+    return "Calculating Times...";
+  } else {
+    int startHours = (startTime / 3600).floor();
+    int startMinutes = ((startTime % 3600) / 60).floor();
+    int endHours = startHours + ((duration / 3600).floor());
+    int endMinutes = startMinutes + (((duration % 3600) / 60).floor());
+    DateTime startDT = DateTime.utc(2020, 3, 10, startHours, startMinutes);
+    DateTime endDT = DateTime.utc(2020, 3, 10, endHours, endMinutes);
+    var formatter = new DateFormat('Hm');
+    String formattedStart = formatter.format(startDT);
+    String formattedEnd = formatter.format(endDT);
+    return formattedStart + " - " + formattedEnd;
+  }
 }
 
 class ActivityDayTitle extends StatelessWidget {
@@ -394,7 +421,7 @@ List<Widget> getActivityRows(Map itinerary, int day) {
     rows.add(
       Padding(
         padding: EdgeInsets.only(top: 20),
-        child: ActivityOption(itinerary[day.toString()][index]),
+        child: ActivityOption(activity: itinerary[day.toString()][index]),
       ),
     );
   }
@@ -402,102 +429,117 @@ List<Widget> getActivityRows(Map itinerary, int day) {
   return rows;
 }
 
-class ActivityOption extends StatelessWidget {
+class ActivityOption extends StatefulWidget {
+  final Map activity;
+  final Key key;
+  ActivityOption({this.activity, this.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return ActivityOptionState(activity);
+  }
+}
+
+class ActivityOptionState extends State<ActivityOption> {
   Map activity;
   String category;
   String bestPhotoURL;
   String name;
   String time;
 
-  ActivityOption(Map activity) {
+  ActivityOptionState(Map activity) {
     this.activity = activity;
     category = activity["category"] ?? "Activity";
     bestPhotoURL = activity["bestPhoto"] ?? getDefaultActivityImageURL();
     name = activity["name"];
     time = getActivityTime(activity["startTime"], activity["duration"]);
   }
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => ActivityDetails(
+
+  void clickActivity() {
+    showGeneralDialog(
+      context: context,
+      barrierColor: CustomColors.dialogBackground,
+      transitionDuration: Duration(milliseconds: 100),
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionBuilder: (context, a1, a2, widget) {
+        return Transform.scale(
+          scale: a1.value,
+          child: ActivityDetails(
             activity: activity,
           ),
         );
       },
-      child: Stack(
-        children: <Widget>[
-          // ClipRRect(
-          //   borderRadius: BorderRadius.all(Radius.circular(15)),
-          //   child: Container(
-          //     decoration: BoxDecoration(color: CustomColors.lightGrey),
-          //   ),
-          // ),
-          ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(15)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
-                  child: Container(
-                    height: 100,
-                    width: 140,
-                    child: Image(
-                      image: NetworkImage(bestPhotoURL),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+      pageBuilder: (context, animation1, animation2) {},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedButton(
+      callback: clickActivity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(15)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(15)),
+              child: Container(
+                height: 100,
+                width: 140,
+                child: Image(
+                  image: NetworkImage(bestPhotoURL),
+                  fit: BoxFit.cover,
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 20, right: 10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      // mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(
-                          time,
-                          style: Theme.of(context).textTheme.headline1,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 5),
-                          child: Text(
-                            name,
-                            style: Theme.of(context).textTheme.headline2,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 5),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: CustomColors.redGrey,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                  top: 5, bottom: 5, left: 10, right: 10),
-                              child: Text(
-                                category,
-                                overflow: TextOverflow.ellipsis,
-                                softWrap: true,
-                                maxLines: 2,
-                                style: Theme.of(context).textTheme.headline1,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 20, right: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    Text(
+                      time,
+                      style: Theme.of(context).textTheme.headline1,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Text(
+                        name,
+                        style: Theme.of(context).textTheme.headline2,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: CustomColors.redGrey,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              top: 5, bottom: 5, left: 10, right: 10),
+                          child: Text(
+                            category,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: true,
+                            textWidthBasis: TextWidthBasis.longestLine,
+                            maxLines: 2,
+                            style: Theme.of(context).textTheme.headline1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -528,7 +570,7 @@ class ActivitiesSection extends StatefulWidget {
 }
 
 class ActivitiesSectionState extends State<ActivitiesSection> {
-  final Map itinerary;
+  Map itinerary;
   final List allActivities;
   final Map travel;
   final Map accommodation;
@@ -553,9 +595,18 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              "Activities",
-              style: Theme.of(context).textTheme.headline3,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Activities",
+                  style: Theme.of(context).textTheme.headline3,
+                ),
+                Icon(
+                  Icons.map,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ],
             ),
             Padding(
               padding: EdgeInsets.only(top: 30),
@@ -563,13 +614,12 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                 height: 350,
                 child: Swiper(
                   onIndexChanged: (value) {
-                    _currentIndex = value;
+                    setState(() {
+                      _currentIndex = value;
+                    });
                   },
                   itemWidth: 3000,
-                  // itemHeight: 400,
                   itemBuilder: (BuildContext context, int day) {
-                    List<Widget> rows = getActivityRows(itinerary, day);
-
                     return Column(
                       children: <Widget>[
                         Text(
@@ -579,14 +629,29 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(top: 20),
-                            child: rows.length != 0
-                                ? SingleChildScrollView(
-                                    // primary: false,
-                                    physics: BouncingScrollPhysics(),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: rows,
+                            child: itinerary[day.toString()].length != 0
+                                ? MediaQuery.removePadding(
+                                    context: context,
+                                    removeTop: true,
+                                    child: ListView.builder(
+                                      primary: false,
+                                      itemCount:
+                                          itinerary[day.toString()].length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return Padding(
+                                          padding: EdgeInsets.only(top: 20),
+                                          child: ActivityOption(
+                                              key: Key(itinerary[day.toString()]
+                                                      [index]["id"] +
+                                                  itinerary[day.toString()]
+                                                          [index]["startTime"]
+                                                      .toString()),
+                                              activity:
+                                                  itinerary[day.toString()]
+                                                      [index]),
+                                        );
+                                      },
                                     ),
                                   )
                                 : NoActivities(
@@ -610,7 +675,8 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
             Padding(
               padding: EdgeInsets.only(top: 20, left: 20, right: 20),
               child: GestureDetector(
-                onTap: () {
+                onTap: () async {
+                  registerClick("change_activities");
                   Navigator.push(
                     context,
                     PageTransition(
@@ -720,8 +786,8 @@ class AccommodationSection extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(top: 30, left: 20, right: 20),
-              child: GestureDetector(
-                onTap: () {
+              child: AnimatedButton(
+                callback: () {
                   Navigator.push(
                     context,
                     PageTransition(

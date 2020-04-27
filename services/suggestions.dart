@@ -7,21 +7,25 @@ List destinationSuggestions;
 List activitySuggestions;
 Map currencySuggestions;
 List exploreSuggestions;
+List testingSuggestions;
 
 Future<void> getSuggestions() async {
   try {
     String destinationSuggestionsResponse =
-        await makeGetRequest("suggestions", "suggestion=destinations");
+        await makeGetRequest("suggestions/destinations", "");
     String activitySuggestionsResponse =
-        await makeGetRequest("suggestions", "suggestion=activities");
+        await makeGetRequest("suggestions/activities", "");
     String currencySuggestionsResponse =
-        await makeGetRequest("suggestions", "suggestion=currencies");
+        await makeGetRequest("suggestions/currencies", "");
     String exploreSuggestionsResponse =
-        await makeGetRequest("suggestions", "suggestion=explore");
+        await makeGetRequest("suggestions/explore", "");
+    String testingSuggestionsResponse =
+        await makeGetRequest("suggestions/testing", "");
     destinationSuggestions = json.decode(destinationSuggestionsResponse);
     activitySuggestions = json.decode(activitySuggestionsResponse);
     currencySuggestions = json.decode(currencySuggestionsResponse);
     exploreSuggestions = json.decode(exploreSuggestionsResponse);
+    testingSuggestions = json.decode(testingSuggestionsResponse);
   } on Exception catch (e) {
     print(e);
     throw e;
@@ -37,6 +41,10 @@ List getDestinationSuggestionsForQuery(String query) {
     }
   });
   return sug;
+}
+
+String getActivityFromId(String id) {
+  return activitySuggestions.where((a) => a["id"] == id).toList()[0]["heading"];
 }
 
 List getActivitySuggestionsForQuery(String query) {
@@ -69,4 +77,8 @@ Map getCurrencySuggestions() {
 
 List getExploreSuggestions() {
   return exploreSuggestions;
+}
+
+List getTestingSuggestions() {
+  return testingSuggestions;
 }

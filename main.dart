@@ -2,7 +2,9 @@ import 'package:async/async.dart';
 import 'package:blimp/screens/explore.dart';
 import 'package:blimp/screens/search.dart';
 import 'package:blimp/screens/settings.dart';
+import 'package:blimp/screens/testing.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(BlimpApp());
@@ -59,7 +61,12 @@ class BlimpMaterialApp extends StatelessWidget {
         primarySwatch: Theme.of(context).primaryColor,
         primaryColor: Color.fromRGBO(230, 20, 60, 1),
         highlightColor: Colors.transparent,
+        dividerColor: Colors.transparent,
+        accentColor: Color.fromRGBO(230, 20, 60, 1),
         splashColor: Colors.transparent,
+        buttonColor: Color.fromRGBO(230, 20, 60, 1),
+        buttonBarTheme:
+            ButtonBarThemeData(buttonTextTheme: ButtonTextTheme.accent),
         textTheme: TextTheme(
           headline4: TextStyle(
             color: Colors.black87,
@@ -113,7 +120,7 @@ class BlimpScaffold extends StatefulWidget {
 
 class BlimpScaffoldState extends State<BlimpScaffold> {
   int _currentIndex = 0;
-  final List<Widget> _children = [ExplorePage(), SearchPage(), SettingsPage()];
+  final List<Widget> _children = [ExplorePage(), SearchPage(), TestingPage()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,7 +145,7 @@ class BlimpScaffoldState extends State<BlimpScaffold> {
             title: Text("Search"),
           ),
           new BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(CupertinoIcons.lab_flask),
             title: Text("Profile"),
           )
         ],

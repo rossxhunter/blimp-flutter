@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:blimp/configurations.dart';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/results.dart';
@@ -5,11 +7,13 @@ import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
+import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/loading.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_emoji/flutter_emoji.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 final List<String> _tabsString = <String>[
@@ -295,71 +299,108 @@ class ExploreOption extends StatelessWidget {
   final int index;
   final String name;
   ExploreOption({this.index, this.name});
+
+  var parser = EmojiParser();
+
+  void exploreOptionClicked() {}
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      overflow: Overflow.visible,
-      children: <Widget>[
-        Container(
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(15)),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 130, right: 10),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            getExploreSuggestions()[index]["name"],
-                            style: Theme.of(context).textTheme.headline3,
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: Text(
-                                  'A beautiful city with pretty buildings and parks, come here for culture, wine and food',
-                                  overflow: TextOverflow.ellipsis,
-                                  softWrap: true,
-                                  maxLines: 2,
-                                  style: Theme.of(context).textTheme.headline1,
+    return AnimatedButton(
+      callback: exploreOptionClicked,
+      child: Stack(
+        overflow: Overflow.visible,
+        children: <Widget>[
+          Container(
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(15)),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 130, right: 10),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              getExploreSuggestions()[index]["name"],
+                              style: Theme.of(context).textTheme.headline3,
+                            ),
+                            Text(
+                              getExploreSuggestions()[index]["country_name"] +
+                                  " " +
+                                  parser
+                                      .get("flag-" +
+                                          getExploreSuggestions()[index]
+                                              ["country_code"])
+                                      .code,
+                              style: Theme.of(context).textTheme.bodyText2,
+                            ),
+                            Row(
+                              children: <Widget>[
+                                Icon(
+                                  Icons.camera_alt,
+                                  size: 20,
+                                  // color: Theme.of(context).primaryColor,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                Expanded(
+                                  child: Wrap(
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 5),
+                                        child: TopAttractionBox(
+                                          attraction:
+                                              getExploreSuggestions()[index]
+                                                  ["top_attractions"][0],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          bottom: 20,
-          left: -20,
-          child: ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            child: Container(
-              height: 120,
-              width: 140,
-              //   child: Image.asset(
-              //     "assets/images/paris.jpg",
-              //     fit: BoxFit.cover,
-              //   ),
-              child: Image.network(
-                getExploreSuggestions()[index]["imageURL"],
-                fit: BoxFit.cover,
+          Positioned(
+            bottom: 20,
+            left: -20,
+            child: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              child: Container(
+                height: 120,
+                width: 140,
+                child:
+                    // Image.asset(
+                    //   "assets/images/paris.jpg",
+                    //   fit: BoxFit.cover,
+                    // ),
+                    FadeInImage(
+                  fit: BoxFit.cover,
+                  image: NetworkImage(
+                      "https://blimp-resources.s3.eu-west-2.amazonaws.com/images/destinations/" +
+                          getExploreSuggestions()[index]["id"].toString() +
+                          "/1.jpg"),
+                  placeholder: AssetImage("assets/images/mountains.jpg"),
+                ),
+
+                // child: Image.network(
+                //   getExploreSuggestions()[index]["imageURL"],
+                //   fit: BoxFit.cover,
                 //   placeholder: (context, url) => Image.asset(
                 //     "assets/images/paris.jpg",
                 //     fit: BoxFit.cover,
@@ -369,8 +410,35 @@ class ExploreOption extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class TopAttractionBox extends StatelessWidget {
+  final String attraction;
+
+  TopAttractionBox({this.attraction});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CustomColors.lightGrey,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: 5, bottom: 5, left: 10, right: 10),
+        child: Text(
+          attraction,
+          overflow: TextOverflow.ellipsis,
+          textWidthBasis: TextWidthBasis.longestLine,
+          softWrap: true,
+          maxLines: 2,
+          style: Theme.of(context).textTheme.headline1,
         ),
-      ],
+      ),
     );
   }
 }

@@ -42,7 +42,6 @@ class ChangeActivitiesScreen extends StatefulWidget {
 class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     with TickerProviderStateMixin {
   Map itinerary;
-  Map initialItinerary;
   int day;
   final List allActivities;
   final Map travel;
@@ -57,7 +56,6 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
       this.travel,
       this.accommodation,
       this.preferences}) {
-    initialItinerary = Map.from(itinerary);
     _activities = List<List>();
     for (int i = 0; i < itinerary.keys.length; i++) {
       _activities.add(List());
@@ -120,17 +118,23 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     return tabs;
   }
 
+  bool _isScreenDisabled = false;
+
   @override
   Widget build(BuildContext context) {
-    ScrollController _scrollController =
-        PrimaryScrollController.of(context) ?? ScrollController();
     PopupMenu.context = context;
-    return Stack(
-      children: [
-        DefaultTabController(
-          length: itinerary.keys.length,
-          initialIndex: day,
-          child: Scaffold(
+    TabController _controller = TabController(
+        vsync: this, length: itinerary.keys.length, initialIndex: day);
+    _controller.addListener(() {
+      setState(() {
+        day = _controller.index;
+      });
+    });
+    return AbsorbPointer(
+      absorbing: _isScreenDisabled,
+      child: Stack(
+        children: [
+          Scaffold(
             backgroundColor: Colors.white,
             appBar: AppBar(
               centerTitle: true,
@@ -176,6 +180,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                     onPressed: () {
                       showDialog(
                         context: context,
+                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
                         builder: (BuildContext context) => NewActivity(
                           allActivities: allActivities,
                           callback: addNewActivity,
@@ -192,6 +197,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                 children: [
                   TabBar(
                     isScrollable: true,
+                    controller: _controller,
                     unselectedLabelColor: Theme.of(context).primaryColor,
                     labelStyle: Theme.of(context).textTheme.bodyText1,
                     labelColor: Theme.of(context).primaryColor,
@@ -202,6 +208,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                   ),
                   Expanded(
                     child: TabBarView(
+                      controller: _controller,
                       physics: AlwaysScrollableScrollPhysics(),
                       children: _getTabNums(itinerary.keys.length).map((int d) {
                         return Stack(
@@ -211,13 +218,12 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                                   bottom: 20, top: 10, left: 0, right: 0),
                               child: CustomScrollView(
                                 physics: AlwaysScrollableScrollPhysics(),
-                                // controller: _scrollController,
                                 slivers: <Widget>[
                                   ReorderableSliverList(
                                     delegate:
                                         ReorderableSliverChildListDelegate(
-                                            _getActivityRows(
-                                                _activities[d], context)),
+                                      _getActivityRows(_activities[d], context),
+                                    ),
                                     onReorder: _onReorder,
                                   )
                                 ],
@@ -232,25 +238,25 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
               ),
             ),
           ),
-        ),
-        Positioned.fill(
-          top: null,
-          bottom: 0,
-          child: Container(
-            color: Colors.transparent,
-            child: Padding(
-              padding: EdgeInsets.only(left: 20, right: 20, bottom: 30),
-              child: GestureDetector(
-                onTap: () {
-                  itinerary[day.toString()] = _activities[day];
-                  Navigator.pop(context);
-                },
-                child: ConfirmButton(),
+          Positioned.fill(
+            top: null,
+            bottom: 0,
+            child: Container(
+              color: Colors.transparent,
+              child: Padding(
+                padding: EdgeInsets.only(left: 20, right: 20, bottom: 30),
+                child: GestureDetector(
+                  onTap: () {
+                    itinerary[day.toString()] = _activities[day];
+                    Navigator.of(context).pop();
+                  },
+                  child: ConfirmButton(),
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -258,55 +264,10 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     List<Widget> rows = [];
     for (Map activity in activities) {
       rows.add(
-        Slidable(
-          key: Key("${activity["name"]}"),
-          actionPane: SlidableDrawerActionPane(),
-          actionExtentRatio: 0.25,
-          child: ListViewCard(
-            activity: activity,
-            callback: removeActivity,
-          ),
-          actions: <Widget>[],
-          //   IconSlideAction(
-          //     caption: 'Duration',
-          //     color: Colors.blue,
-          //     iconWidget: Padding(
-          //       padding: EdgeInsets.only(
-          //         bottom: 10,
-          //       ),
-          //       child: Icon(
-          //         Icons.timer,
-          //         color: Colors.white,
-          //       ),
-          //     ),
-          //     onTap: () => Scaffold.of(context)
-          //         .showSnackBar(SnackBar(content: Text('Yay! A SnackBar!'))),
-          //   ),
-          //   IconSlideAction(
-          //     caption: 'Switch Days',
-          //     color: Colors.indigo,
-          //     iconWidget: Padding(
-          //       padding: EdgeInsets.only(
-          //         bottom: 10,
-          //       ),
-          //       child: Icon(
-          //         Icons.shuffle,
-          //         color: Colors.white,
-          //       ),
-          //     ),
-          //     // onTap: () => _showSnackBar('Share'),
-          //   ),
-          // ],
-          // secondaryActions: <Widget>[
-          //   IconSlideAction(
-          //     caption: 'Delete',
-          //     color: Colors.red,
-          //     icon: Icons.delete,
-          //     onTap: () {
-          //       removeActivity(activity);
-          //     },
-          //   ),
-          // ],
+        ListViewCard(
+          key: Key(activity["id"] + activity["startTime"].toString()),
+          activity: activity,
+          callback: removeActivity,
         ),
       );
     }
@@ -314,26 +275,30 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
   }
 
   void _onReorder(int oldIndex, int newIndex) {
-    List<Map> newActivities = List<Map>();
-    for (int i = 0; i < _activities[day].length; i++) {
-      if (i == oldIndex) {
-        newActivities.add(_activities[day][newIndex]);
-      } else if (i == newIndex) {
-        newActivities.add(_activities[day][oldIndex]);
-      } else {
-        newActivities.add(_activities[day][i]);
-      }
+    _isScreenDisabled = true;
+    List<Map> newActivities = List.from(_activities[day]);
+    Map a = newActivities.removeAt(oldIndex);
+    newActivities.insert(newIndex, a);
+    List<Map> pendingActivties = List<Map>();
+    for (int i = 0; i < newActivities.length; i++) {
+      pendingActivties.add(Map.from(newActivities[i]));
+      pendingActivties.last["startTime"] = -1;
     }
+    setState(() {
+      _activities[day] = pendingActivties;
+    });
 
     getItineraryFromActivities(
             newActivities, day, travel, accommodation, preferences)
         .then((newItineraryActivities) {
       setState(() {
         _activities[day] = newItineraryActivities;
+        _isScreenDisabled = false;
       });
     }).catchError((e) {
       showDialog(
         context: context,
+        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
         builder: (BuildContext context) => CustomDialog(
           title: "Error",
           description: "Unable to add activity - " + e.toString(),
@@ -346,13 +311,13 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
 class ListViewCard extends StatelessWidget {
   final Map activity;
   final Function callback;
-  final GlobalKey optBtnKey = GlobalKey();
+  final Key key;
 
-  ListViewCard({this.activity, this.callback});
+  ListViewCard({this.activity, this.callback, this.key});
 
   @override
   Widget build(BuildContext context) {
-    Widget child = ActivityOption(activity);
+    Widget child = ActivityOption(activity: activity);
     return Padding(
       padding: EdgeInsets.only(bottom: 20, top: 20, left: 30, right: 20),
       child: Row(
@@ -368,6 +333,7 @@ class ListViewCard extends StatelessWidget {
               side: BorderSide(color: CustomColors.lightGrey, width: 2),
             ),
             elevation: 0,
+            tooltip: "Actions",
             onSelected: (value) {
               if (value == "delete") {
                 callback(activity);

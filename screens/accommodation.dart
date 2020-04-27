@@ -31,9 +31,20 @@ class AccommodationScreenState extends State<AccommodationScreen> {
             width: 4,
           ),
         ),
-        title: Text(
-          'Accommodation',
-          style: Theme.of(context).textTheme.headline3,
+        title: Column(
+          children: [
+            Text(
+              'Accommodation',
+              style: Theme.of(context).textTheme.headline3,
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 5, bottom: 5),
+              child: Text(
+                allAccommodation.length.toString() + " options",
+                style: Theme.of(context).textTheme.headline1,
+              ),
+            ),
+          ],
         ),
         leading: Padding(
           padding: EdgeInsets.only(left: 10),
