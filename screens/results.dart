@@ -6,6 +6,7 @@ import 'package:blimp/screens/activityDetails.dart';
 import 'package:blimp/screens/changeActivities.dart';
 import 'package:blimp/screens/feedback.dart';
 import 'package:blimp/screens/flights.dart';
+import 'package:blimp/screens/search.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/images.dart';
 import 'package:blimp/services/suggestions.dart';
@@ -22,6 +23,7 @@ import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:stretchy_header/stretchy_header.dart';
 import 'package:http/http.dart';
+import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 
 List<String> imgList = ["assets/images/paris.jpg", "assets/images/paris.jpg"];
 
@@ -30,7 +32,7 @@ class ResultsPage extends StatefulWidget {
   final Map flights;
   final Map accommodation;
   final Map itinerary;
-  final String imageURL;
+  final List imageURLs;
   final String wiki;
   final String name;
   final List allFlights;
@@ -44,7 +46,7 @@ class ResultsPage extends StatefulWidget {
       this.accommodation,
       this.itinerary,
       this.wiki,
-      this.imageURL,
+      this.imageURLs,
       this.name,
       this.allFlights,
       this.allAccommodation,
@@ -58,7 +60,7 @@ class ResultsPage extends StatefulWidget {
         accommodation: accommodation,
         itinerary: itinerary,
         wiki: wiki,
-        imageURL: imageURL,
+        imageURLs: imageURLs,
         name: name,
         allFlights: allFlights,
         allAccommodation: allAccommodation,
@@ -69,10 +71,10 @@ class ResultsPage extends StatefulWidget {
 
 class ResultsPageState extends State<ResultsPage> {
   final int destId;
-  final Map flights;
-  final Map accommodation;
+  Map flights;
+  Map accommodation;
   final Map itinerary;
-  String imageURL;
+  final List imageURLs;
   final String wiki;
   final String name;
   final List allFlights;
@@ -91,7 +93,7 @@ class ResultsPageState extends State<ResultsPage> {
       this.accommodation,
       this.itinerary,
       this.wiki,
-      this.imageURL,
+      this.imageURLs,
       this.name,
       this.allFlights,
       this.allAccommodation,
@@ -101,12 +103,12 @@ class ResultsPageState extends State<ResultsPage> {
         flights["return"]["price"]["amount"] +
         accommodation["price"]["amount"];
   }
-
+  int _currentIndex;
   @override
   void initState() {
     super.initState();
-
     _scrollController = ScrollController()..addListener(() => setState(() {}));
+    _currentIndex = 0;
   }
 
   bool get _showTitle {
@@ -114,17 +116,23 @@ class ResultsPageState extends State<ResultsPage> {
         _scrollController.offset > kExpandedHeight - kToolbarHeight;
   }
 
-  Future<void> getDestImageUrl() async {
-    final response = await get(imageURL);
+  void updateFlights(int selectedFlight) {
+    setState(() {
+      flights = allFlights.where((f) => f["id"] == selectedFlight).toList()[0];
+    });
+  }
 
-    if (response.statusCode != 200) {
-      imageURL = null;
-    }
+  void updateAccommodation(int selectedAccommodation) {
+    setState(() {
+      accommodation = allAccommodation
+          .where((a) => a["id"] == selectedAccommodation)
+          .toList()[0];
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // getDestImageUrl();
+    // preloadImages(context, allAccommodation, itinerary, imageURLs);
     return Scaffold(
       backgroundColor: CustomColors.greyBackground,
       body: Stack(
@@ -151,10 +159,8 @@ class ResultsPageState extends State<ResultsPage> {
                     : null,
                 actions: _showTitle
                     ? <Widget>[
-                        IconButton(
-                          icon: Icon(Icons.refresh,
-                              color: Theme.of(context).primaryColor),
-                          onPressed: () {
+                        AnimatedButton(
+                          callback: () {
                             showGeneralDialog(
                               context: context,
                               barrierColor: CustomColors.dialogBackground,
@@ -166,6 +172,10 @@ class ResultsPageState extends State<ResultsPage> {
                                   scale: a1.value,
                                   child: FeedbackScreen(
                                     destId: destId,
+                                    duration: flights["outbound"]["duration"],
+                                    categoryIds: allActivities
+                                        .map((a) => a["categoryId"])
+                                        .toList(),
                                     preferences: preferences,
                                     price: price,
                                   ),
@@ -174,11 +184,59 @@ class ResultsPageState extends State<ResultsPage> {
                               pageBuilder: (context, animation1, animation2) {},
                             );
                           },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.sort,
+                          child: Icon(Icons.refresh,
                               color: Theme.of(context).primaryColor),
-                          onPressed: () {},
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 20, right: 20),
+                          child: AnimatedButton(
+                            child: Icon(Icons.sort,
+                                color: Theme.of(context).primaryColor),
+                            callback: () {
+                              showModalBottomSheet(
+                                  context: context,
+                                  backgroundColor: Colors.transparent,
+                                  isScrollControlled: true,
+                                  builder: (_) {
+                                    return DraggableScrollableSheet(
+                                      expand: false,
+                                      initialChildSize: 0.8,
+                                      builder: (BuildContext context,
+                                          myscrollController) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                          ),
+                                          child: Padding(
+                                            padding: EdgeInsets.only(top: 10),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  height: 15,
+                                                  width: 80,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            100),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: SearchPage(),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  });
+                            },
+                          ),
                         ),
                       ]
                     : null,
@@ -210,28 +268,33 @@ class ResultsPageState extends State<ResultsPage> {
                       background: Stack(
                         fit: StackFit.expand,
                         children: [
-                          FadeInImage(
-                            fit: BoxFit.cover,
-                            image: NetworkImage(
-                                "https://blimp-resources.s3.eu-west-2.amazonaws.com/images/destinations/" +
-                                    destId.toString() +
-                                    "/1.jpg"),
-                            placeholder:
-                                AssetImage("assets/images/mountains.jpg"),
-                          ),
-                          // Image.asset(
-                          //   'assets/images/paris.jpg',
-                          //   fit: BoxFit.cover,
-                          // ),
-                          // imageURL != null
-                          //     ? Image.network(
-                          //         imageURL,
-                          //         fit: BoxFit.cover,
-                          //       )
-                          //     : Image.asset(
-                          //         'assets/images/paris.jpg',
-                          //         fit: BoxFit.cover,
-                          //       ),
+                          imageURLs.length == 0
+                              ? Image(
+                                  image:
+                                      AssetImage("assets/images/mountains.jpg"),
+                                  fit: BoxFit.cover)
+                              : Swiper(
+                                  onIndexChanged: (value) {
+                                    setState(() {
+                                      _currentIndex = value;
+                                    });
+                                  },
+                                  pagination: SwiperPagination(
+                                    margin: EdgeInsets.only(
+                                        left: 10, right: 10, bottom: 40),
+                                  ),
+                                  itemWidth: 3000,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return Image(
+                                      fit: BoxFit.cover,
+                                      image: NetworkImage(imageURLs[index]),
+                                    );
+                                  },
+                                  itemCount: imageURLs.length,
+                                  viewportFraction: 1,
+                                  scale: 1,
+                                ),
                         ],
                       ),
                     ),
@@ -267,6 +330,7 @@ class ResultsPageState extends State<ResultsPage> {
                         Padding(
                           padding: EdgeInsets.only(top: 10),
                           child: FlightsSection(
+                            callback: updateFlights,
                             flights: flights,
                             allFlights: allFlights,
                           ),
@@ -274,6 +338,7 @@ class ResultsPageState extends State<ResultsPage> {
                         Padding(
                           padding: EdgeInsets.only(top: 10),
                           child: AccommodationSection(
+                            callback: updateAccommodation,
                             accommodation: accommodation,
                             allAccommodation: allAccommodation,
                           ),
@@ -646,7 +711,8 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                                                       [index]["id"] +
                                                   itinerary[day.toString()]
                                                           [index]["startTime"]
-                                                      .toString()),
+                                                      .toString() + itinerary[day.toString()]
+                                                          [index]["duration"].toString()),
                                               activity:
                                                   itinerary[day.toString()]
                                                       [index]),
@@ -762,11 +828,40 @@ class NoActivities extends StatelessWidget {
   }
 }
 
-class AccommodationSection extends StatelessWidget {
+class AccommodationSection extends StatefulWidget {
+  final Function callback;
   final Map accommodation;
   final List allAccommodation;
 
-  AccommodationSection({this.accommodation, this.allAccommodation});
+  AccommodationSection(
+      {this.callback, this.accommodation, this.allAccommodation});
+
+  @override
+  State<StatefulWidget> createState() {
+    return AccommodationSectionState(
+        callback: callback,
+        accommodation: accommodation,
+        allAccommodation: allAccommodation);
+  }
+}
+
+class AccommodationSectionState extends State<AccommodationSection> {
+  final Function callback;
+  Map accommodation;
+  final List allAccommodation;
+
+  AccommodationSectionState(
+      {this.callback, this.accommodation, this.allAccommodation});
+
+  void accommodationSelected(int selectedAccommodation) {
+    setState(() {
+      accommodation = allAccommodation
+          .where((a) => a["id"] == selectedAccommodation)
+          .toList()[0];
+    });
+    callback(selectedAccommodation);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -793,6 +888,8 @@ class AccommodationSection extends StatelessWidget {
                     PageTransition(
                       type: PageTransitionType.downToUp,
                       child: AccommodationScreen(
+                        callback: accommodationSelected,
+                        selectedAccommodation: accommodation["id"],
                         allAccommodation: allAccommodation,
                       ),
                     ),
@@ -828,11 +925,33 @@ class AccommodationSection extends StatelessWidget {
   }
 }
 
-class FlightsSection extends StatelessWidget {
+class FlightsSection extends StatefulWidget {
+  final Function callback;
   final Map flights;
   final List allFlights;
 
-  FlightsSection({this.flights, this.allFlights});
+  FlightsSection({this.callback, this.flights, this.allFlights});
+  @override
+  State<StatefulWidget> createState() {
+    return FlightsSectionState(
+        callback: callback, flights: flights, allFlights: allFlights);
+  }
+}
+
+class FlightsSectionState extends State<FlightsSection> {
+  final Function callback;
+  Map flights;
+  final List allFlights;
+
+  FlightsSectionState({this.callback, this.allFlights, this.flights});
+
+  void selectFlight(int selectedFlight) {
+    setState(() {
+      flights = allFlights.where((f) => f["id"] == selectedFlight).toList()[0];
+    });
+    callback(selectedFlight);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -866,7 +985,11 @@ class FlightsSection extends StatelessWidget {
                     context,
                     PageTransition(
                       type: PageTransitionType.downToUp,
-                      child: FlightsScreen(allFlights: allFlights),
+                      child: FlightsScreen(
+                        allFlights: allFlights,
+                        selectedFlight: flights["id"],
+                        callback: selectFlight,
+                      ),
                     ),
                   );
                 },

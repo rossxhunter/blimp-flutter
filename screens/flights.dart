@@ -1,29 +1,41 @@
 import 'package:blimp/screens/filterFlights.dart';
 import 'package:blimp/styles/colors.dart';
+import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:collection/collection.dart';
 
 class FlightsScreen extends StatefulWidget {
   final List allFlights;
-  FlightsScreen({this.allFlights});
+  final int selectedFlight;
+  final Function callback;
+  FlightsScreen({this.allFlights, this.callback, this.selectedFlight});
 
   @override
   State<StatefulWidget> createState() {
-    return FlightsScreenState(allFlights: allFlights);
+    return FlightsScreenState(
+        allFlights: allFlights,
+        callback: callback,
+        selectedFlight: selectedFlight);
   }
 }
 
 class FlightsScreenState extends State<FlightsScreen> {
   final List allFlights;
+  int selectedFlight;
+  final Function callback;
   List shownFlights;
   int _selectedFlight = 0;
   List<double> _outboundTimes = [6.0, 18.0];
   List<double> _returnTimes = [6.0, 18.0];
 
-  FlightsScreenState({this.allFlights}) {
+  FlightsScreenState({this.allFlights, this.callback, this.selectedFlight}) {
     shownFlights = List.from(allFlights);
+    shownFlights.removeWhere((f) => f["id"] == selectedFlight);
+    shownFlights.insert(
+        0, allFlights.where((f) => f["id"] == selectedFlight).toList()[0]);
   }
 
   void filterFlights(List outboundTimes, List returnTimes) {
@@ -122,6 +134,7 @@ class FlightsScreenState extends State<FlightsScreen> {
                     onTap: () {
                       setState(() {
                         _selectedFlight = index;
+                        selectedFlight = shownFlights[index]["id"];
                       });
                     },
                     child: Container(
@@ -151,7 +164,8 @@ class FlightsScreenState extends State<FlightsScreen> {
                             top: 10,
                             right: 10,
                             child: Visibility(
-                              visible: _selectedFlight == index,
+                              visible:
+                                  selectedFlight == shownFlights[index]["id"],
                               child: SelectedIcon(),
                             ),
                           ),
@@ -170,7 +184,13 @@ class FlightsScreenState extends State<FlightsScreen> {
               color: Colors.transparent,
               child: Padding(
                 padding: EdgeInsets.only(left: 20, right: 20, bottom: 30),
-                child: ConfirmButton(),
+                child: AnimatedButton(
+                  callback: () {
+                    callback(selectedFlight);
+                    Navigator.pop(context);
+                  },
+                  child: ConfirmButton(),
+                ),
               ),
             ),
           ),
@@ -193,34 +213,6 @@ class SelectedIcon extends StatelessWidget {
         child: Icon(
           Icons.check,
           color: Colors.white,
-        ),
-      ),
-    );
-  }
-}
-
-class ConfirmButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      // onTap: () => callback(),
-      child: Container(
-        width: 200,
-        decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Center(
-            child: Text(
-              "Done",
-              style: Theme.of(context)
-                  .textTheme
-                  .button
-                  .copyWith(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ),
         ),
       ),
     );

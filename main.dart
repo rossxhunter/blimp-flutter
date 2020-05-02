@@ -4,8 +4,10 @@ import 'package:blimp/screens/search.dart';
 import 'package:blimp/screens/settings.dart';
 import 'package:blimp/screens/testing.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/widgets/buttons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_emoji/flutter_emoji.dart';
 
 void main() => runApp(BlimpApp());
 
@@ -19,40 +21,102 @@ class BlimpApp extends StatefulWidget {
 }
 
 class BlimpAppState extends State<BlimpApp> {
-  Future<void> _future;
-
-  initState() {
-    super.initState();
-    _future = getSuggestions();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _future,
-      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-            return Center(
-              child: Text('Waiting', textDirection: TextDirection.ltr),
-            );
-          case ConnectionState.waiting:
-            return Center(
-              child: Text('Loading Data...', textDirection: TextDirection.ltr),
-            );
-          default:
-            if (snapshot.hasError)
-              return Text('Error: ${snapshot.error}',
-                  textDirection: TextDirection.ltr);
-            else
-              return BlimpMaterialApp();
-        }
-      },
+    return BlimpMaterialApp();
+  }
+}
+
+class ErrorScreen extends StatelessWidget {
+  final Function callback;
+
+  ErrorScreen({this.callback});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).primaryColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "An error has occured 😢",
+              textDirection: TextDirection.ltr,
+              style: Theme.of(context)
+                  .textTheme
+                  .headline3
+                  .copyWith(color: Colors.white),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: AnimatedButton(
+                callback: callback,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text(
+                      "Try Again",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyText1
+                          .copyWith(color: Theme.of(context).primaryColor),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class BlimpMaterialApp extends StatelessWidget {
+class LoadingDataScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).primaryColor,
+      body: Center(
+        child: Text(
+          'Loading App Data...',
+          textDirection: TextDirection.ltr,
+          style: Theme.of(context)
+              .textTheme
+              .headline3
+              .copyWith(color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class BlimpMaterialApp extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return BlimpMaterialAppState();
+  }
+}
+
+class BlimpMaterialAppState extends State<BlimpMaterialApp> {
+  Future<void> _future;
+
+  initState() {
+    super.initState();
+
+    _future = getSuggestions();
+  }
+
+  void tryAgain() {
+    setState(() {
+      _future = getSuggestions();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -106,7 +170,22 @@ class BlimpMaterialApp extends StatelessWidget {
           ),
         ),
       ),
-      home: BlimpScaffold(),
+      home: FutureBuilder<void>(
+        future: _future,
+        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+              return LoadingDataScreen();
+            case ConnectionState.waiting:
+              return LoadingDataScreen();
+            default:
+              if (snapshot.hasError)
+                return ErrorScreen(callback: tryAgain);
+              else
+                return BlimpScaffold();
+          }
+        },
+      ),
     );
   }
 }

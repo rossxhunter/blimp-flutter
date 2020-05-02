@@ -2,27 +2,42 @@ import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_emoji/flutter_emoji.dart';
 // import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter_typeahead/cupertino_flutter_typeahead.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
-class SearchField extends StatefulWidget {
+class OriginDestinationField extends StatefulWidget {
   final String point;
   final Function callback;
   final TextEditingController controller;
-  SearchField({this.point, this.callback, this.controller});
+  OriginDestinationField({this.point, this.callback, this.controller});
   @override
   State<StatefulWidget> createState() {
-    return SearchFieldState(
+    return OriginDestinationFieldState(
         point: point, callback: callback, typeAheadController: controller);
   }
 }
 
-class SearchFieldState extends State<SearchField> {
+class ActivitiesField extends StatefulWidget {
+  final Function callback;
+  final TextEditingController controller;
+  ActivitiesField({this.callback, this.controller});
+  @override
+  State<StatefulWidget> createState() {
+    return ActivitiesFieldState(
+        callback: callback, typeAheadController: controller);
+  }
+}
+
+class OriginDestinationFieldState extends State<OriginDestinationField> {
   final String point;
   final Function callback;
   final TextEditingController typeAheadController;
+  EmojiParser parser = EmojiParser();
 
-  SearchFieldState({this.point, this.callback, this.typeAheadController});
+  OriginDestinationFieldState(
+      {this.point, this.callback, this.typeAheadController});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -55,38 +70,171 @@ class SearchFieldState extends State<SearchField> {
                         child: Text(point),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(right: getRightPadding()),
+                        padding: EdgeInsets.only(right: 60),
                         child: CupertinoTypeAheadField(
                           textFieldConfiguration:
                               CupertinoTextFieldConfiguration(
-                            onChanged: (var value) {
-                              // if (point != "From" && point != "Destination") {
-                              //   callback(value);
-                              // } else {
-                              //   callback(point, value);
-                              // }
-                            },
+                            onChanged: (var value) {},
                             maxLines: 2,
                             onTap: () {
                               typeAheadController.clear();
-                              if (point != "From" && point != "Destination") {
-                                callback({});
-                              } else {
-                                callback(point, {});
-                              }
+                              callback(point, {});
                             },
                             padding: EdgeInsets.only(
-                                left: 0, right: 6, top: 6, bottom: 6),
+                                left: 0, right: 6, top: 15, bottom: 6),
                             controller: typeAheadController,
                             autofocus: false,
                             style: Theme.of(context).textTheme.headline2,
                             decoration: BoxDecoration(),
                           ),
                           suggestionsCallback: (pattern) {
-                            if (point != "From" && point != "Destination") {
-                              return getActivitySuggestionsForQuery(pattern);
-                            }
                             return getDestinationSuggestionsForQuery(pattern);
+                          },
+                          suggestionsBoxDecoration:
+                              CupertinoSuggestionsBoxDecoration(
+                            offsetX: -65,
+                            borderRadius: BorderRadius.circular(15),
+                            constraints:
+                                BoxConstraints(minWidth: constraints.maxWidth),
+                          ),
+                          hideOnLoading: true,
+                          hideSuggestionsOnKeyboardHide: true,
+                          hideOnEmpty: true,
+                          hideOnError: true,
+                          getImmediateSuggestions: true,
+                          suggestionsBoxController:
+                              CupertinoSuggestionsBoxController(),
+                          itemBuilder: (context, suggestion) {
+                            return Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Row(
+                                children: <Widget>[
+                                  Text(
+                                    parser
+                                        .get(
+                                            "flag-" + suggestion["countryCode"])
+                                        .code,
+                                    style:
+                                        Theme.of(context).textTheme.headline4,
+                                  ),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(left: 20),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            suggestion["type"] == "city"
+                                                ? suggestion["cityName"] +
+                                                    " - All Aiports"
+                                                : suggestion["airportName"],
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyText1,
+                                            // overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            suggestion["type"] == "city"
+                                                ? suggestion["countryName"]
+                                                : suggestion["cityName"],
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyText2,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          onSuggestionSelected: (suggestion) {
+                            this.typeAheadController.text =
+                                suggestion["type"] == "city"
+                                    ? suggestion["cityName"]
+                                    : suggestion["airportName"];
+                            callback(point, suggestion);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  IconData _getIcon() {
+    if (point == "From") {
+      return Icons.flight_takeoff;
+    } else if (point == "Destination") {
+      return Icons.flight_land;
+    }
+  }
+}
+
+class ActivitiesFieldState extends State<ActivitiesField> {
+  final Function callback;
+  final TextEditingController typeAheadController;
+
+  ActivitiesFieldState({this.callback, this.typeAheadController});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: CustomColors.lightGrey,
+          width: 3,
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return Padding(
+            padding: EdgeInsets.all(10),
+            child: Row(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(right: 20, left: 10),
+                  child: Icon(
+                    Icons.beach_access,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.topLeft,
+                        child: Text("Preferred Activities"),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(right: 60),
+                        child: CupertinoTypeAheadField(
+                          textFieldConfiguration:
+                              CupertinoTextFieldConfiguration(
+                            onChanged: (var value) {},
+                            maxLines: 2,
+                            onTap: () {
+                              typeAheadController.clear();
+                              callback({});
+                            },
+                            padding: EdgeInsets.only(
+                                left: 0, right: 6, top: 15, bottom: 6),
+                            controller: typeAheadController,
+                            autofocus: false,
+                            style: Theme.of(context).textTheme.headline2,
+                            decoration: BoxDecoration(),
+                          ),
+                          suggestionsCallback: (pattern) {
+                            return getActivitySuggestionsForQuery(pattern);
                           },
                           suggestionsBoxDecoration:
                               CupertinoSuggestionsBoxDecoration(
@@ -107,28 +255,22 @@ class SearchFieldState extends State<SearchField> {
                                 padding: EdgeInsets.all(20),
                                 child: Row(
                                   children: <Widget>[
-                                    Icon(Icons.local_airport),
+                                    Image(
+                                      image: NetworkImage(
+                                          suggestion["icon"] + "64.png"),
+                                      color: Colors.black,
+                                      width: 32,
+                                      height: 32,
+                                    ),
                                     Expanded(
                                       child: Padding(
                                         padding: EdgeInsets.only(left: 20),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              suggestion["heading"],
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyText1,
-                                              // overflow: TextOverflow.ellipsis,
-                                            ),
-                                            Text(
-                                              suggestion["subheading"],
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyText2,
-                                            ),
-                                          ],
+                                        child: Text(
+                                          suggestion["name"],
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1,
+                                          // overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ),
@@ -136,13 +278,8 @@ class SearchFieldState extends State<SearchField> {
                                 ));
                           },
                           onSuggestionSelected: (suggestion) {
-                            this.typeAheadController.text =
-                                suggestion["heading"];
-                            if (point != "From" && point != "Destination") {
-                              callback(suggestion);
-                            } else {
-                              callback(point, suggestion);
-                            }
+                            this.typeAheadController.text = suggestion["name"];
+                            callback(suggestion);
                           },
                         ),
                       ),
@@ -155,25 +292,6 @@ class SearchFieldState extends State<SearchField> {
         },
       ),
     );
-  }
-
-  double getRightPadding() {
-    if (point == "Preferred Activities") {
-      return 60;
-    }
-    return 60;
-  }
-
-  IconData _getIcon() {
-    if (point == "From") {
-      return Icons.flight_takeoff;
-    } else if (point == "Destination") {
-      return Icons.flight_land;
-    } else if (point == "Preferred Activities") {
-      return Icons.beach_access;
-    } else if (point == "New Activity") {
-      return Icons.beach_access;
-    }
   }
 }
 

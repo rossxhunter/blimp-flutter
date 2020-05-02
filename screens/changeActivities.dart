@@ -6,6 +6,7 @@ import 'package:blimp/screens/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
+import 'package:blimp/widgets/buttons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -65,12 +66,6 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     }
   }
 
-  void removeActivity(Map activity) {
-    setState(() {
-      _activities[day].remove(activity);
-    });
-  }
-
   void addNewActivity(Map activity) {
     List<Map> newActivities = List<Map>();
     for (Map a in _activities[day]) {
@@ -118,10 +113,72 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     return tabs;
   }
 
+  void changeDuration(Map changedActivity, int duration) {
+    List<Map> newActivities = List<Map>();
+    for (Map a in _activities[day]) {
+      newActivities.add(Map.from(a));
+      if (a == changedActivity) {
+        newActivities.last["duration"] = duration;
+      }
+    }
+    getItineraryFromActivities(
+            newActivities, day, travel, accommodation, preferences)
+        .then((newItineraryActivities) {
+      setState(() {
+        _activities[day] = newItineraryActivities;
+        _isScreenDisabled = false;
+      });
+    }).catchError((e) {
+      showDialog(
+        context: context,
+        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+        builder: (BuildContext context) => CustomDialog(
+          title: "Error",
+          description: "Unable to change duration - " + e.toString(),
+        ),
+      );
+    });
+  }
+
   bool _isScreenDisabled = false;
 
   @override
   Widget build(BuildContext context) {
+    void activityAction(String action, Map activity) {
+      if (action == "delete") {
+        setState(() {
+          _activities[day].remove(activity);
+        });
+      } else if (action == "changeDuration") {
+        int hours = activity["duration"] ~/ (60 * 60);
+        int minutes = (activity["duration"] - (hours * 60 * 60)) ~/ 60;
+        showDialog(
+            context: context,
+            builder: (BuildContext builder) {
+              return ChangeDuration(
+                  callback: (duration) => changeDuration(activity, duration),
+                  hours: hours,
+                  minutes: minutes);
+            });
+      } else if (action == "switchDays") {}
+    }
+
+    List<Widget> _getActivityRows(List activities, BuildContext context) {
+      List<Widget> rows = [];
+      for (Map activity in activities) {
+        rows.add(
+          ListViewCard(
+            key: Key(activity["id"] +
+                activity["startTime"].toString() +
+                activity["duration"].toString()),
+            activity: activity,
+            callback: activityAction,
+          ),
+        );
+      }
+      return rows;
+    }
+
     PopupMenu.context = context;
     TabController _controller = TabController(
         vsync: this, length: itinerary.keys.length, initialIndex: day);
@@ -260,20 +317,6 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     );
   }
 
-  List<Widget> _getActivityRows(List activities, BuildContext context) {
-    List<Widget> rows = [];
-    for (Map activity in activities) {
-      rows.add(
-        ListViewCard(
-          key: Key(activity["id"] + activity["startTime"].toString()),
-          activity: activity,
-          callback: removeActivity,
-        ),
-      );
-    }
-    return rows;
-  }
-
   void _onReorder(int oldIndex, int newIndex) {
     _isScreenDisabled = true;
     List<Map> newActivities = List.from(_activities[day]);
@@ -308,6 +351,68 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
   }
 }
 
+class ChangeDuration extends StatefulWidget {
+  final int hours;
+  final int minutes;
+  final Function callback;
+
+  ChangeDuration({this.callback, this.hours, this.minutes});
+  @override
+  State<StatefulWidget> createState() {
+    return ChangeDurationState(
+        callback: callback, hours: hours, minutes: minutes);
+  }
+}
+
+class ChangeDurationState extends State<ChangeDuration> {
+  final int hours;
+  final int minutes;
+  int duration;
+  final Function callback;
+
+  ChangeDurationState({this.callback, this.hours, this.minutes}) {
+    duration = (hours * 60 * 60) + minutes * 60;
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      elevation: 0.0,
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CupertinoTimerPicker(
+              onTimerDurationChanged: (value) {
+                setState(() {
+                  duration = value.inSeconds;
+                });
+              },
+              mode: CupertinoTimerPickerMode.hm,
+              minuteInterval: 5,
+              initialTimerDuration: Duration(hours: hours, minutes: minutes),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: AnimatedButton(
+                callback: () {
+                  callback(duration);
+                  Navigator.pop(context);
+                },
+                child: ConfirmButton(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ListViewCard extends StatelessWidget {
   final Map activity;
   final Function callback;
@@ -335,9 +440,7 @@ class ListViewCard extends StatelessWidget {
             elevation: 0,
             tooltip: "Actions",
             onSelected: (value) {
-              if (value == "delete") {
-                callback(activity);
-              }
+              callback(value, activity);
             },
             icon: Icon(
               Icons.more_horiz,
@@ -363,7 +466,10 @@ class ListViewCard extends StatelessWidget {
                 value: "switchDays",
                 child: Row(
                   children: [
-                    Icon(Icons.shuffle, color: Colors.green),
+                    Icon(
+                      Icons.shuffle,
+                      color: Colors.green,
+                    ),
                     Padding(
                       padding: EdgeInsets.only(left: 5),
                       child: Text('Switch Days'),

@@ -140,9 +140,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
       duration: Duration(milliseconds: 100),
       lowerBound: 0.0,
       upperBound: 0.1,
-    )..addListener(() {
+    )
+      ..addListener(() {
         setState(() {});
-      });
+      })
+      ..addStatusListener((stastus) {});
+    ;
   }
 
   @override
@@ -155,7 +158,8 @@ class _AnimatedButtonState extends State<AnimatedButton>
     _controller.forward();
   }
 
-  void _onTapUp(TapUpDetails details) {
+  Future<void> _onTapUp(TapUpDetails details) async {
+    await _controller.forward();
     _controller.reverse();
     callback();
   }
@@ -176,6 +180,30 @@ class _AnimatedButtonState extends State<AnimatedButton>
       child: Transform.scale(
         scale: _scale,
         child: child,
+      ),
+    );
+  }
+}
+
+class ConfirmButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Center(
+          child: Text(
+            "Done",
+            style: Theme.of(context)
+                .textTheme
+                .button
+                .copyWith(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ),
       ),
     );
   }

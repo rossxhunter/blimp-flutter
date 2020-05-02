@@ -8,7 +8,8 @@ String getDefaultActivityImageURL() {
   return "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Buckingham_Palace_UK.jpg/2560px-Buckingham_Palace_UK.jpg";
 }
 
-void preloadImages(BuildContext context, List allAccommodation, Map itinerary) {
+void preloadImages(BuildContext context, List allAccommodation, Map itinerary,
+    List destImages) {
   var configuration = createLocalImageConfiguration(context);
   List<String> urls = [];
 
@@ -34,7 +35,12 @@ void preloadImages(BuildContext context, List allAccommodation, Map itinerary) {
     }
   }
 
+  for (String url in destImages) {
+    urls.add(url);
+  }
+
   for (String url in urls) {
-    NetworkImage(url)..resolve(configuration);
+    // NetworkImage(url)..resolve(configuration);
+    precacheImage(NetworkImage(url), context);
   }
 }

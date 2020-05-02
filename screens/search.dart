@@ -1,5 +1,6 @@
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/model/properties.dart';
+import 'package:blimp/routes.dart';
 import 'package:blimp/screens/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
@@ -50,6 +51,7 @@ class SearchPageState extends State<SearchPage> {
     "budgetGEQ": INITIAL_BUDGET_GEQ,
     "budgetLEQ": INITIAL_BUDGET_LEQ,
     "budgetCurrency": INITIAL_BUDGET_CURRENCY,
+    "preferenceScores": PreferenceScores(culture: 3, learn: 3, relax: 3)
   };
 
   //CALLBACK
@@ -107,10 +109,11 @@ class SearchPageState extends State<SearchPage> {
       }
       List<SoftPreference> softPreferences = [
         SoftPreference(
-            "preferred_activities", searchFields["preferredActivities"])
+            "preferred_activities",
+            searchFields["preferredActivities"] +
+                searchFields["essentialActivities"])
       ];
-      PreferenceScores prefScores =
-          PreferenceScores(culture: 5, learn: 5, relax: 5);
+      PreferenceScores prefScores = searchFields["preferenceScores"];
       Preferences preferences =
           Preferences(constraints, softPreferences, prefScores);
 
@@ -120,19 +123,7 @@ class SearchPageState extends State<SearchPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ResultsPage(
-              destId: holiday["destId"],
-              name: holiday["name"],
-              wiki: holiday["wiki"],
-              imageURL: holiday["imageURL"],
-              itinerary: holiday["itinerary"],
-              flights: holiday["travel"],
-              accommodation: holiday["accommodation"],
-              allFlights: holiday["all_travel"],
-              allAccommodation: holiday["all_accommodation"],
-              allActivities: holiday["all_activities"],
-              preferences: preferences,
-            ),
+            builder: (context) => ResultsPageRoute(holiday, preferences).page(),
           ),
         );
       }).catchError((e) {
@@ -339,7 +330,10 @@ class SearchPageState extends State<SearchPage> {
                                         ),
                                         Padding(
                                           padding: EdgeInsets.only(top: 25),
-                                          child: PreferenceScoresSection(),
+                                          child: PreferenceScoresSection(
+                                              callback: updateSearchFields,
+                                              initialPrefScores: searchFields[
+                                                  "preferenceScores"]),
                                         ),
                                       ],
                                     ),
@@ -378,14 +372,39 @@ class SearchPageState extends State<SearchPage> {
 }
 
 class PreferenceScoresSection extends StatefulWidget {
+  final Function callback;
+  final PreferenceScores initialPrefScores;
+  PreferenceScoresSection({this.callback, this.initialPrefScores});
   @override
   State<StatefulWidget> createState() {
-    return PreferenceScoresSectionState();
+    return PreferenceScoresSectionState(
+        callback: callback, initialPrefScores: initialPrefScores);
   }
 }
 
 class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
-  Map preferenceScores = {"culture": 3.0, "learn": 3.0, "relax": 3.0};
+  final Function callback;
+  final PreferenceScores initialPrefScores;
+  Map prefScores;
+  PreferenceScoresSectionState({this.callback, this.initialPrefScores}) {
+    prefScores = {
+      "culture": {
+        "score": initialPrefScores.culture.toDouble(),
+        "title": "Cultural",
+        "icon": Icons.location_city
+      },
+      "learn": {
+        "score": initialPrefScores.learn.toDouble(),
+        "title": "Educational",
+        "icon": Icons.local_library
+      },
+      "relax": {
+        "score": initialPrefScores.relax.toDouble(),
+        "title": "Relaxing",
+        "icon": Icons.beach_access
+      },
+    };
+  }
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
@@ -394,33 +413,57 @@ class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
       ),
       children: [
         ListView.builder(
-            itemCount: preferenceScores.keys.length,
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemBuilder: (BuildContext context, int index) {
-              String pref = preferenceScores.keys.toList()[index];
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          itemCount: prefScores.keys.length,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemBuilder: (BuildContext context, int index) {
+            String pref = prefScores.keys.toList()[index];
+            return Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: Row(
+                // crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    pref,
-                    style: Theme.of(context).textTheme.headline2,
-                    textAlign: TextAlign.center,
-                  ),
-                  CupertinoSlider(
-                    value: preferenceScores[pref],
-                    min: 1.0,
-                    max: 5.0,
-                    activeColor: Theme.of(context).primaryColor,
-                    onChanged: (value) {
-                      setState(() {
-                        preferenceScores[pref] = value;
-                      });
-                    },
+                  IconBox(icon: prefScores[pref]["icon"]),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            prefScores[pref]["title"],
+                            style: Theme.of(context).textTheme.headline2,
+                            textAlign: TextAlign.center,
+                          ),
+                          CupertinoSlider(
+                            value: prefScores[pref]["score"],
+                            min: 1.0,
+                            max: 5.0,
+                            activeColor: Theme.of(context).primaryColor,
+                            onChanged: (value) {
+                              setState(() {
+                                prefScores[pref]["score"] = value;
+                                PreferenceScores newPrefScores =
+                                    PreferenceScores(
+                                        culture: prefScores["culture"]["score"]
+                                            .toInt(),
+                                        learn: prefScores["learn"]["score"]
+                                            .toInt(),
+                                        relax: prefScores["relax"]["score"]
+                                            .toInt());
+                                callback("preferenceScores", newPrefScores);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
-              );
-            })
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -482,8 +525,7 @@ class ActivitiesState extends State<Activities> {
       children: <Widget>[
         Stack(
           children: <Widget>[
-            SearchField(
-              point: "Preferred Activities",
+            ActivitiesField(
               callback: typeNewActivity,
               controller: _controller,
             ),
@@ -533,7 +575,7 @@ class ActivitiesState extends State<Activities> {
                       child: Dismissible(
                         direction: DismissDirection.endToStart,
                         background: Container(color: Colors.red),
-                        key: Key(activitiesList[index]["heading"]),
+                        key: Key(activitiesList[index]["name"]),
                         onDismissed: (direction) {
                           // Scaffold.of(context).showSnackBar(SnackBar(
                           //     content: Text("${activities[index]} removed")));
@@ -548,7 +590,7 @@ class ActivitiesState extends State<Activities> {
                             Flexible(
                               flex: 4,
                               child: ActivityText(
-                                  text: activitiesList[index]["heading"]),
+                                  text: activitiesList[index]["name"]),
                             ),
                             Flexible(
                               flex: 2,
@@ -843,14 +885,14 @@ class OriginDestFieldsState extends State<OriginDestFields> {
       children: <Widget>[
         Column(
           children: <Widget>[
-            SearchField(
+            OriginDestinationField(
               point: "From",
               callback: updateSearchFields,
               controller: originController,
             ),
             Padding(
               padding: EdgeInsets.only(top: 10),
-              child: SearchField(
+              child: OriginDestinationField(
                 point: "Destination",
                 callback: updateSearchFields,
                 controller: destinationController,

@@ -101,7 +101,8 @@ class FlightTicketLogistics extends StatelessWidget {
                 ),
                 Padding(
                   padding: EdgeInsets.only(top: 10),
-                  child: Text(ticketDetails["departure"]["date"]),
+                  child: Text(DateFormat("d MMM").format(
+                      DateTime.parse(ticketDetails["departure"]["date"]))),
                 ),
               ],
             ),
@@ -128,7 +129,8 @@ class FlightTicketLogistics extends StatelessWidget {
                 ),
                 Padding(
                   padding: EdgeInsets.only(top: 10),
-                  child: Text(ticketDetails["arrival"]["date"]),
+                  child: Text(DateFormat("d MMM").format(
+                      DateTime.parse(ticketDetails["arrival"]["date"]))),
                 ),
               ],
             ),

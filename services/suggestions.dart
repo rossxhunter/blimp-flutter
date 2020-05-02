@@ -35,22 +35,35 @@ Future<void> getSuggestions() async {
 List getDestinationSuggestionsForQuery(String query) {
   List sug = [];
   destinationSuggestions.forEach((destSug) {
-    if (destSug["heading"].contains(RegExp(query, caseSensitive: false)) ||
-        destSug["subheading"].contains(RegExp(query, caseSensitive: false))) {
-      sug.add(destSug);
+    if (destSug["type"] == "city") {
+      if (destSug["cityName"].contains(RegExp(query, caseSensitive: false)) ||
+          destSug["countryName"]
+              .contains(RegExp(query, caseSensitive: false))) {
+        sug.add(destSug);
+      }
+    } else if (destSug["type"] == "airport") {
+      if (destSug["airportName"]
+              .contains(RegExp(query, caseSensitive: false)) ||
+          destSug["cityName"].contains(RegExp(query, caseSensitive: false))) {
+        sug.add(destSug);
+      }
     }
   });
   return sug;
 }
 
 String getActivityFromId(String id) {
-  return activitySuggestions.where((a) => a["id"] == id).toList()[0]["heading"];
+  return activitySuggestions.where((a) => a["id"] == id).toList()[0]["plural"];
+}
+
+String getActivityIconFromId(String id) {
+  return activitySuggestions.where((a) => a["id"] == id).toList()[0]["icon"];
 }
 
 List getActivitySuggestionsForQuery(String query) {
   List sug = [];
   activitySuggestions.forEach((actSug) {
-    if (actSug["heading"].contains(RegExp(query, caseSensitive: false))) {
+    if (actSug["name"].contains(RegExp(query, caseSensitive: false))) {
       sug.add(actSug);
     }
   });

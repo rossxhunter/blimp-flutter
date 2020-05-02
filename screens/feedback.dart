@@ -1,11 +1,13 @@
 import 'dart:ui';
 
 import 'package:blimp/model/preferences.dart';
+import 'package:blimp/routes.dart';
 import 'package:blimp/screens/activitiesFeedback.dart';
 import 'package:blimp/screens/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
+import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/loading.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,30 +16,51 @@ import 'package:auto_size_text/auto_size_text.dart';
 class FeedbackScreen extends StatefulWidget {
   final Preferences preferences;
   final int destId;
+  final List categoryIds;
+  final int duration;
   final double price;
 
-  FeedbackScreen({this.preferences, this.destId, this.price});
+  FeedbackScreen(
+      {this.preferences,
+      this.duration,
+      this.categoryIds,
+      this.destId,
+      this.price});
 
   @override
   State<StatefulWidget> createState() {
+    preferences.constraints.removeWhere((c) => c.property == "destination");
+
     return FeedbackScreenState(
-        preferences: preferences, destId: destId, price: price);
+        preferences: preferences,
+        duration: duration,
+        categoryIds: categoryIds,
+        destId: destId,
+        price: price);
   }
 }
 
 class FeedbackScreenState extends State<FeedbackScreen> {
   final Preferences preferences;
   final int destId;
+  final List categoryIds;
+  final int duration;
   final double price;
 
   bool _shouldShowBackButton = false;
 
   Widget _currentFeedbackWidget;
 
-  FeedbackScreenState({this.preferences, this.destId, this.price}) {
+  FeedbackScreenState(
+      {this.preferences,
+      this.categoryIds,
+      this.duration,
+      this.destId,
+      this.price}) {
     _currentFeedbackWidget = FeedbackMainScreen(
       preferences: preferences,
       destId: destId,
+      duration: duration,
       callback: furtherOptionsButtonPressed,
       price: price,
     );
@@ -61,6 +84,7 @@ class FeedbackScreenState extends State<FeedbackScreen> {
         _currentFeedbackWidget = ActivitiesFeedbackScreen(
             preferences: preferences,
             destId: destId,
+            categoryIds: categoryIds,
             callback: backButtonPressed);
         _shouldShowBackButton = true;
       });
@@ -80,68 +104,18 @@ class FeedbackScreenState extends State<FeedbackScreen> {
           child: Container(
             padding: EdgeInsets.all(20),
             decoration: new BoxDecoration(
-              // color: Colors.white,
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.circular(20),
-              // border: Border.all(
-              //   color: CustomColors.lightGrey,
-              //   width: 0,
-              // ),
             ),
             child: AnimatedSwitcher(
               duration: Duration(microseconds: 300),
-              //Enable this for ScaleTransition
               transitionBuilder: (Widget child, Animation<double> animation) {
                 return ScaleTransition(
                   child: child,
                   scale: animation,
                 );
               },
-              //Enable this for RotationTransition
-              // transitionBuilder: (Widget child, Animation<double> animation) {
-              //   return RotationTransition(
-              //     child: child,
-              //     turns: animation,
-              //   );
-              // },
               child: _currentFeedbackWidget,
-            ),
-          ),
-        ),
-        // Positioned(
-        //   right: 30,
-        //   top: 20,
-        //   child: Material(
-        //     color: Colors.transparent,
-        //     child: IconButton(
-        //       onPressed: () {
-        //         Navigator.pop(context);
-        //       },
-        //       icon: Icon(
-        //         Icons.close,
-        //         color: Theme.of(context).primaryColor,
-        //         size: 40,
-        //       ),
-        //     ),
-        //   ),
-        // ),
-        Positioned(
-          left: 30,
-          top: 20,
-          child: Visibility(
-            visible: _shouldShowBackButton,
-            child: Material(
-              color: Colors.transparent,
-              child: IconButton(
-                onPressed: () {
-                  backButtonPressed();
-                },
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: Theme.of(context).primaryColor,
-                  size: 40,
-                ),
-              ),
             ),
           ),
         ),
@@ -153,17 +127,23 @@ class FeedbackScreenState extends State<FeedbackScreen> {
 class FeedbackMainScreen extends StatefulWidget {
   final Preferences preferences;
   final int destId;
+  final int duration;
   final Function callback;
   final double price;
 
   FeedbackMainScreen(
-      {this.preferences, this.destId, this.callback, this.price});
+      {this.preferences,
+      this.destId,
+      this.duration,
+      this.callback,
+      this.price});
 
   @override
   State<StatefulWidget> createState() {
     return FeedbackMainScreenState(
         preferences: preferences,
         destId: destId,
+        duration: duration,
         callback: callback,
         price: price);
   }
@@ -172,11 +152,16 @@ class FeedbackMainScreen extends StatefulWidget {
 class FeedbackMainScreenState extends State<FeedbackMainScreen> {
   final Preferences preferences;
   final int destId;
+  final int duration;
   final Function callback;
   final double price;
 
   FeedbackMainScreenState(
-      {this.preferences, this.destId, this.callback, this.price});
+      {this.preferences,
+      this.destId,
+      this.duration,
+      this.callback,
+      this.price});
 
   @override
   Widget build(BuildContext context) {
@@ -193,62 +178,78 @@ class FeedbackMainScreenState extends State<FeedbackMainScreen> {
             crossAxisSpacing: 20,
             mainAxisSpacing: 20,
             children: <Widget>[
-              GestureDetector(
-                onTap: () => fetchFeedbackHoliday(context, preferences, {
+              AnimatedButton(
+                callback: () => fetchFeedbackHoliday(context, preferences, {
                   "type": "cheaper",
                   "previous_dest_id": destId,
                   "previous_price": price
                 }),
                 child: FeedbackOption(
                   text: "Cheaper",
-                  iconData: Icons.attach_money,
+                  icon: Icon(
+                    Icons.attach_money,
+                    color: Colors.white,
+                  ),
                   color: Colors.purple,
                   preferences: preferences,
                   destId: destId,
                 ),
               ),
-              GestureDetector(
-                onTap: () => fetchFeedbackHoliday(context, preferences, {
+              AnimatedButton(
+                callback: () => fetchFeedbackHoliday(context, preferences, {
                   "type": "closer",
                   "previous_dest_id": destId,
+                  "previous_travel_duration": duration,
                 }),
                 child: FeedbackOption(
                   text: "Closer",
-                  iconData: Icons.flight,
+                  icon: Icon(
+                    Icons.flight,
+                    color: Colors.white,
+                  ),
                   color: Colors.blue,
                   preferences: preferences,
                   destId: destId,
                 ),
               ),
-              GestureDetector(
-                onTap: () => fetchFeedbackHoliday(context, preferences, {
+              AnimatedButton(
+                callback: () => fetchFeedbackHoliday(context, preferences, {
                   "type": "better_weather",
                   "previous_dest_id": destId,
                 }),
                 child: FeedbackOption(
                   text: "Better Weather",
-                  iconData: Icons.wb_sunny,
+                  icon: Icon(
+                    Icons.wb_sunny,
+                    color: Colors.white,
+                  ),
                   color: Colors.orange,
                   preferences: preferences,
                   destId: destId,
                 ),
               ),
-              GestureDetector(
-                onTap: () => callback("activities"),
+              AnimatedButton(
+                callback: () => callback("activities"),
                 child: FeedbackOption(
                   text: "Different Activities",
-                  iconData: Icons.beach_access,
+                  icon: Icon(
+                    Icons.beach_access,
+                    color: Colors.white,
+                  ),
                   color: Colors.green,
                 ),
               ),
-              GestureDetector(
-                onTap: () => fetchFeedbackHoliday(context, preferences, {
+              AnimatedButton(
+                callback: () => fetchFeedbackHoliday(context, preferences, {
                   "type": "different",
                   "previous_dest_id": destId,
                 }),
                 child: FeedbackOption(
                   text: "Just Different",
-                  iconData: CupertinoIcons.shuffle_thick,
+                  icon: Icon(
+                    CupertinoIcons.shuffle_thick,
+                    color: Colors.white,
+                  ),
                   color: Theme.of(context).primaryColor,
                 ),
               ),
@@ -284,19 +285,7 @@ void fetchFeedbackHoliday(
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ResultsPage(
-            destId: holiday["destId"],
-            name: holiday["name"],
-            wiki: holiday["wiki"],
-            imageURL: holiday["imageURL"],
-            itinerary: holiday["itinerary"],
-            flights: holiday["travel"],
-            accommodation: holiday["accommodation"],
-            allFlights: holiday["all_travel"],
-            allAccommodation: holiday["all_accommodation"],
-            allActivities: holiday["all_activities"],
-            preferences: preferences,
-          ),
+          builder: (context) => ResultsPageRoute(holiday, preferences).page(),
         ),
       );
     },
@@ -314,13 +303,13 @@ void fetchFeedbackHoliday(
 
 class FeedbackOption extends StatelessWidget {
   final String text;
-  final IconData iconData;
+  final Widget icon;
   final Color color;
   final Preferences preferences;
   final int destId;
 
   FeedbackOption(
-      {this.text, this.iconData, this.color, this.preferences, this.destId});
+      {this.text, this.icon, this.color, this.preferences, this.destId});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -333,10 +322,7 @@ class FeedbackOption extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(
-              iconData,
-              color: Colors.white,
-            ),
+            icon,
             Padding(
               padding: EdgeInsets.only(top: 10),
               child: AutoSizeText(

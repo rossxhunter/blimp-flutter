@@ -1,23 +1,42 @@
 import 'package:blimp/styles/colors.dart';
+import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
 import 'package:flutter/material.dart';
 
 class AccommodationScreen extends StatefulWidget {
   final List allAccommodation;
+  final int selectedAccommodation;
+  final Function callback;
 
-  AccommodationScreen({this.allAccommodation});
+  AccommodationScreen(
+      {this.allAccommodation, this.selectedAccommodation, this.callback});
   @override
   State<StatefulWidget> createState() {
-    return AccommodationScreenState(allAccommodation: allAccommodation);
+    return AccommodationScreenState(
+        allAccommodation: allAccommodation,
+        selectedAccommodation: selectedAccommodation,
+        callback: callback);
   }
 }
 
 class AccommodationScreenState extends State<AccommodationScreen> {
   final List allAccommodation;
+  int selectedAccommodation;
+  final Function callback;
+  List shownAccommodation;
   int _selectedAccommodation = 0;
 
-  AccommodationScreenState({this.allAccommodation});
+  AccommodationScreenState(
+      {this.allAccommodation, this.selectedAccommodation, this.callback}) {
+    shownAccommodation = List.from(allAccommodation);
+    shownAccommodation.removeWhere((a) => a["id"] == selectedAccommodation);
+    shownAccommodation.insert(
+        0,
+        allAccommodation
+            .where((a) => a["id"] == selectedAccommodation)
+            .toList()[0]);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +59,7 @@ class AccommodationScreenState extends State<AccommodationScreen> {
             Padding(
               padding: EdgeInsets.only(top: 5, bottom: 5),
               child: Text(
-                allAccommodation.length.toString() + " options",
+                shownAccommodation.length.toString() + " options",
                 style: Theme.of(context).textTheme.headline1,
               ),
             ),
@@ -82,6 +101,7 @@ class AccommodationScreenState extends State<AccommodationScreen> {
                     onTap: () {
                       setState(() {
                         _selectedAccommodation = index;
+                        selectedAccommodation = shownAccommodation[index]["id"];
                       });
                     },
                     child: Container(
@@ -94,7 +114,7 @@ class AccommodationScreenState extends State<AccommodationScreen> {
                             child: Column(
                               children: <Widget>[
                                 HotelOption(
-                                  hotelDetails: allAccommodation[index],
+                                  hotelDetails: shownAccommodation[index],
                                 ),
                               ],
                             ),
@@ -103,7 +123,8 @@ class AccommodationScreenState extends State<AccommodationScreen> {
                             top: 10,
                             right: 10,
                             child: Visibility(
-                              visible: _selectedAccommodation == index,
+                              visible: selectedAccommodation ==
+                                  shownAccommodation[index]["id"],
                               child: SelectedIcon(),
                             ),
                           ),
@@ -122,7 +143,13 @@ class AccommodationScreenState extends State<AccommodationScreen> {
               color: Colors.transparent,
               child: Padding(
                 padding: EdgeInsets.only(left: 20, right: 20, bottom: 30),
-                child: ConfirmButton(),
+                child: AnimatedButton(
+                  callback: () {
+                    callback(selectedAccommodation);
+                    Navigator.pop(context);
+                  },
+                  child: ConfirmButton(),
+                ),
               ),
             ),
           ),
@@ -145,34 +172,6 @@ class SelectedIcon extends StatelessWidget {
         child: Icon(
           Icons.check,
           color: Colors.white,
-        ),
-      ),
-    );
-  }
-}
-
-class ConfirmButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      // onTap: () => callback(),
-      child: Container(
-        width: 200,
-        decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Center(
-            child: Text(
-              "Done",
-              style: Theme.of(context)
-                  .textTheme
-                  .button
-                  .copyWith(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ),
         ),
       ),
     );

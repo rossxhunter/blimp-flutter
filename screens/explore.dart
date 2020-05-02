@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:blimp/configurations.dart';
 import 'package:blimp/model/preferences.dart';
+import 'package:blimp/routes.dart';
 import 'package:blimp/screens/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
@@ -265,19 +266,7 @@ class RandomHolidayButton extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ResultsPage(
-                destId: holiday["destId"],
-                name: holiday["name"],
-                wiki: holiday["wiki"],
-                imageURL: holiday["imageURL"],
-                itinerary: holiday["itinerary"],
-                flights: holiday["travel"],
-                accommodation: holiday["accommodation"],
-                allFlights: holiday["all_travel"],
-                allAccommodation: holiday["all_accommodation"],
-                allActivities: holiday["all_activities"],
-                preferences: prefs,
-              ),
+              builder: (context) => ResultsPageRoute(holiday, prefs).page(),
             ),
           );
         }).catchError((e) {
@@ -286,7 +275,7 @@ class RandomHolidayButton extends StatelessWidget {
             context: context,
             builder: (BuildContext context) => CustomDialog(
               title: "Error",
-              description: "Unable to fetch itinerary :(",
+              description: "Can't get holiday - " + e.toString(),
             ),
           );
         });
@@ -307,7 +296,36 @@ class ExploreOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedButton(
-      callback: exploreOptionClicked,
+      callback: () {
+        showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return LoadingIndicator();
+            });
+        Preferences prefs = prefsConfig[0];
+        prefs.constraints.add(Constraint("destination",
+            {"type": "city", "id": getExploreSuggestions()[index]["id"]}));
+        getHoliday(prefs).then((holiday) {
+          print(holiday);
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResultsPageRoute(holiday, prefs).page(),
+            ),
+          );
+        }).catchError((e) {
+          Navigator.pop(context);
+          showDialog(
+            context: context,
+            builder: (BuildContext context) => CustomDialog(
+              title: "Error",
+              description: "Can't get holiday - " + e.toString(),
+            ),
+          );
+        });
+      },
       child: Stack(
         overflow: Overflow.visible,
         children: <Widget>[
@@ -349,7 +367,6 @@ class ExploreOption extends StatelessWidget {
                                 Icon(
                                   Icons.camera_alt,
                                   size: 20,
-                                  // color: Theme.of(context).primaryColor,
                                 ),
                                 Expanded(
                                   child: Wrap(
@@ -384,29 +401,13 @@ class ExploreOption extends StatelessWidget {
               child: Container(
                 height: 120,
                 width: 140,
-                child:
-                    // Image.asset(
-                    //   "assets/images/paris.jpg",
-                    //   fit: BoxFit.cover,
-                    // ),
-                    FadeInImage(
+                child: FadeInImage(
                   fit: BoxFit.cover,
-                  image: NetworkImage(
-                      "https://blimp-resources.s3.eu-west-2.amazonaws.com/images/destinations/" +
-                          getExploreSuggestions()[index]["id"].toString() +
-                          "/1.jpg"),
+                  image: getExploreSuggestions()[index]["image"] != null
+                      ? NetworkImage(getExploreSuggestions()[index]["image"])
+                      : AssetImage("assets/images/mountains.jpg"),
                   placeholder: AssetImage("assets/images/mountains.jpg"),
                 ),
-
-                // child: Image.network(
-                //   getExploreSuggestions()[index]["imageURL"],
-                //   fit: BoxFit.cover,
-                //   placeholder: (context, url) => Image.asset(
-                //     "assets/images/paris.jpg",
-                //     fit: BoxFit.cover,
-                //   ),
-                //   errorWidget: (context, url, error) => Icon(Icons.error),
-                // ),
               ),
             ),
           ),
