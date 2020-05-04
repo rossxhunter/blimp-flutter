@@ -158,7 +158,13 @@ class NewActivityFieldState extends State<NewActivityField> {
                 padding: EdgeInsets.all(20),
                 child: Row(
                   children: <Widget>[
-                    Icon(Icons.local_airport),
+                    Image(
+                      image:
+                          NetworkImage(suggestion["categoryIcon"] + "64.png"),
+                      color: Colors.black,
+                      width: 32,
+                      height: 32,
+                    ),
                     Expanded(
                       child: Padding(
                         padding: EdgeInsets.only(left: 20),

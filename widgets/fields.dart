@@ -297,8 +297,7 @@ class ActivitiesFieldState extends State<ActivitiesField> {
 
 class CustomCheckbox extends StatefulWidget {
   final Function callback;
-  final Map value;
-  CustomCheckbox({this.callback, this.value});
+  CustomCheckbox({this.callback});
   @override
   State<StatefulWidget> createState() {
     return CustomCheckboxState();
@@ -315,7 +314,7 @@ class CustomCheckboxState extends State<CustomCheckbox> {
       onChanged: (bool newValue) {
         setState(() {
           checkboxValue = newValue;
-          widget.callback(widget.value, newValue);
+          widget.callback(newValue);
         });
         Text('Remember me');
       },

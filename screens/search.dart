@@ -595,8 +595,8 @@ class ActivitiesState extends State<Activities> {
                             Flexible(
                               flex: 2,
                               child: CustomCheckbox(
-                                value: activitiesList[index],
-                                callback: changeCheckboxValue,
+                                callback: (value) => changeCheckboxValue(
+                                    activitiesList[index], value),
                               ),
                             ),
                           ],

@@ -1,4 +1,5 @@
 import 'package:blimp/model/preferences.dart';
+import 'package:blimp/screens/activitiesOptions.dart';
 import 'package:blimp/screens/explore.dart';
 import 'package:blimp/screens/flights.dart';
 import 'package:blimp/screens/newActivity.dart';
@@ -49,6 +50,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
   final Map accommodation;
   final Preferences preferences;
   List<List> _activities;
+  List<double> windowTimes;
 
   ChangeActivitiesScreenState(
       {this.itinerary,
@@ -140,6 +142,10 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     });
   }
 
+  void updateWindowTimes(List<double> times) {
+    windowTimes = times;
+  }
+
   bool _isScreenDisabled = false;
 
   @override
@@ -225,7 +231,16 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                     icon: Icon(Icons.filter_list),
                     color: Theme.of(context).primaryColor,
                     iconSize: 30,
-                    onPressed: () {},
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+                        builder: (BuildContext context) => ActivitiesOptions(
+                          callback: updateWindowTimes,
+                          windowTimes: [8, 16],
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Padding(

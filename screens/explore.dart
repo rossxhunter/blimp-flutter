@@ -365,7 +365,7 @@ class ExploreOption extends StatelessWidget {
                             Row(
                               children: <Widget>[
                                 Icon(
-                                  Icons.camera_alt,
+                                  Icons.location_on,
                                   size: 20,
                                 ),
                                 Expanded(

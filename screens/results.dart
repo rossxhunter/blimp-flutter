@@ -667,9 +667,20 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                   "Activities",
                   style: Theme.of(context).textTheme.headline3,
                 ),
-                Icon(
-                  Icons.map,
-                  color: Theme.of(context).primaryColor,
+                Row(
+                  children: [
+                    Icon(
+                      Icons.settings,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: 20),
+                      child: Icon(
+                        Icons.map,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -711,8 +722,10 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                                                       [index]["id"] +
                                                   itinerary[day.toString()]
                                                           [index]["startTime"]
-                                                      .toString() + itinerary[day.toString()]
-                                                          [index]["duration"].toString()),
+                                                      .toString() +
+                                                  itinerary[day.toString()]
+                                                          [index]["duration"]
+                                                      .toString()),
                                               activity:
                                                   itinerary[day.toString()]
                                                       [index]),
