@@ -32,8 +32,8 @@ const INITIAL_BUDGET_LEQ = 600;
 const INITIAL_ACCOMMODATION_TYPE = "Hotel";
 const INITIAL_ACCOMMODATION_STARS = 3.0;
 const INITIAL_BUDGET_CURRENCY = "GBP";
-DateTime initialOutboundDate = DateTime.utc(2020, 4, 27);
-DateTime initialReturnDate = DateTime.utc(2020, 4, 30);
+DateTime initialOutboundDate = DateTime.now().add(Duration(days: 120));
+DateTime initialReturnDate = DateTime.now().add(Duration(days: 123));
 
 class SearchPageState extends State<SearchPage> {
   Map searchFields = {
@@ -968,8 +968,8 @@ class SearchButton extends StatelessWidget {
   SearchButton({this.callback});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => callback(),
+    return AnimatedButton(
+      callback: () => callback(),
       child: Container(
         width: 200,
         decoration: BoxDecoration(

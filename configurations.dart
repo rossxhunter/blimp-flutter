@@ -14,7 +14,7 @@ List<Constraint> constraintsConfig = [
   Constraint("accommodation_stars", 3),
   Constraint("accommodation_amenities", ["WIFI_IN_ROOM"]),
   Constraint("essential_activities", []),
-  Constraint("budget_leq", 1500),
+  Constraint("budget_leq", 3000),
   Constraint("budget_geq", 300),
   Constraint("budget_currency", "GBP"),
 ];

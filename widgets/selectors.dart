@@ -337,3 +337,54 @@ class BudgetCurrencySelectorState extends State<BudgetCurrencySelector> {
     );
   }
 }
+
+class TravelMethodSelector extends StatefulWidget {
+  final String method;
+  final Function callback;
+  final int journey;
+  final Key key;
+  TravelMethodSelector({this.method, this.callback, this.journey, this.key});
+  @override
+  State<StatefulWidget> createState() {
+    return TravelMethodSelectorState(method: method, key: key);
+  }
+}
+
+class TravelMethodSelectorState extends State<TravelMethodSelector> {
+  String method;
+  Key key;
+  TravelMethodSelectorState({this.method, this.key});
+
+  IconData _getTravelMethodIcon(String value) {
+    if (value == "drive") {
+      return Icons.directions_car;
+    } else if (value == "walk") {
+      return Icons.directions_walk;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: method,
+      icon: Icon(Icons.arrow_drop_down),
+      underline: Container(
+        height: 0,
+        width: 0,
+      ),
+      style: Theme.of(context).textTheme.bodyText1,
+      onChanged: (String newValue) {
+        // method = newValue;
+        widget.callback(widget.journey, newValue);
+      },
+      items: ["drive", "walk"].map((v) {
+        return DropdownMenuItem<String>(
+          value: v,
+          child: Icon(
+            _getTravelMethodIcon(v),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}

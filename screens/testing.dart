@@ -36,10 +36,10 @@ class TestingPageState extends State<TestingPage> {
                       style: Theme.of(context).textTheme.headline4,
                     ),
                     CupertinoSwitch(
-                      value: shouldRegisterClicks,
+                      value: testingSwitchOn,
                       onChanged: (value) {
                         setState(() {
-                          shouldRegisterClicks = value;
+                          testingSwitchOn = value;
                         });
                       },
                     ),
@@ -87,14 +87,15 @@ class TestOption extends StatelessWidget {
             return LoadingIndicator();
           },
         );
-        getItinerariesForEvaluation(city["id"]).then((itineraries) {
+        getItinerariesForEvaluation(city["id"]).then((result) {
           Navigator.pop(context);
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => HolidayItineraryEvaluation(
                 city: city,
-                itineraries: itineraries,
+                itineraries: result["itineraries"],
+                allActivities: result["all_activities"],
               ),
             ),
           );

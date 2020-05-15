@@ -1,2 +1,2 @@
 String clicksId;
-bool shouldRegisterClicks = false;
+bool testingSwitchOn = false;

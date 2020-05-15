@@ -6,7 +6,7 @@ import 'package:blimp/services/http.dart';
 List destinationSuggestions;
 List activitySuggestions;
 Map currencySuggestions;
-List exploreSuggestions;
+Map exploreSuggestions;
 List testingSuggestions;
 
 Future<void> getSuggestions() async {
@@ -88,7 +88,7 @@ Map getCurrencySuggestions() {
   return currencySuggestions;
 }
 
-List getExploreSuggestions() {
+Map getExploreSuggestions() {
   return exploreSuggestions;
 }
 

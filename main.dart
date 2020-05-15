@@ -216,8 +216,8 @@ class BlimpScaffoldState extends State<BlimpScaffold> {
         showUnselectedLabels: false,
         items: [
           new BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            title: Text("Home"),
+            icon: Icon(Icons.explore),
+            title: Text("Explore"),
           ),
           new BottomNavigationBarItem(
             icon: Icon(Icons.search),

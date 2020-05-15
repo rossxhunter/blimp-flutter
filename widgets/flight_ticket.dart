@@ -1,6 +1,7 @@
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/styles/text.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
@@ -13,24 +14,37 @@ class FlightTicket extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: CustomColors.lightGrey,
           width: 2,
         ),
       ),
+      // height: 150,
       child: Padding(
         padding: EdgeInsets.all(20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            FlightTicketDetails(
-              ticketDetails: ticketDetails,
-            ),
-            FlightTicketLogistics(
-              ticketDetails: ticketDetails,
-            ),
-          ],
+        child: IntrinsicHeight(
+          child: Row(
+            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Flexible(
+                flex: 1,
+                child: FlightTicketDetails(
+                  ticketDetails: ticketDetails,
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: FlightTicketLogistics(
+                    ticketDetails: ticketDetails,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -44,10 +58,36 @@ class FlightTicketDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.max,
       children: <Widget>[
         Row(
           children: <Widget>[
-            Text(ticketDetails["class"]),
+            Expanded(
+              child: Wrap(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: CustomColors.redLowOpacity,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(5),
+                      child: Text(
+                        ticketDetails["class"].toString().replaceAll("_", " "),
+                        maxLines: 2,
+                        textWidthBasis: TextWidthBasis.longestLine,
+                        softWrap: true,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headline1
+                            .copyWith(color: Theme.of(context).primaryColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         Padding(
@@ -70,7 +110,27 @@ class FlightTicketDetails extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Text(ticketDetails["carrierCode"]),
+              CachedNetworkImage(
+                errorWidget: (context, url, error) => Icon(
+                  Icons.flight_takeoff,
+                  size: 20,
+                  color: Theme.of(context).primaryColor,
+                ),
+                imageUrl: ticketDetails["carrierLogo"],
+                height: 20,
+                width: 20,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(left: 5),
+                  child: Text(
+                    ticketDetails["carrierName"],
+                    softWrap: true,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -85,50 +145,59 @@ class FlightTicketLogistics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: <Widget>[
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
               children: <Widget>[
                 Text(ticketDetails["departure"]["airportCode"]),
                 Padding(
-                  padding: EdgeInsets.only(top: 10),
+                  padding: EdgeInsets.only(top: 5),
                   child: Text(
                     ticketDetails["departure"]["time"],
-                    style: textThemes["ticket_header_2"],
+                    style: Theme.of(context).textTheme.headline3,
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(top: 10),
-                  child: Text(DateFormat("d MMM").format(
-                      DateTime.parse(ticketDetails["departure"]["date"]))),
+                  padding: EdgeInsets.only(top: 5),
+                  child: Text(
+                    DateFormat("d MMM").format(
+                      DateTime.parse(ticketDetails["departure"]["date"]),
+                    ),
+                  ),
                 ),
               ],
             ),
             Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(left: 20, right: 20),
-                  child: Icon(
-                    Icons.arrow_forward,
-                  ),
+                Icon(
+                  Icons.arrow_forward,
+                  color: Theme.of(context).primaryColor,
                 ),
               ],
             ),
             Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(ticketDetails["arrival"]["airportCode"]),
                 Padding(
-                  padding: EdgeInsets.only(top: 10),
+                  padding: EdgeInsets.only(top: 5),
                   child: Text(
                     ticketDetails["arrival"]["time"],
-                    style: textThemes["ticket_header_2"],
+                    style: Theme.of(context).textTheme.headline3,
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(top: 10),
+                  padding: EdgeInsets.only(top: 5),
                   child: Text(DateFormat("d MMM").format(
                       DateTime.parse(ticketDetails["arrival"]["date"]))),
                 ),
@@ -136,8 +205,48 @@ class FlightTicketLogistics extends StatelessWidget {
             ),
           ],
         ),
-        Row(
-          children: <Widget>[],
+        Padding(
+          padding: EdgeInsets.only(top: 30),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.swap_vert,
+                    size: 20,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 5),
+                    child: Text(
+                      ticketDetails["journey"],
+                      style: Theme.of(context).textTheme.bodyText2,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.timer,
+                    size: 20,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 5),
+                    child: Text(
+                      (ticketDetails["duration"] ~/ 60).toString() +
+                          "h " +
+                          ticketDetails["duration"].remainder(60).toString() +
+                          "m",
+                      style: Theme.of(context).textTheme.bodyText2,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );

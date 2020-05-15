@@ -277,6 +277,7 @@ void fetchFeedbackHoliday(
       return LoadingIndicator();
     },
   );
+
   getHolidayWithFeedback(preferences, feedback).then(
     (holiday) {
       print(holiday);
@@ -288,6 +289,10 @@ void fetchFeedbackHoliday(
           builder: (context) => ResultsPageRoute(holiday, preferences).page(),
         ),
       );
+      registerClick(feedback["type"], "standard", {
+        "previous_dest_id": feedback["previous_dest_id"],
+        "new_dest_id": holiday["destId"]
+      });
     },
   ).catchError((e) {
     Navigator.pop(context);
@@ -298,6 +303,10 @@ void fetchFeedbackHoliday(
         description: "Unable to fetch holiday - " + e.toString(),
       ),
     );
+    registerClick(feedback["type"], "standard", {
+      "previous_dest_id": feedback["previous_dest_id"],
+      "error": e.toString()
+    });
   });
 }
 

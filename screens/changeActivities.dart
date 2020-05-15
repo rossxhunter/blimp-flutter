@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/activitiesOptions.dart';
 import 'package:blimp/screens/explore.dart';
@@ -8,8 +10,10 @@ import 'package:blimp/services/http.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
+import 'package:blimp/widgets/selectors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dash/flutter_dash.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:reorderables/reorderables.dart';
@@ -21,14 +25,22 @@ class ChangeActivitiesScreen extends StatefulWidget {
   final Map accommodation;
   final Preferences preferences;
   final int day;
+  final String mode;
+  final int destId;
+  final List<List<double>> windows;
+  final int itinNum;
 
   ChangeActivitiesScreen(
       {this.itinerary,
       this.day,
       this.allActivities,
       this.travel,
+      this.mode,
       this.accommodation,
-      this.preferences});
+      this.preferences,
+      this.destId,
+      this.itinNum,
+      this.windows});
   @override
   State<StatefulWidget> createState() {
     return ChangeActivitiesScreenState(
@@ -37,28 +49,40 @@ class ChangeActivitiesScreen extends StatefulWidget {
         allActivities: allActivities,
         travel: travel,
         accommodation: accommodation,
-        preferences: preferences);
+        preferences: preferences,
+        destId: destId,
+        mode: mode,
+        itinNum: itinNum,
+        windows: windows);
   }
 }
 
 class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   Map itinerary;
   int day;
   final List allActivities;
   final Map travel;
   final Map accommodation;
   final Preferences preferences;
+  final int destId;
+  final int itinNum;
+  final String mode;
   List<List> _activities;
   List<double> windowTimes;
+  List<List<double>> windows;
 
   ChangeActivitiesScreenState(
       {this.itinerary,
       this.day,
       this.allActivities,
       this.travel,
+      this.destId,
+      this.itinNum,
+      this.mode,
       this.accommodation,
-      this.preferences}) {
+      this.preferences,
+      this.windows}) {
     _activities = List<List>();
     for (int i = 0; i < itinerary.keys.length; i++) {
       _activities.add(List());
@@ -74,22 +98,29 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
       newActivities.add(a);
     }
     newActivities.add(activity);
-
-    getItineraryFromActivities(
-            newActivities, day, travel, accommodation, preferences)
-        .then((newItineraryActivities) {
-      setState(() {
-        _activities[day] = newItineraryActivities;
+    mode == "standard"
+        ? getItineraryFromActivities(newActivities, day, travel, accommodation,
+            preferences, windows[day])
+        : getEvaluationItineraryFromActivities(
+            newActivities, day, destId, windows[day])
+      ..then((newItineraryActivities) {
+        setState(() {
+          _activities[day] = newItineraryActivities;
+          registerClick("add_activity", mode, {
+            "poi_id": activity["id"],
+            "dest_id": destId,
+            "itinNum": itinNum,
+          });
+        });
+      }).catchError((e) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => CustomDialog(
+            title: "Error",
+            description: "Unable to add activity - " + e.toString(),
+          ),
+        );
       });
-    }).catchError((e) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) => CustomDialog(
-          title: "Error",
-          description: "Unable to add activity - " + e.toString(),
-        ),
-      );
-    });
   }
 
   List<int> _getTabNums(int numDays) {
@@ -123,27 +154,74 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
         newActivities.last["duration"] = duration;
       }
     }
-    getItineraryFromActivities(
-            newActivities, day, travel, accommodation, preferences)
-        .then((newItineraryActivities) {
-      setState(() {
-        _activities[day] = newItineraryActivities;
-        _isScreenDisabled = false;
+    mode == "standard"
+        ? getItineraryFromActivities(newActivities, day, travel, accommodation,
+            preferences, windows[day])
+        : getEvaluationItineraryFromActivities(
+            newActivities, day, destId, windows[day])
+      ..then((newItineraryActivities) {
+        setState(() {
+          _activities[day] = newItineraryActivities;
+          _isScreenDisabled = false;
+          registerClick("change_duration", mode, {
+            "dest_id": destId,
+            "poi_id": changedActivity["id"],
+            "itinNum": itinNum,
+            "new_duration": duration
+          });
+        });
+      }).catchError((e) {
+        showDialog(
+          context: context,
+          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+          builder: (BuildContext context) => CustomDialog(
+            title: "Error",
+            description: "Unable to change duration - " + e.toString(),
+          ),
+        );
       });
-    }).catchError((e) {
-      showDialog(
-        context: context,
-        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-        builder: (BuildContext context) => CustomDialog(
-          title: "Error",
-          description: "Unable to change duration - " + e.toString(),
-        ),
-      );
+  }
+
+  void removeActivity(Map activity) {
+    _activities[day].remove(activity);
+    List<Map> pendingActivties = List<Map>();
+    for (int i = 0; i < _activities[day].length; i++) {
+      pendingActivties.add(Map.from(_activities[day][i]));
+      pendingActivties.last["startTime"] = -1;
+      pendingActivties.last["travelTimeToNext"] = -1;
+    }
+    setState(() {
+      _activities[day] = pendingActivties;
     });
+    mode == "standard"
+        ? getItineraryFromActivities(_activities[day], day, travel,
+            accommodation, preferences, windows[day])
+        : getEvaluationItineraryFromActivities(
+            _activities[day], day, destId, windows[day])
+      ..then((newItineraryActivities) {
+        setState(() {
+          _activities[day] = newItineraryActivities;
+          _isScreenDisabled = false;
+          registerClick("delete_activity", mode, {
+            "dest_id": destId,
+            "poi_id": activity["id"],
+            "itinNum": itinNum,
+          });
+        });
+      }).catchError((e) {
+        showDialog(
+          context: context,
+          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+          builder: (BuildContext context) => CustomDialog(
+            title: "Error",
+            description: "Unable to change duration - " + e.toString(),
+          ),
+        );
+      });
   }
 
   void updateWindowTimes(List<double> times) {
-    windowTimes = times;
+    windows[day] = times;
   }
 
   bool _isScreenDisabled = false;
@@ -153,7 +231,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     void activityAction(String action, Map activity) {
       if (action == "delete") {
         setState(() {
-          _activities[day].remove(activity);
+          removeActivity(activity);
         });
       } else if (action == "changeDuration") {
         int hours = activity["duration"] ~/ (60 * 60);
@@ -169,7 +247,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
       } else if (action == "switchDays") {}
     }
 
-    List<Widget> _getActivityRows(List activities, BuildContext context) {
+    List<Widget> _getActivityRows(List activities) {
       List<Widget> rows = [];
       for (Map activity in activities) {
         rows.add(
@@ -193,6 +271,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
         day = _controller.index;
       });
     });
+    super.build(context);
     return AbsorbPointer(
       absorbing: _isScreenDisabled,
       child: Stack(
@@ -237,7 +316,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                         barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
                         builder: (BuildContext context) => ActivitiesOptions(
                           callback: updateWindowTimes,
-                          windowTimes: [8, 16],
+                          windowTimes: windows[day],
                         ),
                       );
                     },
@@ -280,31 +359,56 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                   ),
                   Expanded(
                     child: TabBarView(
-                      controller: _controller,
-                      physics: AlwaysScrollableScrollPhysics(),
-                      children: _getTabNums(itinerary.keys.length).map((int d) {
-                        return Stack(
-                          children: <Widget>[
-                            Padding(
-                              padding: EdgeInsets.only(
-                                  bottom: 20, top: 10, left: 0, right: 0),
-                              child: CustomScrollView(
-                                physics: AlwaysScrollableScrollPhysics(),
-                                slivers: <Widget>[
-                                  ReorderableSliverList(
-                                    delegate:
-                                        ReorderableSliverChildListDelegate(
-                                      _getActivityRows(_activities[d], context),
+                        controller: _controller,
+                        physics: AlwaysScrollableScrollPhysics(),
+                        children:
+                            _getTabNums(itinerary.keys.length).map((int d) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                                bottom: 20, top: 10, left: 0, right: 0),
+                            child: LayoutBuilder(
+                              builder: (context, constraint) {
+                                return SingleChildScrollView(
+                                  physics: AlwaysScrollableScrollPhysics(),
+                                  child: Container(
+                                    height: _activities[d].length * 160.0 + 60,
+                                    child: Stack(
+                                      children: <Widget>[
+                                        CustomScrollView(
+                                          physics:
+                                              NeverScrollableScrollPhysics(),
+                                          slivers: <Widget>[
+                                            ReorderableSliverList(
+                                              delegate:
+                                                  ReorderableSliverChildListDelegate(
+                                                _getActivityRows(
+                                                    _activities[d]),
+                                              ),
+                                              onReorder: _onReorder,
+                                            ),
+                                          ],
+                                        ),
+                                        Stack(
+                                          children: getTravelTimeWidgets(
+                                              _activities[d]),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              left: 20, top: 60),
+                                          child: ActivitiesBar(
+                                            activities: _activities[d],
+                                            callback: activityAction,
+                                            key: Key(d.toString()),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    onReorder: _onReorder,
-                                  )
-                                ],
-                              ),
+                                  ),
+                                );
+                              },
                             ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                          );
+                        }).toList()),
                   ),
                 ],
               ),
@@ -314,13 +418,29 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
             top: null,
             bottom: 0,
             child: Container(
-              color: Colors.transparent,
+              color: Colors.white,
               child: Padding(
                 padding: EdgeInsets.only(left: 20, right: 20, bottom: 30),
-                child: GestureDetector(
-                  onTap: () {
-                    itinerary[day.toString()] = _activities[day];
+                child: AnimatedButton(
+                  callback: () {
+                    for (int i = 0; i < _activities.length; i++) {
+                      itinerary[i.toString()] = _activities[i];
+                    }
+                    // Future.delayed(Duration(microseconds: 10000), () {
                     Navigator.of(context).pop();
+                    // });
+                    showDialog(
+                        context: context,
+                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+                        builder: (context) {
+                          Future.delayed(Duration(seconds: 1), () {
+                            Navigator.of(context).pop(true);
+                          });
+                          return SuccessDialog(
+                            title: "Success",
+                            description: "Activities Updated",
+                          );
+                        });
                   },
                   child: ConfirmButton(),
                 ),
@@ -332,8 +452,89 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     );
   }
 
+  void changeTravelMethod(int journeyNum, String method) {
+    String oldMethod = _activities[day][journeyNum]["travelMethodToNext"];
+    List<Map> newActivities = List<Map>();
+    for (int i = 0; i < _activities[day].length; i++) {
+      newActivities.add(Map.from(_activities[day][i]));
+      if (i == journeyNum) {
+        newActivities[i]["travelMethodToNext"] = method;
+        newActivities[i]["travelMethodChanged"] = true;
+      }
+    }
+    mode == "standard"
+        ? getItineraryFromActivities(newActivities, day, travel, accommodation,
+            preferences, windows[day])
+        : getEvaluationItineraryFromActivities(
+            newActivities, day, destId, windows[day])
+      ..then((newItineraryActivities) {
+        setState(() {
+          _activities[day] = newItineraryActivities;
+          _isScreenDisabled = false;
+          registerClick("change_travel_method", mode, {
+            "dest_id": destId,
+            "poi_id": _activities[day][journeyNum]["id"],
+            "itinNum": itinNum,
+            "new_method": method
+          });
+        });
+      }).catchError((e) {
+        setState(() {
+          _activities[day][journeyNum]["travelMethodToNext"] = oldMethod;
+          _activities[day][journeyNum]["travelMethodChanged"] = false;
+        });
+        showDialog(
+          context: context,
+          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+          builder: (BuildContext context) => CustomDialog(
+            title: "Error",
+            description: "Unable to change travel method - " + e.toString(),
+          ),
+        );
+      });
+  }
+
+  List<Widget> getTravelTimeWidgets(List activities) {
+    List<Widget> widgetList = List<Widget>();
+    for (int i = 0; i < activities.length - 1; i++) {
+      widgetList.add(
+        Padding(
+          padding: EdgeInsets.only(top: 70 + 65.0 + 160 * i, left: 50),
+          child: Row(
+            key: Key(
+              activities[i]["id"] +
+                  activities[i]["startTime"].toString() +
+                  activities[i]["travelTimeToNext"].toString(),
+            ),
+            children: [
+              TravelMethodSelector(
+                callback: changeTravelMethod,
+                journey: i,
+                method: activities[i]["travelMethodToNext"],
+                key: Key(activities[i]["travelMethodToNext"]),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 10, top: 5),
+                child: Text(activities[i]["travelTimeToNext"] == -1
+                    ? "..."
+                    : (activities[i]["travelTimeToNext"] ~/ 60).toString() +
+                        " mins"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return widgetList;
+  }
+
   void _onReorder(int oldIndex, int newIndex) {
     _isScreenDisabled = true;
+    List<String> poiIds = [
+      _activities[day][oldIndex]["id"],
+      _activities[day][newIndex]['id']
+    ];
+    List<Map> oldActivities = List.from(_activities[day]);
     List<Map> newActivities = List.from(_activities[day]);
     Map a = newActivities.removeAt(oldIndex);
     newActivities.insert(newIndex, a);
@@ -341,28 +542,181 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     for (int i = 0; i < newActivities.length; i++) {
       pendingActivties.add(Map.from(newActivities[i]));
       pendingActivties.last["startTime"] = -1;
+      pendingActivties.last["travelTimeToNext"] = -1;
     }
     setState(() {
       _activities[day] = pendingActivties;
     });
-
-    getItineraryFromActivities(
-            newActivities, day, travel, accommodation, preferences)
-        .then((newItineraryActivities) {
-      setState(() {
-        _activities[day] = newItineraryActivities;
-        _isScreenDisabled = false;
+    mode == "standard"
+        ? getItineraryFromActivities(newActivities, day, travel, accommodation,
+            preferences, windows[day])
+        : getEvaluationItineraryFromActivities(
+            newActivities, day, destId, windows[day])
+      ..then((newItineraryActivities) {
+        setState(() {
+          _activities[day] = newItineraryActivities;
+          _isScreenDisabled = false;
+        });
+        registerClick("reorder_activities", mode, {
+          "dest_id": destId,
+          "poi_ids": poiIds,
+          "itinNum": itinNum,
+        });
+      }).catchError((e) {
+        setState(() {
+          _activities[day] = oldActivities;
+          _isScreenDisabled = false;
+        });
+        showDialog(
+          context: context,
+          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+          builder: (BuildContext context) => CustomDialog(
+            title: "Error",
+            description: "Unable to reorder activities - " + e.toString(),
+          ),
+        );
       });
-    }).catchError((e) {
-      showDialog(
-        context: context,
-        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-        builder: (BuildContext context) => CustomDialog(
-          title: "Error",
-          description: "Unable to add activity - " + e.toString(),
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+}
+
+class ActivitiesBar extends StatelessWidget {
+  final List activities;
+  final Key key;
+  final Function callback;
+  ActivitiesBar({this.activities, this.key, this.callback});
+
+  Widget getExtraActivityBars(int index, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(top: 5, left: 10),
+          child: Dash(
+            direction: Axis.vertical,
+            length: 100,
+            dashColor: Color.fromRGBO(220, 220, 220, 1),
+            dashGap: 4,
+            dashThickness: 2,
+          ),
         ),
+        Padding(
+          padding: EdgeInsets.only(top: 5),
+          child: EditActivityPopupMenuButton(
+            callback: callback,
+            activity: activities[index],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (activities.length == 0) {
+      return Container(
+        height: 0,
+        width: 0,
       );
-    });
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 25,
+          child: EditActivityPopupMenuButton(
+            callback: callback,
+            activity: activities[0],
+          ),
+        ),
+        Expanded(
+          child: SizedBox(
+            width: 25,
+            child: ListView.builder(
+                itemCount: activities.length - 1,
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemBuilder: (BuildContext context, int index) {
+                  return getExtraActivityBars(index + 1, context);
+                }),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class EditActivityPopupMenuButton extends StatelessWidget {
+  final Function callback;
+  final Map activity;
+  EditActivityPopupMenuButton({this.callback, this.activity});
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: CustomColors.lightGrey, width: 2),
+      ),
+      elevation: 0,
+      padding: EdgeInsets.zero,
+      tooltip: "Actions",
+      onSelected: (value) {
+        callback(value, activity);
+      },
+      icon: Icon(
+        Icons.edit,
+        color: Theme.of(context).primaryColor,
+      ),
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
+          value: "changeDuration",
+          child: Row(
+            children: [
+              Icon(
+                Icons.timer,
+                color: Colors.blue,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 5),
+                child: Text('Change Duration'),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: "switchDays",
+          child: Row(
+            children: [
+              Icon(
+                Icons.shuffle,
+                color: Colors.green,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 5),
+                child: Text('Switch Days'),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: "delete",
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete,
+                color: Theme.of(context).primaryColor,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 5),
+                child: Text('Delete Activity'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -439,75 +793,13 @@ class ListViewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget child = ActivityOption(activity: activity);
     return Padding(
-      padding: EdgeInsets.only(bottom: 20, top: 20, left: 30, right: 20),
+      padding: EdgeInsets.only(bottom: 30, top: 30, left: 60, right: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Expanded(
             child: child,
-          ),
-          PopupMenuButton<String>(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-              side: BorderSide(color: CustomColors.lightGrey, width: 2),
-            ),
-            elevation: 0,
-            tooltip: "Actions",
-            onSelected: (value) {
-              callback(value, activity);
-            },
-            icon: Icon(
-              Icons.more_horiz,
-              color: Theme.of(context).primaryColor,
-            ),
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
-                value: "changeDuration",
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.timer,
-                      color: Colors.blue,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 5),
-                      child: Text('Change Duration'),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: "switchDays",
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.shuffle,
-                      color: Colors.green,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 5),
-                      child: Text('Switch Days'),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: "delete",
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 5),
-                      child: Text('Delete Activity'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),

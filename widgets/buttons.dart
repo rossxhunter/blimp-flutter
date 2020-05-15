@@ -117,10 +117,11 @@ class AddButton extends StatelessWidget {
 class AnimatedButton extends StatefulWidget {
   final Widget child;
   final void Function() callback;
-  AnimatedButton({this.child, this.callback});
+  final Key key;
+  AnimatedButton({this.child, this.callback, this.key}) : super(key: key);
   @override
   _AnimatedButtonState createState() =>
-      _AnimatedButtonState(child: child, callback: callback);
+      _AnimatedButtonState(child: child, callback: callback, key: key);
 }
 
 class _AnimatedButtonState extends State<AnimatedButton>
@@ -129,8 +130,9 @@ class _AnimatedButtonState extends State<AnimatedButton>
   AnimationController _controller;
   final Widget child;
   final void Function() callback;
+  final Key key;
 
-  _AnimatedButtonState({this.child, this.callback});
+  _AnimatedButtonState({this.child, this.callback, this.key});
 
   @override
   void initState() {
@@ -144,7 +146,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
       ..addListener(() {
         setState(() {});
       })
-      ..addStatusListener((stastus) {});
+      ..addStatusListener((status) {});
     ;
   }
 
@@ -177,10 +179,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
+      // onTap: () => callback(),
       child: Transform.scale(
         scale: _scale,
         child: child,
       ),
+      // child: child,
     );
   }
 }

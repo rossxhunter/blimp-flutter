@@ -15,6 +15,8 @@ class ResultsPageRoute {
     return ResultsPage(
       destId: holiday["destId"],
       name: holiday["name"],
+      countryInfo: holiday["countryInfo"],
+      weather: holiday["weather"],
       wiki: holiday["wiki"],
       imageURLs: holiday["imageURLs"],
       itinerary: holiday["itinerary"],

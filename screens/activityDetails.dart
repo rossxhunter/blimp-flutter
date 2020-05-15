@@ -1,5 +1,6 @@
 import 'package:blimp/services/images.dart';
 import 'package:blimp/styles/colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ActivityDetails extends StatelessWidget {
@@ -53,10 +54,8 @@ class ActivityDetailsOption extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-          child: Image(
-            image: NetworkImage(
-              activity["bestPhoto"] ?? getDefaultActivityImageURL(),
-            ),
+          child: CachedNetworkImage(
+            imageUrl: activity["bestPhoto"] ?? getDefaultActivityImageURL(),
             width: 10000,
             height: 250,
             fit: BoxFit.cover,
@@ -89,21 +88,30 @@ class ActivityDetailsOption extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Container(
-                        decoration: BoxDecoration(
-                          color: CustomColors.redGrey,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              top: 5, bottom: 5, left: 10, right: 10),
-                          child: Text(
-                            activity["category"],
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: true,
-                            maxLines: 2,
-                            style: Theme.of(context).textTheme.headline1,
-                          ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Image(
+                              image: NetworkImage(
+                                activity["categoryIcon"] + "64.png",
+                              ),
+                              color: Colors.black,
+                              height: 30,
+                              width: 30,
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 5),
+                                child: Text(
+                                  activity["category"],
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
+                                  maxLines: 2,
+                                  style: Theme.of(context).textTheme.bodyText1,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Padding(
@@ -111,12 +119,12 @@ class ActivityDetailsOption extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.lightGreen,
-                            borderRadius: BorderRadius.circular(300),
+                            shape: BoxShape.circle,
                           ),
                           child: Visibility(
                             visible: activity["rating"] != 0,
                             child: Padding(
-                              padding: EdgeInsets.all(10),
+                              padding: EdgeInsets.all(12),
                               child: Text(
                                 activity["rating"].toString(),
                                 style: Theme.of(context).textTheme.button,
@@ -128,19 +136,37 @@ class ActivityDetailsOption extends StatelessWidget {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(top: 20),
-                  child: ConstrainedBox(
-                    constraints: new BoxConstraints(
-                      minHeight: 0,
-                      maxHeight: 100,
-                    ),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        activity["description"] ??
-                            activity["name"] + " is a " + activity["category"],
-                        style: Theme.of(context).textTheme.bodyText2,
-                      ),
+                Visibility(
+                  visible: activity["description"] != null &&
+                      activity["description"] != "",
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Description",
+                          style: Theme.of(context).textTheme.headline2,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: ConstrainedBox(
+                            constraints: new BoxConstraints(
+                              minHeight: 0,
+                              maxHeight: 100,
+                            ),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                activity["description"] ??
+                                    activity["name"] +
+                                        " is a " +
+                                        activity["category"],
+                                style: Theme.of(context).textTheme.bodyText2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

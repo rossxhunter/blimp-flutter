@@ -13,28 +13,46 @@ String encodePrefs(List prefs) {
 }
 
 Future<Map> getItinerariesForEvaluation(int destId) async {
-  var itineraries;
+  var response;
   try {
-    itineraries = await makeGetRequest(
+    response = await makeGetRequest(
         "itineraries_for_evaluation/" + destId.toString(), "");
   } catch (e) {
     print(e);
     throw e;
   }
-  Map d = json.decode(itineraries);
-  return d;
+  Map decodedResponse = json.decode(response);
+  clicksId = decodedResponse["clicks_id"];
+  return decodedResponse;
 }
 
-Future<List> getItineraryFromActivities(List<Map> activities, int day,
-    Map travel, Map accommodation, Preferences preferences) async {
+Future<List> getEvaluationItineraryFromActivities(
+    List activities, int day, int destId, List window) async {
   String activitiesJson = jsonEncode(activities).replaceAll("&", "%26");
+  String windowJson = jsonEncode(window);
+  String params = "activities=$activitiesJson&day=$day&window=$windowJson";
+  var itinerary;
+  try {
+    itinerary = await makeGetRequest(
+        "itinerary_for_evaluation/" + destId.toString(), params);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(itinerary);
+}
+
+Future<List> getItineraryFromActivities(List activities, int day, Map travel,
+    Map accommodation, Preferences preferences, List window) async {
+  String activitiesJson = jsonEncode(activities).replaceAll("&", "%26");
+  String windowJson = jsonEncode(window);
   String travelJson = jsonEncode(travel);
   String accommodationJson = jsonEncode(accommodation);
   String constraints = encodePrefs(preferences.constraints);
   String softPrefs = encodePrefs(preferences.softPreferences);
   String prefScores = jsonEncode(preferences.preferenceScores);
   String params =
-      "activities=$activitiesJson&day=$day&travel=$travelJson&accommodation=$accommodationJson&constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores";
+      "activities=$activitiesJson&day=$day&window=$windowJson&travel=$travelJson&accommodation=$accommodationJson&constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores";
   var itinerary;
   try {
     itinerary = await makeGetRequest("itinerary", params);
@@ -67,7 +85,7 @@ Future<Map> getHoliday(Preferences prefs) async {
   String softPrefs = encodePrefs(prefs.softPreferences);
   String prefScores = jsonEncode(prefs.preferenceScores);
   String params =
-      "constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores&should_register_clicks=$shouldRegisterClicks";
+      "constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores&should_register_clicks=$testingSwitchOn";
   var holiday;
   try {
     holiday = await makeGetRequest("holiday", params);
@@ -76,17 +94,20 @@ Future<Map> getHoliday(Preferences prefs) async {
     throw e;
   }
   Map decodedResponse = json.decode(holiday);
-  if (shouldRegisterClicks) {
+  if (testingSwitchOn) {
     clicksId = decodedResponse["clicks_id"];
   }
   return json.decode(decodedResponse["holiday"]);
 }
 
-Future<void> registerClick(String click) async {
-  if (shouldRegisterClicks != null) {
+Future<void> registerClick(String click, String mode, Map metadata) async {
+  if (testingSwitchOn == true || mode == "evaluation") {
     try {
-      await makePostRequest(
-          "clicks/$clicksId/$click", {"credentials": 'same-origin'});
+      await makePostRequest("clicks/$clicksId/$click", {
+        "credentials": 'same-origin',
+        "mode": mode,
+        "metadata": jsonEncode(metadata)
+      });
     } catch (e) {
       print(e);
       throw e;
@@ -131,4 +152,5 @@ Future<String> makeGetRequest(String path, String params) async {
 
 String _hostname() {
   return "http://localhost:5000";
+  // return "http://blimp-dev-env.eu-west-2.elasticbeanstalk.com";
 }

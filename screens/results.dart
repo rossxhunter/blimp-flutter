@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/accommodation.dart';
 import 'package:blimp/screens/activityDetails.dart';
@@ -15,8 +16,10 @@ import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
 import 'package:bouncing_widget/bouncing_widget.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_emoji/flutter_emoji.dart';
 import 'package:flutter_multi_carousel/carousel.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:intl/intl.dart';
@@ -25,16 +28,16 @@ import 'package:stretchy_header/stretchy_header.dart';
 import 'package:http/http.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 
-List<String> imgList = ["assets/images/paris.jpg", "assets/images/paris.jpg"];
-
 class ResultsPage extends StatefulWidget {
   final int destId;
   final Map flights;
   final Map accommodation;
   final Map itinerary;
   final List imageURLs;
+  final Map weather;
   final String wiki;
   final String name;
+  final Map countryInfo;
   final List allFlights;
   final List allAccommodation;
   final List allActivities;
@@ -46,7 +49,9 @@ class ResultsPage extends StatefulWidget {
       this.accommodation,
       this.itinerary,
       this.wiki,
+      this.weather,
       this.imageURLs,
+      this.countryInfo,
       this.name,
       this.allFlights,
       this.allAccommodation,
@@ -60,8 +65,10 @@ class ResultsPage extends StatefulWidget {
         accommodation: accommodation,
         itinerary: itinerary,
         wiki: wiki,
+        weather: weather,
         imageURLs: imageURLs,
         name: name,
+        countryInfo: countryInfo,
         allFlights: allFlights,
         allAccommodation: allAccommodation,
         allActivities: allActivities,
@@ -77,10 +84,13 @@ class ResultsPageState extends State<ResultsPage> {
   final List imageURLs;
   final String wiki;
   final String name;
+  final Map weather;
+  final Map countryInfo;
   final List allFlights;
   final List allAccommodation;
   final List allActivities;
   final Preferences preferences;
+  List<List<double>> windows;
 
   ScrollController _scrollController;
   double kExpandedHeight = 300.0;
@@ -93,6 +103,8 @@ class ResultsPageState extends State<ResultsPage> {
       this.accommodation,
       this.itinerary,
       this.wiki,
+      this.weather,
+      this.countryInfo,
       this.imageURLs,
       this.name,
       this.allFlights,
@@ -102,6 +114,10 @@ class ResultsPageState extends State<ResultsPage> {
     price = flights["outbound"]["price"]["amount"] +
         flights["return"]["price"]["amount"] +
         accommodation["price"]["amount"];
+    windows = List<List<double>>();
+    for (int i = 0; i < itinerary.keys.length; i++) {
+      windows.add([8, 17]);
+    }
   }
   int _currentIndex;
   @override
@@ -161,6 +177,9 @@ class ResultsPageState extends State<ResultsPage> {
                     ? <Widget>[
                         AnimatedButton(
                           callback: () {
+                            registerClick("feedback", "standard", {
+                              "dest_id": destId,
+                            });
                             showGeneralDialog(
                               context: context,
                               barrierColor: CustomColors.dialogBackground,
@@ -286,9 +305,15 @@ class ResultsPageState extends State<ResultsPage> {
                                   itemWidth: 3000,
                                   itemBuilder:
                                       (BuildContext context, int index) {
-                                    return Image(
+                                    return CachedNetworkImage(
                                       fit: BoxFit.cover,
-                                      image: NetworkImage(imageURLs[index]),
+                                      imageUrl: imageURLs[index],
+                                      errorWidget: (context, url, error) =>
+                                          Image(
+                                        image: AssetImage(
+                                            "assets/images/mountains.jpg"),
+                                        fit: BoxFit.cover,
+                                      ),
                                     );
                                   },
                                   itemCount: imageURLs.length,
@@ -326,13 +351,27 @@ class ResultsPageState extends State<ResultsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        DestinationInfo(name: name, wiki: wiki),
+                        DestinationInfo(
+                          name: name,
+                          wiki: wiki,
+                          weather: weather,
+                          departureDate: preferences.constraints
+                              .singleWhere(
+                                  (c) => c.property == "departure_date")
+                              .value,
+                          returnDate: preferences.constraints
+                              .singleWhere((c) => c.property == "return_date")
+                              .value,
+                          travelDuration: flights["outbound"]["duration"],
+                          countryInfo: countryInfo,
+                        ),
                         Padding(
                           padding: EdgeInsets.only(top: 10),
                           child: FlightsSection(
                             callback: updateFlights,
                             flights: flights,
                             allFlights: allFlights,
+                            destId: destId,
                           ),
                         ),
                         Padding(
@@ -341,16 +380,19 @@ class ResultsPageState extends State<ResultsPage> {
                             callback: updateAccommodation,
                             accommodation: accommodation,
                             allAccommodation: allAccommodation,
+                            destId: destId,
                           ),
                         ),
                         Padding(
                           padding: EdgeInsets.only(top: 10),
                           child: ActivitiesSection(
+                            destId: destId,
                             itinerary: itinerary,
                             allActivities: allActivities,
                             travel: flights,
                             accommodation: accommodation,
                             preferences: preferences,
+                            windows: windows,
                           ),
                         ),
                       ],
@@ -415,7 +457,7 @@ class ResultsPageBookBar extends StatelessWidget {
                       textAlign: TextAlign.left,
                     ),
                     Padding(
-                      padding: EdgeInsets.only(top: 10),
+                      padding: EdgeInsets.only(top: 5),
                       child: Text(
                         NumberFormat.currency(
                                 name: currency,
@@ -434,7 +476,10 @@ class ResultsPageBookBar extends StatelessWidget {
                         top: 20, bottom: 20, left: 40, right: 40),
                     child: Text(
                       "BOOK",
-                      style: Theme.of(context).textTheme.button,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline2
+                          .copyWith(color: Colors.white),
                     ),
                   ),
                   decoration: BoxDecoration(
@@ -546,15 +591,15 @@ class ActivityOptionState extends State<ActivityOption> {
       child: ClipRRect(
         borderRadius: BorderRadius.all(Radius.circular(15)),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             ClipRRect(
               borderRadius: BorderRadius.all(Radius.circular(15)),
               child: Container(
                 height: 100,
                 width: 140,
-                child: Image(
-                  image: NetworkImage(bestPhotoURL),
+                child: CachedNetworkImage(
+                  imageUrl: bestPhotoURL,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -575,28 +620,36 @@ class ActivityOptionState extends State<ActivityOption> {
                       padding: EdgeInsets.only(top: 5),
                       child: Text(
                         name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.headline2,
                       ),
                     ),
                     Padding(
                       padding: EdgeInsets.only(top: 5),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: CustomColors.redGrey,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              top: 5, bottom: 5, left: 10, right: 10),
-                          child: Text(
-                            category,
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: true,
-                            textWidthBasis: TextWidthBasis.longestLine,
-                            maxLines: 2,
-                            style: Theme.of(context).textTheme.headline1,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          CachedNetworkImage(
+                            imageUrl: activity["categoryIcon"] + "64.png",
+                            color: Colors.black,
+                            height: 25,
+                            width: 25,
                           ),
-                        ),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 5, top: 2),
+                              child: Text(
+                                category,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
+                                // textWidthBasis: TextWidthBasis.longestLine,
+                                maxLines: 2,
+                                style: Theme.of(context).textTheme.headline1,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -611,42 +664,52 @@ class ActivityOptionState extends State<ActivityOption> {
 }
 
 class ActivitiesSection extends StatefulWidget {
+  final int destId;
   final Map itinerary;
   final List allActivities;
   final Map travel;
   final Map accommodation;
   final Preferences preferences;
+  final List<List<double>> windows;
 
   ActivitiesSection(
       {this.itinerary,
       this.allActivities,
       this.travel,
+      this.destId,
       this.accommodation,
-      this.preferences});
+      this.preferences,
+      this.windows});
   @override
   State<StatefulWidget> createState() {
     return ActivitiesSectionState(
         itinerary: itinerary,
         allActivities: allActivities,
         travel: travel,
+        destId: destId,
         accommodation: accommodation,
-        preferences: preferences);
+        preferences: preferences,
+        windows: windows);
   }
 }
 
 class ActivitiesSectionState extends State<ActivitiesSection> {
   Map itinerary;
   final List allActivities;
+  final int destId;
   final Map travel;
   final Map accommodation;
   final Preferences preferences;
   int _currentIndex;
+  List<List<double>> windows;
   ActivitiesSectionState(
       {this.itinerary,
       this.allActivities,
       this.travel,
+      this.destId,
       this.accommodation,
-      this.preferences}) {
+      this.preferences,
+      this.windows}) {
     _currentIndex = 0;
   }
 
@@ -753,9 +816,10 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
             ),
             Padding(
               padding: EdgeInsets.only(top: 20, left: 20, right: 20),
-              child: GestureDetector(
-                onTap: () async {
-                  registerClick("change_activities");
+              child: AnimatedButton(
+                callback: () async {
+                  Map metadata = {"dest_id": destId};
+                  registerClick("change_activities", "standard", metadata);
                   Navigator.push(
                     context,
                     PageTransition(
@@ -767,6 +831,9 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                         travel: travel,
                         accommodation: accommodation,
                         preferences: preferences,
+                        destId: destId,
+                        mode: "standard",
+                        windows: windows,
                       ),
                     ),
                   ).then((value) {
@@ -845,16 +912,18 @@ class AccommodationSection extends StatefulWidget {
   final Function callback;
   final Map accommodation;
   final List allAccommodation;
+  final int destId;
 
   AccommodationSection(
-      {this.callback, this.accommodation, this.allAccommodation});
+      {this.callback, this.accommodation, this.allAccommodation, this.destId});
 
   @override
   State<StatefulWidget> createState() {
     return AccommodationSectionState(
         callback: callback,
         accommodation: accommodation,
-        allAccommodation: allAccommodation);
+        allAccommodation: allAccommodation,
+        destId: destId);
   }
 }
 
@@ -862,11 +931,19 @@ class AccommodationSectionState extends State<AccommodationSection> {
   final Function callback;
   Map accommodation;
   final List allAccommodation;
+  final int destId;
 
   AccommodationSectionState(
-      {this.callback, this.accommodation, this.allAccommodation});
+      {this.callback, this.accommodation, this.allAccommodation, this.destId});
 
   void accommodationSelected(int selectedAccommodation) {
+    registerClick("change_accommodation", "standard", {
+      "dest_id": destId,
+      "old_accommodation": accommodation,
+      "new_accommodation": allAccommodation
+          .where((a) => a["id"] == selectedAccommodation)
+          .toList()[0],
+    });
     setState(() {
       accommodation = allAccommodation
           .where((a) => a["id"] == selectedAccommodation)
@@ -890,12 +967,17 @@ class AccommodationSectionState extends State<AccommodationSection> {
             ),
             Padding(
               padding: EdgeInsets.only(top: 20),
-              child: HotelOption(hotelDetails: accommodation),
+              child: HotelOption(
+                  hotelDetails: accommodation,
+                  key: Key(accommodation["id"].toString())),
             ),
             Padding(
               padding: EdgeInsets.only(top: 30, left: 20, right: 20),
               child: AnimatedButton(
                 callback: () {
+                  registerClick("see_all_accommodation", "standard", {
+                    "dest_id": destId,
+                  });
                   Navigator.push(
                     context,
                     PageTransition(
@@ -942,12 +1024,16 @@ class FlightsSection extends StatefulWidget {
   final Function callback;
   final Map flights;
   final List allFlights;
+  final int destId;
 
-  FlightsSection({this.callback, this.flights, this.allFlights});
+  FlightsSection({this.callback, this.flights, this.allFlights, this.destId});
   @override
   State<StatefulWidget> createState() {
     return FlightsSectionState(
-        callback: callback, flights: flights, allFlights: allFlights);
+        callback: callback,
+        flights: flights,
+        allFlights: allFlights,
+        destId: destId);
   }
 }
 
@@ -955,13 +1041,22 @@ class FlightsSectionState extends State<FlightsSection> {
   final Function callback;
   Map flights;
   final List allFlights;
+  final int destId;
 
-  FlightsSectionState({this.callback, this.allFlights, this.flights});
+  FlightsSectionState(
+      {this.callback, this.allFlights, this.flights, this.destId});
 
   void selectFlight(int selectedFlight) {
+    registerClick("change_flight", "standard", {
+      "dest_id": destId,
+      "old_flight": flights,
+      "new_flight":
+          allFlights.where((f) => f["id"] == selectedFlight).toList()[0],
+    });
     setState(() {
       flights = allFlights.where((f) => f["id"] == selectedFlight).toList()[0];
     });
+
     callback(selectedFlight);
   }
 
@@ -992,8 +1087,11 @@ class FlightsSectionState extends State<FlightsSection> {
             ),
             Padding(
               padding: EdgeInsets.only(top: 30, left: 20, right: 20),
-              child: GestureDetector(
-                onTap: () {
+              child: AnimatedButton(
+                callback: () {
+                  registerClick("see_all_flights", "standard", {
+                    "dest_id": destId,
+                  });
                   Navigator.push(
                     context,
                     PageTransition(
@@ -1039,11 +1137,24 @@ class FlightsSectionState extends State<FlightsSection> {
 
 class DestinationInfo extends StatelessWidget {
   final String name;
+  final Map countryInfo;
   final String wiki;
+  final Map weather;
+  final String departureDate;
+  final String returnDate;
+  final int travelDuration;
 
-  DestinationInfo({this.name, this.wiki});
+  DestinationInfo(
+      {this.name,
+      this.countryInfo,
+      this.wiki,
+      this.weather,
+      this.departureDate,
+      this.returnDate,
+      this.travelDuration});
   @override
   Widget build(BuildContext context) {
+    EmojiParser parser = EmojiParser();
     return Container(
       color: Colors.white,
       child: Padding(
@@ -1051,9 +1162,113 @@ class DestinationInfo extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              name,
-              style: Theme.of(context).textTheme.headline4,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              // mainAxisSize: MainAxisSize.max,
+              children: [
+                Expanded(
+                  child: AutoSizeText(
+                    name,
+                    style: Theme.of(context).textTheme.headline4,
+                    softWrap: true,
+                    maxLines: 1,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 40),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.wb_sunny,
+                        color: Colors.yellow,
+                        size: 30,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 5),
+                        child: Text(
+                          weather["temp"].round().toString() + "°C",
+                          style: Theme.of(context).textTheme.headline3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // mainAxisSize: MainAxisSize.max,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.date_range,
+                        size: 20,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 5),
+                        child: Text(
+                          DateFormat("d MMM")
+                                  .format(DateTime.parse(departureDate)) +
+                              " - " +
+                              DateFormat("d MMM")
+                                  .format(DateTime.parse(returnDate)),
+                          style: Theme.of(context).textTheme.headline1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 20),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.flight,
+                          size: 20,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 5),
+                          child: Text(
+                            (travelDuration ~/ 60).toString() +
+                                "h " +
+                                travelDuration.remainder(60).toString() +
+                                "m",
+                            style: Theme.of(context).textTheme.headline1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 20),
+                      child: Row(
+                        children: [
+                          Text(
+                            parser
+                                .get("flag-" + countryInfo["countryCode"])
+                                .code,
+                            style: Theme.of(context).textTheme.headline3,
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 5),
+                              child: Text(
+                                countryInfo["countryName"],
+                                softWrap: true,
+                                style: Theme.of(context).textTheme.headline1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             Padding(
               padding: EdgeInsets.only(top: 20),
@@ -1066,72 +1281,5 @@ class DestinationInfo extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-final List child = imgList.map(
-  (path) {
-    return Container(
-      child: ClipRRect(
-        borderRadius: BorderRadius.all(Radius.circular(0.0)),
-        child: Image.asset(
-          path,
-          fit: BoxFit.cover,
-          width: 1000.0,
-        ),
-      ),
-    );
-  },
-).toList();
-
-class CarouselWithIndicator extends StatefulWidget {
-  final BuildContext originalContext;
-  CarouselWithIndicator({this.originalContext});
-  @override
-  _CarouselWithIndicatorState createState() =>
-      _CarouselWithIndicatorState(originalContext: originalContext);
-}
-
-class _CarouselWithIndicatorState extends State<CarouselWithIndicator> {
-  int _current = 0;
-  final BuildContext originalContext;
-
-  _CarouselWithIndicatorState({this.originalContext});
-
-  @override
-  Widget build(BuildContext context) {
-    return CarouselSlider(
-      items: child,
-      autoPlay: true,
-      viewportFraction: 1.0,
-      aspectRatio: 1,
-      onPageChanged: (index) {
-        setState(() {
-          _current = index;
-        });
-      },
-    );
-    // Positioned(
-    //   child: Align(
-    //     alignment: Alignment.bottomCenter,
-    //     child: Row(
-    //       mainAxisAlignment: MainAxisAlignment.center,
-    //       children: [0, 1].map(
-    //         (index) {
-    //           return Container(
-    //             width: 8.0,
-    //             height: 8.0,
-    //             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
-    //             decoration: BoxDecoration(
-    //                 shape: BoxShape.circle,
-    //                 color: _current == index
-    //                     ? Color.fromRGBO(0, 0, 0, 0.9)
-    //                     : Color.fromRGBO(0, 0, 0, 0.4)),
-    //           );
-    //         },
-    //       ).toList(),
-    //     ),
-    //   ),
-    // ),
   }
 }

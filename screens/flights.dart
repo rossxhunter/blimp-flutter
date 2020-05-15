@@ -27,10 +27,8 @@ class FlightsScreenState extends State<FlightsScreen> {
   int selectedFlight;
   final Function callback;
   List shownFlights;
-  int _selectedFlight = 0;
   List<double> _outboundTimes = [6.0, 18.0];
   List<double> _returnTimes = [6.0, 18.0];
-
   FlightsScreenState({this.allFlights, this.callback, this.selectedFlight}) {
     shownFlights = List.from(allFlights);
     shownFlights.removeWhere((f) => f["id"] == selectedFlight);
@@ -130,34 +128,25 @@ class FlightsScreenState extends State<FlightsScreen> {
               itemBuilder: (BuildContext context, int index) {
                 return Padding(
                   padding: EdgeInsets.only(top: 20),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedFlight = index;
-                        selectedFlight = shownFlights[index]["id"];
-                      });
-                    },
-                    child: Container(
-                      color: Colors.white,
+                  child: Container(
+                    color: Colors.white,
+                    child: AnimatedButton(
+                      key: Key(index.toString() +
+                          (selectedFlight == shownFlights[index]["id"])
+                              .toString()),
+                      callback: () {
+                        setState(() {
+                          selectedFlight = shownFlights[index]["id"];
+                        });
+                      },
                       child: Stack(
-                        children: <Widget>[
+                        children: [
                           Padding(
                             padding: EdgeInsets.only(
                                 top: 20, left: 20, right: 20, bottom: 20),
-                            child: Column(
-                              children: <Widget>[
-                                FlightTicket(
-                                  ticketDetails: shownFlights[index]
-                                      ["outbound"],
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 10),
-                                  child: FlightTicket(
-                                    ticketDetails: shownFlights[index]
-                                        ["return"],
-                                  ),
-                                ),
-                              ],
+                            child: FlightTicketsOption(
+                              flight: shownFlights[index],
+                              selectedFlight: selectedFlight,
                             ),
                           ),
                           Positioned(
@@ -196,6 +185,29 @@ class FlightsScreenState extends State<FlightsScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class FlightTicketsOption extends StatelessWidget {
+  final Map flight;
+  final int selectedFlight;
+  final Key key;
+  FlightTicketsOption({this.flight, this.selectedFlight, this.key});
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        FlightTicket(
+          ticketDetails: flight["outbound"],
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: 10),
+          child: FlightTicket(
+            ticketDetails: flight["return"],
+          ),
+        ),
+      ],
     );
   }
 }

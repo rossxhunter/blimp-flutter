@@ -40,7 +40,7 @@ class AccommodationScreenState extends State<AccommodationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -90,33 +90,37 @@ class AccommodationScreenState extends State<AccommodationScreen> {
       ),
       body: Stack(
         children: <Widget>[
-          Container(
-            color: CustomColors.greyBackground,
-            child: ListView.builder(
-              itemCount: allAccommodation.length,
-              itemBuilder: (BuildContext context, int index) {
-                return Padding(
-                  padding: EdgeInsets.only(top: 20),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedAccommodation = index;
-                        selectedAccommodation = shownAccommodation[index]["id"];
-                      });
-                    },
+          Padding(
+            padding: EdgeInsets.only(bottom: 80),
+            child: Container(
+              color: CustomColors.greyBackground,
+              child: ListView.builder(
+                itemCount: allAccommodation.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Padding(
+                    padding: EdgeInsets.only(top: 20),
                     child: Container(
                       color: Colors.white,
                       child: Stack(
                         children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(
-                                top: 20, left: 20, right: 20, bottom: 20),
-                            child: Column(
-                              children: <Widget>[
-                                HotelOption(
-                                  hotelDetails: shownAccommodation[index],
-                                ),
-                              ],
+                          AnimatedButton(
+                            callback: () {
+                              setState(() {
+                                _selectedAccommodation = index;
+                                selectedAccommodation =
+                                    shownAccommodation[index]["id"];
+                              });
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                  top: 20, left: 20, right: 20, bottom: 20),
+                              child: Column(
+                                children: <Widget>[
+                                  HotelOption(
+                                    hotelDetails: shownAccommodation[index],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           Positioned(
@@ -131,9 +135,9 @@ class AccommodationScreenState extends State<AccommodationScreen> {
                         ],
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
           Positioned.fill(

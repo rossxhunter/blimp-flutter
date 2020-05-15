@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/configurations.dart';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/routes.dart';
@@ -20,9 +21,9 @@ import 'package:transparent_image/transparent_image.dart';
 final List<String> _tabsString = <String>[
   "For You",
   "Popular",
-  "Inspiration",
-  "Tours",
   "Europe",
+  "Asia",
+  "Americas",
 ];
 
 List<Widget> _tabs = [
@@ -221,7 +222,8 @@ class ExplorePageTabView extends StatelessWidget {
                                       ),
                                     );
                                   },
-                                  childCount: getExploreSuggestions().length,
+                                  childCount:
+                                      getExploreSuggestions()[name].length,
                                 ),
                               ),
                             ),
@@ -304,8 +306,10 @@ class ExploreOption extends StatelessWidget {
               return LoadingIndicator();
             });
         Preferences prefs = prefsConfig[0];
-        prefs.constraints.add(Constraint("destination",
-            {"type": "city", "id": getExploreSuggestions()[index]["id"]}));
+        prefs.constraints.add(Constraint("destination", {
+          "type": "city",
+          "id": getExploreSuggestions()[name][index]["id"]
+        }));
         getHoliday(prefs).then((holiday) {
           print(holiday);
           Navigator.pop(context);
@@ -348,19 +352,32 @@ class ExploreOption extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(
-                              getExploreSuggestions()[index]["name"],
+                            AutoSizeText(
+                              getExploreSuggestions()[name][index]["name"],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.headline3,
                             ),
-                            Text(
-                              getExploreSuggestions()[index]["country_name"] +
-                                  " " +
+                            Row(
+                              children: [
+                                Text(
                                   parser
                                       .get("flag-" +
-                                          getExploreSuggestions()[index]
+                                          getExploreSuggestions()[name][index]
                                               ["country_code"])
                                       .code,
-                              style: Theme.of(context).textTheme.bodyText2,
+                                  style: Theme.of(context).textTheme.headline3,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    getExploreSuggestions()[name][index]
+                                        ["country_name"],
+                                    style:
+                                        Theme.of(context).textTheme.bodyText2,
+                                  ),
+                                ),
+                              ],
                             ),
                             Row(
                               children: <Widget>[
@@ -375,8 +392,8 @@ class ExploreOption extends StatelessWidget {
                                         padding: EdgeInsets.only(left: 5),
                                         child: TopAttractionBox(
                                           attraction:
-                                              getExploreSuggestions()[index]
-                                                  ["top_attractions"][0],
+                                              getExploreSuggestions()[name]
+                                                  [index]["top_attractions"][0],
                                         ),
                                       ),
                                     ],
@@ -401,12 +418,12 @@ class ExploreOption extends StatelessWidget {
               child: Container(
                 height: 120,
                 width: 140,
-                child: FadeInImage(
+                child: CachedNetworkImage(
                   fit: BoxFit.cover,
-                  image: getExploreSuggestions()[index]["image"] != null
-                      ? NetworkImage(getExploreSuggestions()[index]["image"])
-                      : AssetImage("assets/images/mountains.jpg"),
-                  placeholder: AssetImage("assets/images/mountains.jpg"),
+                  imageUrl: getExploreSuggestions()[name][index]["image"],
+                  errorWidget: (context, url, error) => Image(
+                      image: AssetImage("assets/images/mountains.jpg"),
+                      fit: BoxFit.cover),
                 ),
               ),
             ),
