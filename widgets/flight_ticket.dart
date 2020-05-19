@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/styles/text.dart';
@@ -23,7 +24,8 @@ class FlightTicket extends StatelessWidget {
       // height: 150,
       child: Padding(
         padding: EdgeInsets.all(20),
-        child: IntrinsicHeight(
+        child: SizedBox(
+          height: 120,
           child: Row(
             // mainAxisAlignment: MainAxisAlignment.spaceBetween,
             // mainAxisSize: MainAxisSize.min,
@@ -37,7 +39,7 @@ class FlightTicket extends StatelessWidget {
               Flexible(
                 flex: 2,
                 child: Padding(
-                  padding: EdgeInsets.only(left: 20),
+                  padding: EdgeInsets.only(left: 10),
                   child: FlightTicketLogistics(
                     ticketDetails: ticketDetails,
                   ),
@@ -94,13 +96,16 @@ class FlightTicketDetails extends StatelessWidget {
           padding: EdgeInsets.only(top: 10),
           child: Row(
             children: <Widget>[
-              Text(
-                NumberFormat.currency(
-                        name: ticketDetails["price"]["currency"],
-                        symbol: getCurrencySuggestions()[ticketDetails["price"]
-                            ["currency"]]["symbol"])
-                    .format(ticketDetails["price"]["amount"]),
-                style: textThemes["ticket_header_1"],
+              Expanded(
+                child: AutoSizeText(
+                  NumberFormat.currency(
+                          name: ticketDetails["price"]["currency"],
+                          symbol: getCurrencySuggestions()[
+                              ticketDetails["price"]["currency"]]["symbol"])
+                      .format(ticketDetails["price"]["amount"]),
+                  maxLines: 1,
+                  style: textThemes["ticket_header_1"],
+                ),
               ),
             ],
           ),
@@ -226,24 +231,27 @@ class FlightTicketLogistics extends StatelessWidget {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  Icon(
-                    Icons.timer,
-                    size: 20,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 5),
-                    child: Text(
-                      (ticketDetails["duration"] ~/ 60).toString() +
-                          "h " +
-                          ticketDetails["duration"].remainder(60).toString() +
-                          "m",
-                      style: Theme.of(context).textTheme.bodyText2,
+              Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.timer,
+                      size: 20,
+                      color: Theme.of(context).primaryColor,
                     ),
-                  ),
-                ],
+                    Padding(
+                      padding: EdgeInsets.only(left: 5),
+                      child: Text(
+                        (ticketDetails["duration"] ~/ 60).toString() +
+                            "h " +
+                            ticketDetails["duration"].remainder(60).toString() +
+                            "m",
+                        style: Theme.of(context).textTheme.bodyText2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

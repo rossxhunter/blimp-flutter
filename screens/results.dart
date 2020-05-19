@@ -28,6 +28,8 @@ import 'package:stretchy_header/stretchy_header.dart';
 import 'package:http/http.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 
+import 'explore.dart';
+
 class ResultsPage extends StatefulWidget {
   final int destId;
   final Map flights;
@@ -60,19 +62,20 @@ class ResultsPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return ResultsPageState(
-        destId: destId,
-        flights: flights,
-        accommodation: accommodation,
-        itinerary: itinerary,
-        wiki: wiki,
-        weather: weather,
-        imageURLs: imageURLs,
-        name: name,
-        countryInfo: countryInfo,
-        allFlights: allFlights,
-        allAccommodation: allAccommodation,
-        allActivities: allActivities,
-        preferences: preferences);
+      destId: destId,
+      flights: flights,
+      accommodation: accommodation,
+      itinerary: itinerary,
+      wiki: wiki,
+      weather: weather,
+      imageURLs: imageURLs,
+      name: name,
+      countryInfo: countryInfo,
+      allFlights: allFlights,
+      allAccommodation: allAccommodation,
+      allActivities: allActivities,
+      preferences: preferences,
+    );
   }
 }
 
@@ -120,18 +123,368 @@ class ResultsPageState extends State<ResultsPage> {
     }
   }
   int _currentIndex;
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()..addListener(() => setState(() {}));
-    _currentIndex = 0;
-  }
+  bool _needsToSetState = true;
+  bool _isShowingTitle = true;
 
   bool get _showTitle {
     return _scrollController.hasClients &&
         _scrollController.offset > kExpandedHeight - kToolbarHeight;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()
+      ..addListener(() {
+        if (_isShowingTitle != _showTitle) {
+          setState(() {
+            _isShowingTitle = _showTitle;
+          });
+        }
+      });
+    _currentIndex = 0;
+  }
+
+  void clickResultsOptions(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (_) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.8,
+            builder: (BuildContext context, myscrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 15,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      ),
+                      Expanded(
+                        child: SearchPage(
+                          preferences: preferences,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        });
+  }
+
+  void clickFeedback(BuildContext context) {
+    registerClick("feedback", "standard", {
+      "dest_id": destId,
+    });
+    showGeneralDialog(
+      context: context,
+      barrierColor: CustomColors.dialogBackground,
+      transitionDuration: Duration(milliseconds: 100),
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionBuilder: (context, a1, a2, widget) {
+        return Transform.scale(
+          scale: a1.value,
+          child: FeedbackScreen(
+            destId: destId,
+            duration: flights["outbound"]["duration"],
+            categoryIds: allActivities.map((a) => a["categoryId"]).toList(),
+            preferences: preferences,
+            price: price,
+            weather: weather,
+          ),
+        );
+      },
+      pageBuilder: (context, animation1, animation2) {},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // preloadImages(context, allAccommodation, itinerary, imageURLs);
+    return Scaffold(
+      backgroundColor: CustomColors.greyBackground,
+      body: Stack(
+        children: <Widget>[
+          PrimaryScrollController(
+            controller: _scrollController,
+            child: CustomScrollView(
+              primary: true,
+              // controller: _scrollController,
+              physics: AlwaysScrollableScrollPhysics(),
+              slivers: <Widget>[
+                SliverAppBar(
+                  shape: ContinuousRectangleBorder(
+                    side: _showTitle
+                        ? BorderSide(color: CustomColors.lightGrey, width: 4)
+                        : BorderSide.none,
+                  ),
+                  leading: _showTitle
+                      ? IconButton(
+                          icon: Icon(Icons.arrow_back,
+                              color: Theme.of(context).primaryColor),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        )
+                      : null,
+                  actions: _showTitle
+                      ? <Widget>[
+                          AnimatedButton(
+                            key: Key("smallFeeback"),
+                            callback: () => clickFeedback(context),
+                            child: Icon(Icons.refresh,
+                                color: Theme.of(context).primaryColor),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 20, right: 20),
+                            child: AnimatedButton(
+                              key: Key("smallOptions"),
+                              child: Icon(
+                                Icons.sort,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                              callback: () {},
+                            ),
+                          ),
+                        ]
+                      : <Widget>[
+                          AnimatedButton(
+                            key: Key("largeFeeback"),
+                            callback: () => clickFeedback(context),
+                            child: Icon(
+                              Icons.refresh,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 20, right: 20),
+                            child: AnimatedButton(
+                              key: Key("largeOptions"),
+                              child: Icon(
+                                Icons.sort,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                              callback: () {},
+                            ),
+                          ),
+                        ],
+                  backgroundColor: Colors.white,
+                  stretch: true,
+                  elevation: 0,
+                  pinned: true,
+                  floating: false,
+                  onStretchTrigger: () {
+                    // Function callback for stretch
+                    return;
+                  },
+                  expandedHeight: kExpandedHeight,
+                  flexibleSpace: Stack(
+                    children: <Widget>[
+                      FlexibleSpaceBar(
+                        stretchModes: <StretchMode>[
+                          StretchMode.zoomBackground,
+                          StretchMode.fadeTitle,
+                        ],
+                        centerTitle: true,
+                        title: _showTitle
+                            ? Text(
+                                name,
+                                style: Theme.of(context).textTheme.headline3,
+                              )
+                            : null,
+                        collapseMode: CollapseMode.parallax,
+                        background: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            imageURLs.length == 0
+                                ? Image(
+                                    image: AssetImage(
+                                        "assets/images/mountains.jpg"),
+                                    fit: BoxFit.cover)
+                                : Swiper(
+                                    onIndexChanged: (value) {
+                                      setState(() {
+                                        _currentIndex = value;
+                                      });
+                                    },
+                                    pagination: SwiperPagination(
+                                      margin: EdgeInsets.only(
+                                          left: 10, right: 10, bottom: 40),
+                                    ),
+                                    itemWidth: 3000,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return CachedNetworkImage(
+                                        fit: BoxFit.cover,
+                                        imageUrl: imageURLs[index],
+                                        placeholder: (context, url) => Image(
+                                            image: AssetImage(
+                                                "assets/images/mountains.jpg"),
+                                            fit: BoxFit.cover),
+                                        errorWidget: (context, url, error) =>
+                                            Image(
+                                          image: AssetImage(
+                                              "assets/images/mountains.jpg"),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      );
+                                    },
+                                    itemCount: imageURLs.length,
+                                    viewportFraction: 1,
+                                    scale: 1,
+                                  ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        bottom: -1,
+                        left: 0,
+                        right: 0,
+                        child: Visibility(
+                          visible: !_showTitle,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(30),
+                                topRight: Radius.circular(30)),
+                            child: Container(
+                              height: 30,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ResultsPageContents(
+                  destId: destId,
+                  flights: flights,
+                  accommodation: accommodation,
+                  itinerary: itinerary,
+                  wiki: wiki,
+                  weather: weather,
+                  imageURLs: imageURLs,
+                  name: name,
+                  countryInfo: countryInfo,
+                  allFlights: allFlights,
+                  allAccommodation: allAccommodation,
+                  allActivities: allActivities,
+                  preferences: preferences,
+                  windows: windows,
+                ),
+              ],
+            ),
+          ),
+          Positioned.fill(
+            top: null,
+            child: ResultsPageBookBar(flights["outbound"]["price"],
+                flights["return"]["price"], accommodation["price"]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ResultsPageContents extends StatefulWidget {
+  final int destId;
+  final Map flights;
+  final Map accommodation;
+  final Map itinerary;
+  final List imageURLs;
+  final String wiki;
+  final String name;
+  final Map weather;
+  final Map countryInfo;
+  final List allFlights;
+  final List allAccommodation;
+  final List allActivities;
+  final Preferences preferences;
+  final List<List<double>> windows;
+  ResultsPageContents(
+      {this.destId,
+      this.flights,
+      this.accommodation,
+      this.itinerary,
+      this.wiki,
+      this.weather,
+      this.countryInfo,
+      this.imageURLs,
+      this.name,
+      this.allFlights,
+      this.allAccommodation,
+      this.allActivities,
+      this.preferences,
+      this.windows});
+  @override
+  State<StatefulWidget> createState() {
+    return ResultsPageContentsState(
+        destId: destId,
+        flights: flights,
+        accommodation: accommodation,
+        itinerary: itinerary,
+        wiki: wiki,
+        weather: weather,
+        imageURLs: imageURLs,
+        name: name,
+        countryInfo: countryInfo,
+        allFlights: allFlights,
+        allAccommodation: allAccommodation,
+        allActivities: allActivities,
+        preferences: preferences,
+        windows: windows);
+  }
+}
+
+class ResultsPageContentsState extends State<ResultsPageContents> {
+  final int destId;
+  Map flights;
+  Map accommodation;
+  Map itinerary;
+  final List imageURLs;
+  final String wiki;
+  final String name;
+  final Map weather;
+  final Map countryInfo;
+  final List allFlights;
+  final List allAccommodation;
+  final List allActivities;
+  final Preferences preferences;
+  List<List<double>> windows;
+  ResultsPageContentsState(
+      {this.destId,
+      this.flights,
+      this.accommodation,
+      this.itinerary,
+      this.wiki,
+      this.weather,
+      this.countryInfo,
+      this.imageURLs,
+      this.name,
+      this.allFlights,
+      this.allAccommodation,
+      this.allActivities,
+      this.preferences,
+      this.windows});
+  @override
   void updateFlights(int selectedFlight) {
     setState(() {
       flights = allFlights.where((f) => f["id"] == selectedFlight).toList()[0];
@@ -146,268 +499,61 @@ class ResultsPageState extends State<ResultsPage> {
     });
   }
 
-  @override
   Widget build(BuildContext context) {
-    // preloadImages(context, allAccommodation, itinerary, imageURLs);
-    return Scaffold(
-      backgroundColor: CustomColors.greyBackground,
-      body: Stack(
-        children: <Widget>[
-          CustomScrollView(
-            primary: false,
-            controller: _scrollController,
-            physics: BouncingScrollPhysics(),
-            slivers: <Widget>[
-              SliverAppBar(
-                shape: ContinuousRectangleBorder(
-                  side: _showTitle
-                      ? BorderSide(color: CustomColors.lightGrey, width: 4)
-                      : BorderSide.none,
-                ),
-                leading: _showTitle
-                    ? IconButton(
-                        icon: Icon(Icons.arrow_back,
-                            color: Theme.of(context).primaryColor),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      )
-                    : null,
-                actions: _showTitle
-                    ? <Widget>[
-                        AnimatedButton(
-                          callback: () {
-                            registerClick("feedback", "standard", {
-                              "dest_id": destId,
-                            });
-                            showGeneralDialog(
-                              context: context,
-                              barrierColor: CustomColors.dialogBackground,
-                              transitionDuration: Duration(milliseconds: 100),
-                              barrierDismissible: true,
-                              barrierLabel: '',
-                              transitionBuilder: (context, a1, a2, widget) {
-                                return Transform.scale(
-                                  scale: a1.value,
-                                  child: FeedbackScreen(
-                                    destId: destId,
-                                    duration: flights["outbound"]["duration"],
-                                    categoryIds: allActivities
-                                        .map((a) => a["categoryId"])
-                                        .toList(),
-                                    preferences: preferences,
-                                    price: price,
-                                  ),
-                                );
-                              },
-                              pageBuilder: (context, animation1, animation2) {},
-                            );
-                          },
-                          child: Icon(Icons.refresh,
-                              color: Theme.of(context).primaryColor),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 20, right: 20),
-                          child: AnimatedButton(
-                            child: Icon(Icons.sort,
-                                color: Theme.of(context).primaryColor),
-                            callback: () {
-                              showModalBottomSheet(
-                                  context: context,
-                                  backgroundColor: Colors.transparent,
-                                  isScrollControlled: true,
-                                  builder: (_) {
-                                    return DraggableScrollableSheet(
-                                      expand: false,
-                                      initialChildSize: 0.8,
-                                      builder: (BuildContext context,
-                                          myscrollController) {
-                                        return Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(15),
-                                          ),
-                                          child: Padding(
-                                            padding: EdgeInsets.only(top: 10),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                Container(
-                                                  height: 15,
-                                                  width: 80,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            100),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: SearchPage(),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  });
-                            },
-                          ),
-                        ),
-                      ]
-                    : null,
-                backgroundColor: Colors.white,
-                stretch: true,
-                elevation: 0,
-                pinned: true,
-                floating: false,
-                onStretchTrigger: () {
-                  // Function callback for stretch
-                  return;
-                },
-                expandedHeight: kExpandedHeight,
-                flexibleSpace: Stack(
-                  children: <Widget>[
-                    FlexibleSpaceBar(
-                      stretchModes: <StretchMode>[
-                        StretchMode.zoomBackground,
-                        StretchMode.fadeTitle,
-                      ],
-                      centerTitle: true,
-                      title: _showTitle
-                          ? Text(
-                              name,
-                              style: Theme.of(context).textTheme.headline3,
-                            )
-                          : null,
-                      collapseMode: CollapseMode.parallax,
-                      background: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          imageURLs.length == 0
-                              ? Image(
-                                  image:
-                                      AssetImage("assets/images/mountains.jpg"),
-                                  fit: BoxFit.cover)
-                              : Swiper(
-                                  onIndexChanged: (value) {
-                                    setState(() {
-                                      _currentIndex = value;
-                                    });
-                                  },
-                                  pagination: SwiperPagination(
-                                    margin: EdgeInsets.only(
-                                        left: 10, right: 10, bottom: 40),
-                                  ),
-                                  itemWidth: 3000,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
-                                    return CachedNetworkImage(
-                                      fit: BoxFit.cover,
-                                      imageUrl: imageURLs[index],
-                                      errorWidget: (context, url, error) =>
-                                          Image(
-                                        image: AssetImage(
-                                            "assets/images/mountains.jpg"),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    );
-                                  },
-                                  itemCount: imageURLs.length,
-                                  viewportFraction: 1,
-                                  scale: 1,
-                                ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -1,
-                      left: 0,
-                      right: 0,
-                      child: Visibility(
-                        visible: !_showTitle,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(30),
-                              topRight: Radius.circular(30)),
-                          child: Container(
-                            height: 30,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 100),
+        child: Container(
+          color: CustomColors.greyBackground,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              DestinationInfo(
+                name: name,
+                wiki: wiki,
+                weather: weather,
+                departureDate: preferences.constraints
+                    .singleWhere((c) => c.property == "departure_date")
+                    .value,
+                returnDate: preferences.constraints
+                    .singleWhere((c) => c.property == "return_date")
+                    .value,
+                travelDuration: flights["outbound"]["duration"],
+                countryInfo: countryInfo,
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: FlightsSection(
+                  callback: updateFlights,
+                  flights: flights,
+                  allFlights: allFlights,
+                  destId: destId,
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 100),
-                  child: Container(
-                    color: CustomColors.greyBackground,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        DestinationInfo(
-                          name: name,
-                          wiki: wiki,
-                          weather: weather,
-                          departureDate: preferences.constraints
-                              .singleWhere(
-                                  (c) => c.property == "departure_date")
-                              .value,
-                          returnDate: preferences.constraints
-                              .singleWhere((c) => c.property == "return_date")
-                              .value,
-                          travelDuration: flights["outbound"]["duration"],
-                          countryInfo: countryInfo,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 10),
-                          child: FlightsSection(
-                            callback: updateFlights,
-                            flights: flights,
-                            allFlights: allFlights,
-                            destId: destId,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 10),
-                          child: AccommodationSection(
-                            callback: updateAccommodation,
-                            accommodation: accommodation,
-                            allAccommodation: allAccommodation,
-                            destId: destId,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 10),
-                          child: ActivitiesSection(
-                            destId: destId,
-                            itinerary: itinerary,
-                            allActivities: allActivities,
-                            travel: flights,
-                            accommodation: accommodation,
-                            preferences: preferences,
-                            windows: windows,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: AccommodationSection(
+                  callback: updateAccommodation,
+                  accommodation: accommodation,
+                  allAccommodation: allAccommodation,
+                  destId: destId,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: ActivitiesSection(
+                  destId: destId,
+                  itinerary: itinerary,
+                  allActivities: allActivities,
+                  travel: flights,
+                  accommodation: accommodation,
+                  preferences: preferences,
+                  windows: windows,
                 ),
               ),
             ],
           ),
-          Positioned.fill(
-            top: null,
-            child: ResultsPageBookBar(flights["outbound"]["price"],
-                flights["return"]["price"], accommodation["price"]),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -599,6 +745,9 @@ class ActivityOptionState extends State<ActivityOption> {
                 height: 100,
                 width: 140,
                 child: CachedNetworkImage(
+                  placeholder: (context, url) => Image(
+                      image: AssetImage("assets/images/mountains.jpg"),
+                      fit: BoxFit.cover),
                   imageUrl: bestPhotoURL,
                   fit: BoxFit.cover,
                 ),
@@ -730,21 +879,21 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                   "Activities",
                   style: Theme.of(context).textTheme.headline3,
                 ),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.settings,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 20),
-                      child: Icon(
-                        Icons.map,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
+                // Row(
+                //   children: [
+                //     Icon(
+                //       Icons.settings,
+                //       color: Theme.of(context).primaryColor,
+                //     ),
+                //     Padding(
+                //       padding: EdgeInsets.only(left: 20),
+                //       child: Icon(
+                //         Icons.map,
+                //         color: Theme.of(context).primaryColor,
+                //       ),
+                //     ),
+                //   ],
+                // ),
               ],
             ),
             Padding(
@@ -883,10 +1032,14 @@ class NoActivities extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Icon(
-            day == 0 ? Icons.flight_land : Icons.flight_takeoff,
+            day == 0
+                ? Icons.flight_land
+                : day == numDays - 1 ? Icons.flight_takeoff : Icons.spa,
           ),
           Text(
-            day == 0 ? "Arrival Day" : "Departure Day",
+            day == 0
+                ? "Arrival Day"
+                : day == numDays - 1 ? "Departure Day" : "Free Day",
             style: Theme.of(context)
                 .textTheme
                 .headline3

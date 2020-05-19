@@ -151,6 +151,6 @@ Future<String> makeGetRequest(String path, String params) async {
 }
 
 String _hostname() {
-  return "http://localhost:5000";
-  // return "http://blimp-dev-env.eu-west-2.elasticbeanstalk.com";
+  // return "http://localhost:5000";
+  return "http://blimp-dev-env.eu-west-2.elasticbeanstalk.com";
 }

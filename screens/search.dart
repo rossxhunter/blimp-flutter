@@ -19,9 +19,11 @@ import 'package:intl/intl.dart';
 import 'package:date_range_picker/date_range_picker.dart' as DateRagePicker;
 
 class SearchPage extends StatefulWidget {
+  final Preferences preferences;
+  SearchPage({this.preferences});
   @override
   State<StatefulWidget> createState() {
-    return SearchPageState();
+    return SearchPageState(preferences: preferences);
   }
 }
 
@@ -36,23 +38,56 @@ DateTime initialOutboundDate = DateTime.now().add(Duration(days: 120));
 DateTime initialReturnDate = DateTime.now().add(Duration(days: 123));
 
 class SearchPageState extends State<SearchPage> {
-  Map searchFields = {
-    "tripType": INITIAL_TRIP_TYPE,
-    "origin": {},
-    "destination": {},
-    "travellers": INITIAL_NUM_TRAVELLERS,
-    "outboundDate": initialOutboundDate,
-    "returnDate": initialReturnDate,
-    "accommodationType": INITIAL_ACCOMMODATION_TYPE,
-    "accommodationStars": INITIAL_ACCOMMODATION_STARS,
-    "accommodationAmenities": [],
-    "preferredActivities": [],
-    "essentialActivities": [],
-    "budgetGEQ": INITIAL_BUDGET_GEQ,
-    "budgetLEQ": INITIAL_BUDGET_LEQ,
-    "budgetCurrency": INITIAL_BUDGET_CURRENCY,
-    "preferenceScores": PreferenceScores(culture: 3, learn: 3, relax: 3)
-  };
+  Preferences preferences;
+  Map searchFields;
+
+  SearchPageState({this.preferences}) {
+    searchFields = {
+      "tripType": preferences != null
+          ? preferences.constraints
+              .firstWhere(
+                (c) => c.property == "trip_type",
+              )
+              .value
+          : INITIAL_TRIP_TYPE,
+      "origin": preferences != null
+          ? preferences.constraints
+              .firstWhere((c) => c.property == "origin")
+              .value
+          : {},
+      "destination": preferences != null
+          ? preferences.constraints
+              .firstWhere((c) => c.property == "destination")
+              .value
+          : {},
+      "travellers": INITIAL_NUM_TRAVELLERS,
+      "outboundDate": preferences != null
+          ? preferences.constraints
+              .firstWhere((c) => c.property == "departure_date")
+          : initialOutboundDate,
+      "returnDate": initialReturnDate,
+      "accommodationType": INITIAL_ACCOMMODATION_TYPE,
+      "accommodationStars": INITIAL_ACCOMMODATION_STARS,
+      "accommodationAmenities": [],
+      "preferredActivities": [],
+      "essentialActivities": [],
+      "budgetGEQ": INITIAL_BUDGET_GEQ,
+      "budgetLEQ": INITIAL_BUDGET_LEQ,
+      "budgetCurrency": INITIAL_BUDGET_CURRENCY,
+      "preferenceScores": PreferenceScores(
+          culture: 3,
+          learn: 3,
+          relax: 3,
+          action: 3,
+          party: 3,
+          family: 3,
+          romantic: 3,
+          nature: 3,
+          shopping: 3,
+          food: 3,
+          sport: 3)
+    };
+  }
 
   //CALLBACK
   void updateSearchFields(String field, var value) {
@@ -70,7 +105,8 @@ class SearchPageState extends State<SearchPage> {
   }
 
   bool searchFieldsValid() {
-    if (searchFields["origin"].length == 0) {
+    if (searchFields["origin"].length == 0 ||
+        searchFields["destination"].length == 0) {
       return false;
     }
     return true;
@@ -174,11 +210,14 @@ class SearchPageState extends State<SearchPage> {
                                   child: OriginDestFields(
                                     callback: updateSearchFields,
                                     switchCallback: switchOriginDest,
+                                    origin: searchFields["origin"],
+                                    destination: searchFields["destination"],
                                   ),
                                 ),
                                 Padding(
                                   padding: EdgeInsets.only(top: 30),
                                   child: TravellersRow(
+                                    numTravellers: searchFields["travellers"],
                                     callback: updateSearchFields,
                                   ),
                                 ),
@@ -403,6 +442,46 @@ class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
         "title": "Relaxing",
         "icon": Icons.beach_access
       },
+      "action": {
+        "score": initialPrefScores.action.toDouble(),
+        "title": "Action",
+        "icon": Icons.directions_run
+      },
+      "party": {
+        "score": initialPrefScores.party.toDouble(),
+        "title": "Party",
+        "icon": Icons.local_bar
+      },
+      "sport": {
+        "score": initialPrefScores.sport.toDouble(),
+        "title": "Sport",
+        "icon": Icons.directions_bike
+      },
+      "food": {
+        "score": initialPrefScores.food.toDouble(),
+        "title": "Foody",
+        "icon": Icons.restaurant
+      },
+      "nature": {
+        "score": initialPrefScores.nature.toDouble(),
+        "title": "Nature",
+        "icon": Icons.nature
+      },
+      "shopping": {
+        "score": initialPrefScores.shopping.toDouble(),
+        "title": "Shopping",
+        "icon": Icons.shopping_basket
+      },
+      "romantic": {
+        "score": initialPrefScores.romantic.toDouble(),
+        "title": "Romantic",
+        "icon": CupertinoIcons.heart_solid
+      },
+      "family": {
+        "score": initialPrefScores.family.toDouble(),
+        "title": "Family",
+        "icon": Icons.child_friendly
+      },
     };
   }
   @override
@@ -450,6 +529,12 @@ class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
                                         learn: prefScores["learn"]["score"]
                                             .toInt(),
                                         relax: prefScores["relax"]["score"]
+                                            .toInt(),
+                                        action: prefScores["action"]["score"]
+                                            .toInt(),
+                                        party: prefScores["party"]["score"]
+                                            .toInt(),
+                                        sport: prefScores["sport"]["score"]
                                             .toInt());
                                 callback("preferenceScores", newPrefScores);
                               });
@@ -796,15 +881,18 @@ class DatesState extends State<Dates> {
 
 class TravellersRow extends StatefulWidget {
   final Function callback;
-  TravellersRow({this.callback});
+  final int numTravellers;
+  TravellersRow({this.callback, this.numTravellers});
   @override
   State<StatefulWidget> createState() {
-    return TravellersRowState();
+    return TravellersRowState(numTravellers: numTravellers);
   }
 }
 
 class TravellersRowState extends State<TravellersRow> {
-  int numTravellers = INITIAL_NUM_TRAVELLERS;
+  int numTravellers;
+
+  TravellersRowState({this.numTravellers});
 
   void updateNumTravellers(String direction) {
     if (direction == "+") {
@@ -845,16 +933,43 @@ class TravellersRowState extends State<TravellersRow> {
 class OriginDestFields extends StatefulWidget {
   final Function callback;
   final Function switchCallback;
-  OriginDestFields({this.callback, this.switchCallback});
+  final Map origin;
+  final Map destination;
+  OriginDestFields(
+      {this.callback, this.switchCallback, this.origin, this.destination});
   @override
   State<StatefulWidget> createState() {
-    return OriginDestFieldsState();
+    return OriginDestFieldsState(origin: origin, destination: destination);
   }
 }
 
 class OriginDestFieldsState extends State<OriginDestFields> {
   TextEditingController originController = TextEditingController();
   TextEditingController destinationController = TextEditingController();
+  Map origin;
+  Map destination;
+
+  OriginDestFieldsState({this.origin, this.destination}) {
+    if (origin.keys.length != 0) {
+      Map o = getDestinationSuggestions().firstWhere(
+          (s) => s["id"] == origin["id"] && s["type"] == origin["type"]);
+
+      if (o["type"] == "airport") {
+        originController.text = o["airportName"];
+      } else {
+        originController.text = o["cityName"];
+      }
+    }
+    if (destination.keys.length != 0) {
+      Map d = getDestinationSuggestions().firstWhere((s) =>
+          s["id"] == destination["id"] && s["type"] == destination["type"]);
+      if (d["type"] == "airport") {
+        destinationController.text = d["airportName"];
+      } else {
+        destinationController.text = d["cityName"];
+      }
+    }
+  }
 
   void updateSearchFields(String point, Map value) {
     Map state;

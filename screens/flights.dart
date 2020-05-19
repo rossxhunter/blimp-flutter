@@ -1,5 +1,6 @@
 import 'package:blimp/screens/filterFlights.dart';
 import 'package:blimp/styles/colors.dart';
+import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:flutter/material.dart';
@@ -177,6 +178,18 @@ class FlightsScreenState extends State<FlightsScreen> {
                   callback: () {
                     callback(selectedFlight);
                     Navigator.pop(context);
+                    showDialog(
+                        context: context,
+                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+                        builder: (context) {
+                          Future.delayed(Duration(seconds: 1), () {
+                            Navigator.of(context).pop(true);
+                          });
+                          return SuccessDialog(
+                            title: "Success",
+                            description: "Flights Changed",
+                          );
+                        });
                   },
                   child: ConfirmButton(),
                 ),

@@ -19,24 +19,28 @@ class FeedbackScreen extends StatefulWidget {
   final List categoryIds;
   final int duration;
   final double price;
+  final Map weather;
 
   FeedbackScreen(
       {this.preferences,
       this.duration,
       this.categoryIds,
       this.destId,
-      this.price});
+      this.price,
+      this.weather});
 
   @override
   State<StatefulWidget> createState() {
     preferences.constraints.removeWhere((c) => c.property == "destination");
 
     return FeedbackScreenState(
-        preferences: preferences,
-        duration: duration,
-        categoryIds: categoryIds,
-        destId: destId,
-        price: price);
+      preferences: preferences,
+      duration: duration,
+      categoryIds: categoryIds,
+      destId: destId,
+      price: price,
+      weather: weather,
+    );
   }
 }
 
@@ -46,6 +50,7 @@ class FeedbackScreenState extends State<FeedbackScreen> {
   final List categoryIds;
   final int duration;
   final double price;
+  final Map weather;
 
   bool _shouldShowBackButton = false;
 
@@ -56,24 +61,26 @@ class FeedbackScreenState extends State<FeedbackScreen> {
       this.categoryIds,
       this.duration,
       this.destId,
-      this.price}) {
+      this.price,
+      this.weather}) {
     _currentFeedbackWidget = FeedbackMainScreen(
       preferences: preferences,
       destId: destId,
       duration: duration,
       callback: furtherOptionsButtonPressed,
       price: price,
+      weather: weather,
     );
   }
 
   void backButtonPressed() {
     setState(() {
       _currentFeedbackWidget = FeedbackMainScreen(
-        preferences: preferences,
-        destId: destId,
-        callback: furtherOptionsButtonPressed,
-        price: price,
-      );
+          preferences: preferences,
+          destId: destId,
+          callback: furtherOptionsButtonPressed,
+          price: price,
+          weather: weather);
       _shouldShowBackButton = false;
     });
   }
@@ -130,13 +137,15 @@ class FeedbackMainScreen extends StatefulWidget {
   final int duration;
   final Function callback;
   final double price;
+  final Map weather;
 
   FeedbackMainScreen(
       {this.preferences,
       this.destId,
       this.duration,
       this.callback,
-      this.price});
+      this.price,
+      this.weather});
 
   @override
   State<StatefulWidget> createState() {
@@ -145,7 +154,8 @@ class FeedbackMainScreen extends StatefulWidget {
         destId: destId,
         duration: duration,
         callback: callback,
-        price: price);
+        price: price,
+        weather: weather);
   }
 }
 
@@ -155,13 +165,15 @@ class FeedbackMainScreenState extends State<FeedbackMainScreen> {
   final int duration;
   final Function callback;
   final double price;
+  final Map weather;
 
   FeedbackMainScreenState(
       {this.preferences,
       this.destId,
       this.duration,
       this.callback,
-      this.price});
+      this.price,
+      this.weather});
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +228,7 @@ class FeedbackMainScreenState extends State<FeedbackMainScreen> {
                 callback: () => fetchFeedbackHoliday(context, preferences, {
                   "type": "better_weather",
                   "previous_dest_id": destId,
+                  "previous_av_temp": weather["temp"]
                 }),
                 child: FeedbackOption(
                   text: "Better Weather",

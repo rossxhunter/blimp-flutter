@@ -95,3 +95,7 @@ Map getExploreSuggestions() {
 List getTestingSuggestions() {
   return testingSuggestions;
 }
+
+List getDestinationSuggestions() {
+  return destinationSuggestions;
+}

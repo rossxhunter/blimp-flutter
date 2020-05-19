@@ -39,11 +39,41 @@ class PreferenceScores {
   int culture;
   int learn;
   int relax;
+  int action;
+  int party;
+  int sport;
+  int food;
+  int nature;
+  int shopping;
+  int romantic;
+  int family;
 
-  PreferenceScores({this.culture, this.learn, this.relax});
+  PreferenceScores(
+      {this.culture,
+      this.learn,
+      this.relax,
+      this.action,
+      this.party,
+      this.sport,
+      this.food,
+      this.nature,
+      this.shopping,
+      this.romantic,
+      this.family});
 
-  Map<String, dynamic> toJson() =>
-      {'culture': culture, 'learn': learn, 'relax': relax};
+  Map<String, dynamic> toJson() => {
+        'culture': culture,
+        'learn': learn,
+        'relax': relax,
+        'action': action,
+        'party': party,
+        'sport': sport,
+        'food': food,
+        'nature': nature,
+        'shopping': shopping,
+        'romantic': romantic,
+        'family': family
+      };
 }
 
 class Property {

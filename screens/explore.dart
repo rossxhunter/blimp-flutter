@@ -262,6 +262,10 @@ class RandomHolidayButton extends StatelessWidget {
               return LoadingIndicator();
             });
         Preferences prefs = prefsConfig[0];
+        prefs.constraints.removeWhere((c) => c.property == "departure_date");
+        prefs.constraints.removeWhere((c) => c.property == "return_date");
+        prefs.constraints.add(Constraint("departure_date", "2020-08-27"));
+        prefs.constraints.add(Constraint("return_date", "2020-08-30"));
         getHoliday(prefs).then((holiday) {
           print(holiday);
           Navigator.pop(context);
@@ -306,6 +310,12 @@ class ExploreOption extends StatelessWidget {
               return LoadingIndicator();
             });
         Preferences prefs = prefsConfig[0];
+        prefs.constraints.removeWhere((c) => c.property == "departure_date");
+        prefs.constraints.removeWhere((c) => c.property == "return_date");
+        prefs.constraints.add(Constraint("departure_date",
+            getExploreSuggestions()[name][index]["departure_date"]));
+        prefs.constraints.add(Constraint("return_date",
+            getExploreSuggestions()[name][index]["return_date"]));
         prefs.constraints.add(Constraint("destination", {
           "type": "city",
           "id": getExploreSuggestions()[name][index]["id"]
@@ -421,6 +431,9 @@ class ExploreOption extends StatelessWidget {
                 child: CachedNetworkImage(
                   fit: BoxFit.cover,
                   imageUrl: getExploreSuggestions()[name][index]["image"],
+                  placeholder: (context, url) => Image(
+                      image: AssetImage("assets/images/mountains.jpg"),
+                      fit: BoxFit.cover),
                   errorWidget: (context, url, error) => Image(
                       image: AssetImage("assets/images/mountains.jpg"),
                       fit: BoxFit.cover),

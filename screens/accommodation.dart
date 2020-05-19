@@ -1,4 +1,5 @@
 import 'package:blimp/styles/colors.dart';
+import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
@@ -76,17 +77,17 @@ class AccommodationScreenState extends State<AccommodationScreen> {
             },
           ),
         ),
-        actions: <Widget>[
-          Padding(
-            padding: EdgeInsets.only(right: 10),
-            child: IconButton(
-              icon: Icon(Icons.sort),
-              color: Theme.of(context).primaryColor,
-              iconSize: 30,
-              onPressed: () {},
-            ),
-          ),
-        ],
+        // actions: <Widget>[
+        //   Padding(
+        //     padding: EdgeInsets.only(right: 10),
+        //     child: IconButton(
+        //       icon: Icon(Icons.sort),
+        //       color: Theme.of(context).primaryColor,
+        //       iconSize: 30,
+        //       onPressed: () {},
+        //     ),
+        //   ),
+        // ],
       ),
       body: Stack(
         children: <Widget>[
@@ -151,6 +152,18 @@ class AccommodationScreenState extends State<AccommodationScreen> {
                   callback: () {
                     callback(selectedAccommodation);
                     Navigator.pop(context);
+                    showDialog(
+                        context: context,
+                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+                        builder: (context) {
+                          Future.delayed(Duration(seconds: 1), () {
+                            Navigator.of(context).pop(true);
+                          });
+                          return SuccessDialog(
+                            title: "Success",
+                            description: "Accommodation Changed",
+                          );
+                        });
                   },
                   child: ConfirmButton(),
                 ),
