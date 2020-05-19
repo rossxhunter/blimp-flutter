@@ -178,9 +178,9 @@ class ItineraryOptionState extends State<ItineraryOption> {
                         itinNum: itinNum,
                         mode: "evaluation",
                         windows: [
-                          [8, 17],
-                          [8, 17],
-                          [8, 17]
+                          [8, 18],
+                          [8, 18],
+                          [8, 18]
                         ],
                       ),
                     ),
