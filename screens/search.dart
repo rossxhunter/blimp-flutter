@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/model/properties.dart';
 import 'package:blimp/routes.dart';
@@ -729,12 +731,13 @@ class BudgetState extends State<Budget> {
       children: <Widget>[
         DoubleSlider(
           callback: getUpdatedValues,
-          min: 0,
-          max: 1500,
-          step: 50,
-          minDistance: 150,
-          lowerValue: 300,
-          upperValue: 600,
+          isLogarithmic: true,
+          min: log(150),
+          max: log(10000),
+          step: (log(10000) - log(150)) / 100,
+          minDistance: log(150),
+          lowerValue: log(300),
+          upperValue: log(600),
         ),
         Padding(
           padding: EdgeInsets.only(top: 10),

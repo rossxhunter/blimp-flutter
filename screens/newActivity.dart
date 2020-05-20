@@ -3,6 +3,7 @@ import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/cupertino_flutter_typeahead.dart';
+import 'dart:math';
 
 class NewActivity extends StatefulWidget {
   final List allActivities;
@@ -28,6 +29,16 @@ class NewActivityState extends State<NewActivity> {
         Navigator.pop(context);
         callback(newActivity);
       }
+    });
+  }
+
+  void addRandomActivity() {
+    int len = allActivities.length;
+    var rand = new Random();
+    int randNum = rand.nextInt(len);
+    setState(() {
+      Navigator.pop(context);
+      callback(allActivities[randNum]);
     });
   }
 
@@ -67,20 +78,25 @@ class NewActivityState extends State<NewActivity> {
               ),
               Padding(
                 padding: EdgeInsets.only(top: 20),
-                child: GestureDetector(
-                  onTap: () {
+                child: AnimatedButton(
+                  callback: () {
                     addNewActivity();
                   },
                   child: AddActivityButton(),
                 ),
               ),
+              // Padding(
+              //   padding: EdgeInsets.only(top: 20),
+              //   child: BrowseActivitiesButton(),
+              // ),
               Padding(
                 padding: EdgeInsets.only(top: 20),
-                child: BrowseActivitiesButton(),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: AddRandomActivityButton(),
+                child: AnimatedButton(
+                  callback: () {
+                    addRandomActivity();
+                  },
+                  child: AddRandomActivityButton(),
+                ),
               ),
             ],
           ),

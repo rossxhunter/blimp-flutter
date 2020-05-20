@@ -68,6 +68,7 @@ class FilterFlightsState extends State<FilterFlights> {
                         Expanded(
                           child: DoubleSlider(
                             callback: updateOutboundSlider,
+                            isLogarithmic: false,
                             min: 0,
                             max: 24,
                             lowerValue: outboundTimes[0],
@@ -104,6 +105,7 @@ class FilterFlightsState extends State<FilterFlights> {
                           Expanded(
                             child: DoubleSlider(
                               callback: updateReturnSlider,
+                              isLogarithmic: false,
                               min: 0,
                               max: 24,
                               lowerValue: returnTimes[0],

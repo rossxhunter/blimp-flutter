@@ -12,6 +12,7 @@ import 'package:blimp/services/http.dart';
 import 'package:blimp/services/images.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
+import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
@@ -484,10 +485,24 @@ class ResultsPageContentsState extends State<ResultsPageContents> {
       this.allActivities,
       this.preferences,
       this.windows});
-  @override
+
   void updateFlights(int selectedFlight) {
     setState(() {
       flights = allFlights.where((f) => f["id"] == selectedFlight).toList()[0];
+      getItineraryFromChange(preferences, flights, accommodation, destId)
+          .then((i) {
+        setState(() {
+          itinerary = i;
+        });
+      }).catchError((e) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => CustomDialog(
+            title: "Error",
+            description: "Unable to update itinerary - " + e.toString(),
+          ),
+        );
+      });
     });
   }
 
@@ -496,9 +511,24 @@ class ResultsPageContentsState extends State<ResultsPageContents> {
       accommodation = allAccommodation
           .where((a) => a["id"] == selectedAccommodation)
           .toList()[0];
+      getItineraryFromChange(preferences, flights, accommodation, destId)
+          .then((i) {
+        setState(() {
+          itinerary = i;
+        });
+      }).catchError((e) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => CustomDialog(
+            title: "Error",
+            description: "Unable to update itinerary - " + e.toString(),
+          ),
+        );
+      });
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Padding(
@@ -542,6 +572,7 @@ class ResultsPageContentsState extends State<ResultsPageContents> {
               Padding(
                 padding: EdgeInsets.only(top: 10),
                 child: ActivitiesSection(
+                  key: Key(itinerary.toString()),
                   destId: destId,
                   itinerary: itinerary,
                   allActivities: allActivities,
@@ -813,6 +844,7 @@ class ActivityOptionState extends State<ActivityOption> {
 }
 
 class ActivitiesSection extends StatefulWidget {
+  final Key key;
   final int destId;
   final Map itinerary;
   final List allActivities;
@@ -822,7 +854,8 @@ class ActivitiesSection extends StatefulWidget {
   final List<List<double>> windows;
 
   ActivitiesSection(
-      {this.itinerary,
+      {this.key,
+      this.itinerary,
       this.allActivities,
       this.travel,
       this.destId,
@@ -832,6 +865,7 @@ class ActivitiesSection extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return ActivitiesSectionState(
+        key: key,
         itinerary: itinerary,
         allActivities: allActivities,
         travel: travel,
@@ -843,16 +877,18 @@ class ActivitiesSection extends StatefulWidget {
 }
 
 class ActivitiesSectionState extends State<ActivitiesSection> {
+  Key key;
   Map itinerary;
-  final List allActivities;
-  final int destId;
-  final Map travel;
-  final Map accommodation;
-  final Preferences preferences;
+  List allActivities;
+  int destId;
+  Map travel;
+  Map accommodation;
+  Preferences preferences;
   int _currentIndex;
   List<List<double>> windows;
   ActivitiesSectionState(
-      {this.itinerary,
+      {this.key,
+      this.itinerary,
       this.allActivities,
       this.travel,
       this.destId,
@@ -901,6 +937,7 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
               child: Container(
                 height: 350,
                 child: Swiper(
+                  key: key,
                   onIndexChanged: (value) {
                     setState(() {
                       _currentIndex = value;

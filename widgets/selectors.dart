@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:flutter/material.dart';
@@ -194,6 +196,7 @@ class DoubleSlider extends StatefulWidget {
   final double lowerValue;
   final double upperValue;
   final double min;
+  final bool isLogarithmic;
   final double max;
   final double step;
   final double minDistance;
@@ -203,6 +206,7 @@ class DoubleSlider extends StatefulWidget {
       this.upperValue,
       this.max,
       this.min,
+      this.isLogarithmic,
       this.minDistance,
       this.step});
   @override
@@ -210,8 +214,9 @@ class DoubleSlider extends StatefulWidget {
     return DoubleSliderState(
         initialLowerValue: lowerValue,
         initialUpperValue: upperValue,
-        max: max,
-        min: min,
+        maxVal: max,
+        minVal: min,
+        isLogarithmic: isLogarithmic,
         minDistance: minDistance,
         step: step);
   }
@@ -220,19 +225,21 @@ class DoubleSlider extends StatefulWidget {
 class DoubleSliderState extends State<DoubleSlider> {
   final double initialLowerValue;
   final double initialUpperValue;
-  final double min;
-  final double max;
-  final double step;
-  final double minDistance;
+  final double minVal;
+  final double maxVal;
+  final bool isLogarithmic;
+  double step;
+  double minDistance;
   double _lowerValue;
   double _upperValue;
   DoubleSliderState(
       {this.initialLowerValue,
       this.initialUpperValue,
-      this.min,
-      this.max,
+      this.minVal,
+      this.maxVal,
       this.step,
-      this.minDistance}) {
+      this.minDistance,
+      this.isLogarithmic}) {
     _lowerValue = initialLowerValue;
     _upperValue = initialUpperValue;
   }
@@ -241,10 +248,11 @@ class DoubleSliderState extends State<DoubleSlider> {
     return FlutterSlider(
       values: [_lowerValue, _upperValue],
       rangeSlider: true,
-      min: min,
-      max: max,
+      min: minVal,
+      max: maxVal,
       step: step,
-      minimumDistance: minDistance,
+      // minimumDistance: minDistance,
+      tooltip: FlutterSliderTooltip(disabled: true),
       selectByTap: false,
       trackBar: FlutterSliderTrackBar(
         inactiveTrackBar: BoxDecoration(
@@ -282,21 +290,32 @@ class DoubleSliderState extends State<DoubleSlider> {
         _lowerValue = lowerValue;
         _upperValue = upperValue;
         // setState(() {});
-        widget.callback(lowerValue, upperValue);
+        widget.callback(_getRealValue(lowerValue), _getRealValue(upperValue));
       },
       onDragCompleted: (handlerIndex, lowerValue, upperValue) {
         _lowerValue = lowerValue;
         _upperValue = upperValue;
         // setState(() {});
-        widget.callback(lowerValue, upperValue);
+        widget.callback(_getRealValue(lowerValue), _getRealValue(upperValue));
       },
       onDragging: (handlerIndex, lowerValue, upperValue) {
         _lowerValue = lowerValue;
         _upperValue = upperValue;
         // setState(() {});
-        widget.callback(lowerValue, upperValue);
+        widget.callback(_getRealValue(lowerValue), _getRealValue(upperValue));
       },
     );
+  }
+
+  double _getRealValue(double value) {
+    if (isLogarithmic == true) {
+      int steps = (maxVal - minVal) ~/ step;
+      double scale = (maxVal - minVal) / steps;
+      double realValue = exp(minVal + scale * ((value ~/ step) - 119));
+      realValue = 50.0 * (realValue / 50).ceil();
+      return min(realValue, exp(maxVal));
+    }
+    return value;
   }
 }
 

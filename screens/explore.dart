@@ -264,6 +264,7 @@ class RandomHolidayButton extends StatelessWidget {
         Preferences prefs = prefsConfig[0];
         prefs.constraints.removeWhere((c) => c.property == "departure_date");
         prefs.constraints.removeWhere((c) => c.property == "return_date");
+        prefs.constraints.removeWhere((c) => c.property == "destination");
         prefs.constraints.add(Constraint("departure_date", "2020-08-27"));
         prefs.constraints.add(Constraint("return_date", "2020-08-30"));
         getHoliday(prefs).then((holiday) {

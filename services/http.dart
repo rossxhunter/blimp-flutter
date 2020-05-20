@@ -80,6 +80,26 @@ Future<Map> getHolidayWithFeedback(Preferences prefs, Map feedback) async {
   return json.decode(itinerary);
 }
 
+Future<Map> getItineraryFromChange(
+    Preferences prefs, Map travel, Map accommodation, int destId) async {
+  String constraints = encodePrefs(prefs.constraints);
+  String softPrefs = encodePrefs(prefs.softPreferences);
+  String prefScores = jsonEncode(prefs.preferenceScores);
+  String travelJson = jsonEncode(travel);
+  String accommodationJson = jsonEncode(accommodation);
+  String params =
+      "destination_id=$destId&travel=$travelJson&accommodation=$accommodationJson&constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores&should_register_clicks=$testingSwitchOn";
+  var itinerary;
+  try {
+    itinerary = await makeGetRequest("itinerary_from_change", params);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  Map decodedResponse = json.decode(itinerary);
+  return decodedResponse;
+}
+
 Future<Map> getHoliday(Preferences prefs) async {
   String constraints = encodePrefs(prefs.constraints);
   String softPrefs = encodePrefs(prefs.softPreferences);

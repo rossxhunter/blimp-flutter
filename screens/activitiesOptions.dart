@@ -58,6 +58,7 @@ class ActivitiesOptionsState extends State<ActivitiesOptions> {
                         Expanded(
                           child: DoubleSlider(
                             callback: updateActivitiesWindow,
+                            isLogarithmic: false,
                             min: 6,
                             max: 24,
                             lowerValue: windowTimes[0],

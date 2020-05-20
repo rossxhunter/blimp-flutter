@@ -685,21 +685,21 @@ class EditActivityPopupMenuButton extends StatelessWidget {
             ],
           ),
         ),
-        PopupMenuItem<String>(
-          value: "switchDays",
-          child: Row(
-            children: [
-              Icon(
-                Icons.shuffle,
-                color: Colors.green,
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 5),
-                child: Text('Switch Days'),
-              ),
-            ],
-          ),
-        ),
+        // PopupMenuItem<String>(
+        //   value: "switchDays",
+        //   child: Row(
+        //     children: [
+        //       Icon(
+        //         Icons.shuffle,
+        //         color: Colors.green,
+        //       ),
+        //       Padding(
+        //         padding: EdgeInsets.only(left: 5),
+        //         child: Text('Switch Days'),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         PopupMenuItem<String>(
           value: "delete",
           child: Row(
