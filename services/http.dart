@@ -126,7 +126,8 @@ Future<void> registerClick(String click, String mode, Map metadata) async {
       await makePostRequest("clicks/$clicksId/$click", {
         "credentials": 'same-origin',
         "mode": mode,
-        "metadata": jsonEncode(metadata)
+        "metadata":
+            jsonEncode(metadata).replaceAll("&", "%26").replaceAll('"', "'")
       });
     } catch (e) {
       print(e);
@@ -171,6 +172,6 @@ Future<String> makeGetRequest(String path, String params) async {
 }
 
 String _hostname() {
-  // return "http://localhost:5000";
-  return "http://blimp-dev-env.eu-west-2.elasticbeanstalk.com";
+  return "http://localhost:5000";
+  // return "http://blimp-dev-env.eu-west-2.elasticbeanstalk.com";
 }

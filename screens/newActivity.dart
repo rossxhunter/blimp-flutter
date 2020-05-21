@@ -27,7 +27,7 @@ class NewActivityState extends State<NewActivity> {
     setState(() {
       if (newActivity.length > 0) {
         Navigator.pop(context);
-        callback(newActivity);
+        callback(newActivity, false);
       }
     });
   }
@@ -38,7 +38,7 @@ class NewActivityState extends State<NewActivity> {
     int randNum = rand.nextInt(len);
     setState(() {
       Navigator.pop(context);
-      callback(allActivities[randNum]);
+      callback(allActivities[randNum], true);
     });
   }
 

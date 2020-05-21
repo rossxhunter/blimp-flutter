@@ -76,6 +76,7 @@ class OriginDestinationFieldState extends State<OriginDestinationField> {
                               CupertinoTextFieldConfiguration(
                             onChanged: (var value) {},
                             maxLines: 2,
+                            placeholder: "City or Airport",
                             onTap: () {
                               typeAheadController.clear();
                               callback(point, {});
@@ -222,6 +223,7 @@ class ActivitiesFieldState extends State<ActivitiesField> {
                               CupertinoTextFieldConfiguration(
                             onChanged: (var value) {},
                             maxLines: 2,
+                            placeholder: "e.g. History Museum",
                             onTap: () {
                               typeAheadController.clear();
                               callback({});
