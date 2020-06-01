@@ -3,6 +3,8 @@ import 'package:blimp/screens/explore.dart';
 import 'package:blimp/screens/search.dart';
 import 'package:blimp/screens/settings.dart';
 import 'package:blimp/screens/testing.dart';
+import 'package:blimp/screens/trips.dart';
+import 'package:blimp/screens/user.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:flutter/cupertino.dart';
@@ -129,6 +131,7 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
         accentColor: Color.fromRGBO(230, 20, 60, 1),
         splashColor: Colors.transparent,
         buttonColor: Color.fromRGBO(230, 20, 60, 1),
+        canvasColor: Colors.white,
         buttonBarTheme:
             ButtonBarThemeData(buttonTextTheme: ButtonTextTheme.accent),
         textTheme: TextTheme(
@@ -199,7 +202,12 @@ class BlimpScaffold extends StatefulWidget {
 
 class BlimpScaffoldState extends State<BlimpScaffold> {
   int _currentIndex = 0;
-  final List<Widget> _children = [ExplorePage(), SearchPage(), TestingPage()];
+  final List<Widget> _children = [
+    ExplorePage(),
+    SearchPage(),
+    UserPage(),
+    TestingPage()
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,25 +215,33 @@ class BlimpScaffoldState extends State<BlimpScaffold> {
         index: _currentIndex,
         children: _children,
       ),
-      backgroundColor: Color.fromRGBO(250, 250, 250, 1),
+      // backgroundColor: Color.fromRGBO(250, 250, 250, 1),
+      // backgroundColor: Colors.white,
       bottomNavigationBar: BottomNavigationBar(
-        onTap: onTabTapped, // new
+        onTap: onTabTapped,
+        elevation: 0,
+        unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
-        currentIndex: _currentIndex, // ne
-        showSelectedLabels: false, // <-- HERE
+        selectedItemColor: Theme.of(context).primaryColor,
+        currentIndex: _currentIndex,
+        showSelectedLabels: false,
         showUnselectedLabels: false,
         items: [
-          new BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.explore),
             title: Text("Explore"),
           ),
-          new BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.search),
             title: Text("Search"),
           ),
-          new BottomNavigationBarItem(
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            title: Text("User"),
+          ),
+          BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.lab_flask),
-            title: Text("Profile"),
+            title: Text("Testing"),
           )
         ],
       ),

@@ -50,13 +50,8 @@ Widget successDialogContent(
   return Stack(
     children: <Widget>[
       Container(
-        height: 200,
-        padding: EdgeInsets.only(
-          top: Consts.avatarRadius + Consts.padding,
-          bottom: Consts.padding,
-          left: Consts.padding,
-          right: Consts.padding,
-        ),
+        height: 250,
+        padding: EdgeInsets.all(30),
         margin: EdgeInsets.only(top: Consts.avatarRadius),
         decoration: new BoxDecoration(
           color: Colors.white,

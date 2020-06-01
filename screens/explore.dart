@@ -16,6 +16,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 final List<String> _tabsString = <String>[
@@ -176,19 +177,19 @@ class ExplorePageTabView extends StatelessWidget {
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                stops: [0, 0.1],
-                end: Alignment
-                    .bottomCenter, // 10% of the width, so there are ten blinds.
-                colors: [
-                  Colors.white,
-                  CustomColors.greyBackground
-                ], // whitish to gray
-                tileMode:
-                    TileMode.repeated, // repeats the gradient over the canvas
-              ),
-            ),
+                // gradient: LinearGradient(
+                //   begin: Alignment.topCenter,
+                //   stops: [0, 0.1],
+                //   end: Alignment
+                //       .bottomCenter,
+                //   colors: [
+                //     Colors.white,
+                //     CustomColors.greyBackground
+                //   ], // whitish to gray
+                //   tileMode:
+                //       TileMode.repeated,
+                // ),
+                ),
             child: TabBarView(
               physics: AlwaysScrollableScrollPhysics(),
               children: _tabsString.map((String name) {
@@ -210,22 +211,7 @@ class ExplorePageTabView extends StatelessWidget {
                             SliverPadding(
                               padding: const EdgeInsets.only(
                                   left: 30, right: 30, top: 20),
-                              sliver: SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (BuildContext context, int index) {
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                          bottom: 20, top: 20, left: 20),
-                                      child: ExploreOption(
-                                        index: index,
-                                        name: name,
-                                      ),
-                                    );
-                                  },
-                                  childCount:
-                                      getExploreSuggestions()[name].length,
-                                ),
-                              ),
+                              sliver: ExploreList(name: name),
                             ),
                           ],
                         ),
@@ -240,6 +226,49 @@ class ExplorePageTabView extends StatelessWidget {
       ],
     );
   }
+}
+
+class ExploreList extends StatefulWidget {
+  final String name;
+  ExploreList({this.name});
+  @override
+  State<StatefulWidget> createState() {
+    return ExploreListState(name: name);
+  }
+}
+
+class ExploreListState extends State<ExploreList>
+    with AutomaticKeepAliveClientMixin {
+  final String name;
+  ExploreListState({this.name});
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: MediaQuery.removePadding(
+        removeTop: true,
+        context: context,
+        child: ListView.builder(
+          // itemExtent: 30,
+          addAutomaticKeepAlives: true,
+          shrinkWrap: true,
+          itemCount: getExploreSuggestions()[name].length,
+          physics: BouncingScrollPhysics(),
+          itemBuilder: (BuildContext context, int index) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 20, top: 20, left: 20),
+              child: ExploreOption(
+                index: index,
+                name: name,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class RandomHolidayButton extends StatelessWidget {
@@ -291,10 +320,20 @@ class RandomHolidayButton extends StatelessWidget {
   }
 }
 
-class ExploreOption extends StatelessWidget {
+class ExploreOption extends StatefulWidget {
   final int index;
   final String name;
   ExploreOption({this.index, this.name});
+  @override
+  State<StatefulWidget> createState() {
+    return ExploreOptionState(index: index, name: name);
+  }
+}
+
+class ExploreOptionState extends State<ExploreOption> {
+  final int index;
+  final String name;
+  ExploreOptionState({this.index, this.name});
 
   var parser = EmojiParser();
 
@@ -345,10 +384,22 @@ class ExploreOption extends StatelessWidget {
         overflow: Overflow.visible,
         children: <Widget>[
           Container(
-            height: 120,
+            height: 130,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: CustomColors.lightGrey,
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: CustomColors.lightGrey,
+                  blurRadius: 0.0,
+                  spreadRadius: 0.0,
+                  offset: Offset(5.0, 5.0), // shadow direction: bottom right
+                )
+              ],
             ),
             child: Padding(
               padding: EdgeInsets.all(10),
@@ -424,22 +475,58 @@ class ExploreOption extends StatelessWidget {
           Positioned(
             bottom: 20,
             left: -20,
-            child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              child: Container(
-                height: 120,
-                width: 140,
-                child: CachedNetworkImage(
-                  fit: BoxFit.cover,
-                  imageUrl: getExploreSuggestions()[name][index]["image"],
-                  placeholder: (context, url) => Image(
-                      image: AssetImage("assets/images/mountains.jpg"),
-                      fit: BoxFit.cover),
-                  errorWidget: (context, url, error) => Image(
-                      image: AssetImage("assets/images/mountains.jpg"),
-                      fit: BoxFit.cover),
-                ),
+            child: Container(
+              height: 135,
+              width: 155,
+              // decoration: BoxDecoration(
+              //   borderRadius: BorderRadius.circular(10),
+              //   boxShadow: [
+              //     BoxShadow(
+              //       color: CustomColors.lightGrey,
+              //       blurRadius: 0.0,
+              //       spreadRadius: 0.0,
+              //       offset: Offset(4.0, 4.0),
+              //     )
+              //   ],
+              // ),
+              child: Swiper(
+                // autoplay: true,
+                // curve: Curves.elasticIn,
+                itemWidth: 5000,
+                itemHeight: 3000,
+                layout: SwiperLayout.TINDER,
+                itemBuilder: (BuildContext context, int i) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    child: CachedNetworkImage(
+                      fit: BoxFit.cover,
+                      imageUrl: getExploreSuggestions()[name][index]["images"]
+                          [i],
+                      // placeholder: (context, url) => Image(
+                      //     image: AssetImage("assets/images/mountains.jpg"),
+                      //     fit: BoxFit.cover),
+                      errorWidget: (context, url, error) => Image(
+                        image: AssetImage("assets/images/mountains.jpg"),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
+                itemCount:
+                    getExploreSuggestions()[name][index]["images"].length,
+                viewportFraction: 1,
+                scale: 1,
               ),
+              // CachedNetworkImage(
+              //   fit: BoxFit.cover,
+              //   imageUrl: getExploreSuggestions()[name][index]["image"],
+              //   placeholder: (context, url) => Image(
+              //       image: AssetImage("assets/images/mountains.jpg"),
+              //       fit: BoxFit.cover),
+              //   errorWidget: (context, url, error) => Image(
+              //       image: AssetImage("assets/images/mountains.jpg"),
+              //       fit: BoxFit.cover),
+              // ),
             ),
           ),
         ],

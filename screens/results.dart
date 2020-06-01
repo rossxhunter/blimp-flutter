@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/accommodation.dart';
 import 'package:blimp/screens/activityDetails.dart';
+import 'package:blimp/screens/booking.dart';
 import 'package:blimp/screens/changeActivities.dart';
 import 'package:blimp/screens/feedback.dart';
 import 'package:blimp/screens/flights.dart';
@@ -396,8 +397,11 @@ class ResultsPageState extends State<ResultsPage> {
           ),
           Positioned.fill(
             top: null,
-            child: ResultsPageBookBar(flights["outbound"]["price"],
-                flights["return"]["price"], accommodation["price"]),
+            child: ResultsPageBookBar(
+              destinationName: name,
+              flights: flights,
+              accommodation: accommodation,
+            ),
           ),
         ],
       ),
@@ -591,16 +595,18 @@ class ResultsPageContentsState extends State<ResultsPageContents> {
 }
 
 class ResultsPageBookBar extends StatelessWidget {
+  Map flights;
+  Map accommodation;
   Map outboundFlightPrice;
   Map returnFlightPrice;
   Map accommodationPrice;
   double totalPrice;
   String currency;
-  ResultsPageBookBar(
-      Map outboundFlightPrice, Map returnFlightPrice, Map accommodationPrice) {
-    this.outboundFlightPrice = outboundFlightPrice;
-    this.returnFlightPrice = returnFlightPrice;
-    this.accommodationPrice = accommodationPrice;
+  final String destinationName;
+  ResultsPageBookBar({this.destinationName, this.flights, this.accommodation}) {
+    this.outboundFlightPrice = flights["outbound"]["price"];
+    this.returnFlightPrice = flights["return"]["price"];
+    this.accommodationPrice = accommodation["price"];
     this.totalPrice = outboundFlightPrice["amount"] +
         returnFlightPrice["amount"] +
         accommodationPrice["amount"];
@@ -647,23 +653,37 @@ class ResultsPageBookBar extends StatelessWidget {
                     ),
                   ],
                 ),
-                Container(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        top: 20, bottom: 20, left: 40, right: 40),
-                    child: Text(
-                      "BOOK",
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline2
-                          .copyWith(color: Colors.white),
+                AnimatedButton(
+                  callback: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookingPage(
+                          destinationName: destinationName,
+                          flights: flights,
+                          accommodation: accommodation,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          top: 20, bottom: 20, left: 40, right: 40),
+                      child: Text(
+                        "BOOK",
+                        style: Theme.of(context)
+                            .textTheme
+                            .headline2
+                            .copyWith(color: Colors.white),
+                      ),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                )
+                ),
               ],
             ),
           ),
