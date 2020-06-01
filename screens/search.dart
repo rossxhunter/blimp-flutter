@@ -585,7 +585,6 @@ class ActivitiesState extends State<Activities> {
 
   void typeNewActivity(Map activity) {
     newActivity = activity;
-    addNewActivity();
   }
 
   void changeCheckboxValue(Map activity, bool value) {
@@ -617,17 +616,17 @@ class ActivitiesState extends State<Activities> {
               callback: typeNewActivity,
               controller: _controller,
             ),
-            // Positioned.fill(
-            //   child: Align(
-            //     alignment: Alignment.centerRight,
-            //     child: Padding(
-            //       padding: EdgeInsets.only(right: 20),
-            //       child: AddButton(
-            //         callback: addNewActivity,
-            //       ),
-            //     ),
-            //   ),
-            // ),
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 20),
+                  child: AddButton(
+                    callback: addNewActivity,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
         Visibility(
@@ -1046,10 +1045,10 @@ class TripTypeState extends State<TripType> {
   int activeOption = 1;
 
   void updateStates(int newActive) {
-    // setState(() {
-    //   activeOption = newActive;
-    //   widget.callback("tripType", options[newActive]);
-    // });
+    setState(() {
+      activeOption = newActive;
+      widget.callback("tripType", options[newActive]);
+    });
   }
 
   List<String> options = ["One Way", "Return", "Multi Trip"];
