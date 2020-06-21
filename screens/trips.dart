@@ -52,7 +52,7 @@ class TripsPageState extends State<TripsPage> {
                             Padding(
                               padding: EdgeInsets.only(top: 20),
                               child: Container(
-                                height: 180,
+                                height: 240,
                                 child: ListView.builder(
                                   itemCount: 3,
                                   scrollDirection: Axis.horizontal,
@@ -68,9 +68,9 @@ class TripsPageState extends State<TripsPage> {
                         ),
                       ),
                     ),
-                    Divider(
-                      color: Colors.grey,
-                    ),
+                    // Divider(
+                    //   color: Colors.grey,
+                    // ),
                     Padding(
                       padding: EdgeInsets.only(bottom: 30),
                       child: Container(
@@ -83,7 +83,7 @@ class TripsPageState extends State<TripsPage> {
                               padding: EdgeInsets.only(
                                 left: 20,
                                 right: 20,
-                                top: 30,
+                                top: 0,
                                 // bottom: 30,
                               ),
                               child: Text("Upcoming Trips",
@@ -92,7 +92,7 @@ class TripsPageState extends State<TripsPage> {
                             Padding(
                               padding: EdgeInsets.only(top: 20),
                               child: Container(
-                                height: 180,
+                                height: 240,
                                 child: ListView.builder(
                                   itemCount: 3,
                                   scrollDirection: Axis.horizontal,
@@ -108,9 +108,7 @@ class TripsPageState extends State<TripsPage> {
                         ),
                       ),
                     ),
-                    Divider(
-                      color: Colors.grey,
-                    ),
+
                     Container(
                       width: double.infinity,
                       color: Colors.white,
@@ -121,7 +119,7 @@ class TripsPageState extends State<TripsPage> {
                             padding: EdgeInsets.only(
                               left: 20,
                               right: 20,
-                              top: 30,
+                              top: 0,
                               // bottom: 30,
                             ),
                             child: Text("Past Trips",
@@ -130,7 +128,7 @@ class TripsPageState extends State<TripsPage> {
                           Padding(
                             padding: EdgeInsets.only(top: 20),
                             child: Container(
-                              height: 180,
+                              height: 240,
                               child: ListView.builder(
                                 itemCount: 3,
                                 scrollDirection: Axis.horizontal,
@@ -159,40 +157,56 @@ class TripOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(left: 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 170,
-            height: 130,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              image: DecorationImage(
-                image: AssetImage("assets/images/paris.jpg"),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 10, left: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AutoSizeText(
-                  "Paris",
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.headline3,
+      padding: EdgeInsets.only(left: 20, bottom: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.4),
+              blurRadius: 10.0,
+              offset: Offset(0, 5),
+            )
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 170,
+                height: 130,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  image: DecorationImage(
+                    image: AssetImage("assets/images/paris.jpg"),
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                Text(
-                  "22 Feb - 24 Feb",
-                  style: Theme.of(context).textTheme.headline1,
-                )
-              ],
-            ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10, left: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AutoSizeText(
+                      "Paris",
+                      maxLines: 1,
+                      style: Theme.of(context).textTheme.headline3,
+                    ),
+                    Text(
+                      "22 Feb - 24 Feb",
+                      style: Theme.of(context).textTheme.headline1,
+                    )
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

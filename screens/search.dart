@@ -1004,10 +1004,19 @@ class OriginDestFieldsState extends State<OriginDestFields> {
       children: <Widget>[
         Column(
           children: <Widget>[
-            OriginDestinationField(
-              point: "From",
-              callback: updateSearchFields,
-              controller: originController,
+            Row(
+              children: [
+                // IconBox(
+                //   icon: Icons.flight_takeoff,
+                // ),
+                Expanded(
+                  child: OriginDestinationField(
+                    point: "From",
+                    callback: updateSearchFields,
+                    controller: originController,
+                  ),
+                ),
+              ],
             ),
             Padding(
               padding: EdgeInsets.only(top: 10),
@@ -1094,6 +1103,25 @@ class SearchButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).primaryColor,
           borderRadius: BorderRadius.circular(20),
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: Color.fromRGBO(
+          //         (Theme.of(context).primaryColor.red * 0.8).round(),
+          //         (Theme.of(context).primaryColor.green * 0.8).round(),
+          //         (Theme.of(context).primaryColor.blue * 0.8).round(),
+          //         1),
+          //     blurRadius: 0.0,
+          //     spreadRadius: 0,
+          //     offset: Offset(0, 5),
+          //   )
+          // ],
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).primaryColor.withOpacity(0.2),
+              blurRadius: 10.0,
+              offset: Offset(0, 10),
+            )
+          ],
         ),
         child: Padding(
           padding: EdgeInsets.all(20),

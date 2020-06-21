@@ -15,6 +15,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dash/flutter_dash.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:reorderables/reorderables.dart';
 
@@ -101,7 +102,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     newActivities.add(activity);
     mode == "standard"
         ? getItineraryFromActivities(newActivities, day, travel, accommodation,
-            preferences, windows[day])
+            preferences, windows[day], destId)
         : getEvaluationItineraryFromActivities(
             newActivities, day, destId, windows[day])
       ..then((newItineraryActivities) {
@@ -163,7 +164,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     }
     mode == "standard"
         ? getItineraryFromActivities(newActivities, day, travel, accommodation,
-            preferences, windows[day])
+            preferences, windows[day], destId)
         : getEvaluationItineraryFromActivities(
             newActivities, day, destId, windows[day])
       ..then((newItineraryActivities) {
@@ -202,7 +203,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     });
     mode == "standard"
         ? getItineraryFromActivities(_activities[day], day, travel,
-            accommodation, preferences, windows[day])
+            accommodation, preferences, windows[day], destId)
         : getEvaluationItineraryFromActivities(
             _activities[day], day, destId, windows[day])
       ..then((newItineraryActivities) {
@@ -229,8 +230,8 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
 
   void updateWindowTimes(List<double> times) {
     mode == "standard"
-        ? getItineraryFromActivities(
-            _activities[day], day, travel, accommodation, preferences, times)
+        ? getItineraryFromActivities(_activities[day], day, travel,
+            accommodation, preferences, times, destId)
         : getEvaluationItineraryFromActivities(
             _activities[day], day, destId, times)
       ..then((newItineraryActivities) {
@@ -278,6 +279,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
 
     List<Widget> _getActivityRows(List activities) {
       List<Widget> rows = [];
+      int i = 0;
       for (Map activity in activities) {
         rows.add(
           ListViewCard(
@@ -285,9 +287,14 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                 activity["startTime"].toString() +
                 activity["duration"].toString()),
             activity: activity,
-            callback: activityAction,
+            actionCallback: activityAction,
+            reorderCallback: _onReorder,
+            travelCallback: changeTravelMethod,
+            index: i,
+            length: activities.length,
           ),
         );
+        i += 1;
       }
       return rows;
     }
@@ -336,7 +343,10 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                 Padding(
                   padding: EdgeInsets.only(right: 0),
                   child: IconButton(
-                    icon: Icon(Icons.filter_list),
+                    icon: Icon(
+                      FontAwesomeIcons.slidersH,
+                      size: 20,
+                    ),
                     color: Theme.of(context).primaryColor,
                     iconSize: 30,
                     onPressed: () {
@@ -394,47 +404,35 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                             _getTabNums(itinerary.keys.length).map((int d) {
                           return Padding(
                             padding: EdgeInsets.only(
-                                bottom: 20, top: 10, left: 0, right: 0),
+                                bottom: 80, top: 10, left: 10, right: 10),
                             child: LayoutBuilder(
                               builder: (context, constraint) {
-                                return SingleChildScrollView(
-                                  physics: AlwaysScrollableScrollPhysics(),
-                                  // reverse: true,
-                                  controller: _scrollController,
-                                  child: Container(
-                                    height: _activities[d].length * 160.0 + 60,
-                                    child: Stack(
-                                      children: <Widget>[
-                                        CustomScrollView(
-                                          physics:
-                                              NeverScrollableScrollPhysics(),
-                                          slivers: <Widget>[
-                                            ReorderableSliverList(
-                                              delegate:
-                                                  ReorderableSliverChildListDelegate(
-                                                _getActivityRows(
-                                                    _activities[d]),
-                                              ),
-                                              onReorder: _onReorder,
-                                            ),
-                                          ],
-                                        ),
-                                        Stack(
-                                          children: getTravelTimeWidgets(
-                                              _activities[d]),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                              left: 20, top: 60),
-                                          child: ActivitiesBar(
-                                            activities: _activities[d],
-                                            callback: activityAction,
-                                            key: Key(d.toString()),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                return Stack(
+                                  children: <Widget>[
+                                    ListView.builder(
+                                        itemCount:
+                                            _getActivityRows(_activities[d])
+                                                .length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          return _getActivityRows(
+                                              _activities[d])[index];
+                                        }),
+
+                                    // Stack(
+                                    //   children: getTravelTimeWidgets(
+                                    //       _activities[d]),
+                                    // ),
+                                    // Padding(
+                                    //   padding: EdgeInsets.only(
+                                    //       left: 20, top: 60),
+                                    //   child: ActivitiesBar(
+                                    //     activities: _activities[d],
+                                    //     callback: activityAction,
+                                    //     key: Key(d.toString()),
+                                    //   ),
+                                    // ),
+                                  ],
                                 );
                               },
                             ),
@@ -498,7 +496,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     }
     mode == "standard"
         ? getItineraryFromActivities(newActivities, day, travel, accommodation,
-            preferences, windows[day])
+            preferences, windows[day], destId)
         : getEvaluationItineraryFromActivities(
             newActivities, day, destId, windows[day])
       ..then((newItineraryActivities) {
@@ -583,7 +581,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     });
     mode == "standard"
         ? getItineraryFromActivities(newActivities, day, travel, accommodation,
-            preferences, windows[day])
+            preferences, windows[day], destId)
         : getEvaluationItineraryFromActivities(
             newActivities, day, destId, windows[day])
       ..then((newItineraryActivities) {
@@ -638,9 +636,21 @@ class ActivitiesBar extends StatelessWidget {
         ),
         Padding(
           padding: EdgeInsets.only(top: 5),
-          child: EditActivityPopupMenuButton(
-            callback: callback,
-            activity: activities[index],
+          child: Column(
+            children: [
+              Icon(
+                FontAwesomeIcons.chevronUp,
+                color: Theme.of(context).primaryColor,
+              ),
+              EditActivityPopupMenuButton(
+                callback: callback,
+                activity: activities[index],
+              ),
+              Icon(
+                FontAwesomeIcons.chevronDown,
+                color: Theme.of(context).primaryColor,
+              ),
+            ],
           ),
         ),
       ],
@@ -818,22 +828,102 @@ class ChangeDurationState extends State<ChangeDuration> {
 
 class ListViewCard extends StatelessWidget {
   final Map activity;
-  final Function callback;
+  final Function actionCallback;
+  final Function reorderCallback;
+  final Function travelCallback;
   final Key key;
+  final int index;
+  final int length;
 
-  ListViewCard({this.activity, this.callback, this.key});
+  ListViewCard(
+      {this.activity,
+      this.actionCallback,
+      this.reorderCallback,
+      this.travelCallback,
+      this.key,
+      this.index,
+      this.length});
 
   @override
   Widget build(BuildContext context) {
     Widget child = ActivityOption(activity: activity);
     return Padding(
-      padding: EdgeInsets.only(bottom: 30, top: 30, left: 60, right: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Expanded(
-            child: child,
+      padding: EdgeInsets.only(bottom: 0, top: 20, left: 0, right: 10),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.only(right: 10),
+                child: Column(
+                  children: [
+                    index != 0
+                        ? AnimatedButton(
+                            callback: () => reorderCallback(index, index - 1),
+                            child: Icon(
+                              FontAwesomeIcons.chevronUp,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          )
+                        : Container(
+                            height: 0,
+                            width: 0,
+                          ),
+                    EditActivityPopupMenuButton(
+                      activity: activity,
+                      callback: actionCallback,
+                    ),
+                    index != length - 1
+                        ? AnimatedButton(
+                            callback: () => reorderCallback(index, index + 1),
+                            child: Icon(
+                              FontAwesomeIcons.chevronDown,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          )
+                        : Container(
+                            height: 0,
+                            width: 0,
+                          ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: child,
+              ),
+            ],
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: 60, top: 10),
+            child: activity["travelTimeToNext"] != null
+                ? Row(
+                    key: Key(
+                      activity["id"] +
+                          activity["startTime"].toString() +
+                          activity["travelTimeToNext"].toString(),
+                    ),
+                    children: [
+                      TravelMethodSelector(
+                        callback: travelCallback,
+                        journey: index,
+                        method: activity["travelMethodToNext"],
+                        key: Key(activity["travelMethodToNext"]),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 10, top: 5),
+                        child: Text(activity["travelTimeToNext"] == -1
+                            ? "..."
+                            : (activity["travelTimeToNext"] ~/ 60).toString() +
+                                " mins"),
+                      ),
+                    ],
+                  )
+                : Container(
+                    height: 0,
+                    width: 0,
+                  ),
           ),
         ],
       ),

@@ -94,7 +94,7 @@ class AccommodationScreenState extends State<AccommodationScreen> {
           Padding(
             padding: EdgeInsets.only(bottom: 80),
             child: Container(
-              color: CustomColors.greyBackground,
+              color: Colors.white,
               child: ListView.builder(
                 itemCount: allAccommodation.length,
                 itemBuilder: (BuildContext context, int index) {

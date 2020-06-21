@@ -40,14 +40,18 @@ class Achievement extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
+              color: Colors.green,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: Color.fromRGBO(220, 20, 20, 1),
+                  color: Color.fromRGBO(
+                      (Colors.green.red * 0.8).round(),
+                      (Colors.green.green * 0.8).round(),
+                      (Colors.green.blue * 0.8).round(),
+                      1),
                   blurRadius: 0.0,
-                  spreadRadius: 0.0,
-                  offset: Offset(6.0, 6.0), // shadow direction: bottom right
+                  spreadRadius: 0,
+                  offset: Offset(0, 5),
                 )
               ],
             ),
@@ -101,7 +105,7 @@ class Achievement extends StatelessWidget {
                             lineHeight: 20.0,
                             percent: 0.4,
                             backgroundColor: CustomColors.lightGrey,
-                            progressColor: Colors.red,
+                            progressColor: Colors.green,
                           ),
                         ),
                         Padding(

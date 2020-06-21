@@ -241,17 +241,17 @@ class FeedbackMainScreenState extends State<FeedbackMainScreen> {
                   destId: destId,
                 ),
               ),
-              AnimatedButton(
-                callback: () => callback("activities"),
-                child: FeedbackOption(
-                  text: "Different Activities",
-                  icon: Icon(
-                    Icons.beach_access,
-                    color: Colors.white,
-                  ),
-                  color: Colors.green,
-                ),
-              ),
+              // AnimatedButton(
+              //   callback: () => callback("activities"),
+              //   child: FeedbackOption(
+              //     text: "Different Activities",
+              //     icon: Icon(
+              //       Icons.beach_access,
+              //       color: Colors.white,
+              //     ),
+              //     color: Colors.green,
+              //   ),
+              // ),
               AnimatedButton(
                 callback: () => fetchFeedbackHoliday(context, preferences, {
                   "type": "different",

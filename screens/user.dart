@@ -79,29 +79,28 @@ class UserPageState extends State<UserPage> {
                   ],
                 ),
                 Padding(
-                  padding: EdgeInsets.only(top: 20),
+                  padding: EdgeInsets.only(top: 20, left: 20, right: 20),
                   child: Container(
                     width: double.infinity,
-                    child: Column(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        ProfilePicture(),
-                        Padding(
-                          padding: EdgeInsets.only(top: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                isLoggedIn
-                                    ? currentUser["firstName"] +
-                                        " " +
-                                        currentUser["lastName"]
-                                    : "Guest",
-                                style: Theme.of(context).textTheme.headline4,
-                              ),
-                            ],
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              isLoggedIn
+                                  ? "Hi " + currentUser["firstName"]
+                                  : "Hi there",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headline4
+                                  .copyWith(fontWeight: FontWeight.w300),
+                            ),
+                          ],
                         ),
+                        ProfilePicture(),
                       ],
                     ),
                   ),
@@ -135,16 +134,23 @@ class LoginButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(10),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Color.fromRGBO(
+        //         (backgroundColor.red * 0.8).round(),
+        //         (backgroundColor.green * 0.8).round(),
+        //         (backgroundColor.blue * 0.8).round(),
+        //         1),
+        //     blurRadius: 0.0,
+        //     spreadRadius: 0,
+        //     offset: Offset(0, 5),
+        //   )
+        // ],
         boxShadow: [
           BoxShadow(
-            color: Color.fromRGBO(
-                (backgroundColor.red * 0.9).round(),
-                (backgroundColor.green * 0.9).round(),
-                (backgroundColor.blue * 0.9).round(),
-                1),
-            blurRadius: 0.0,
-            spreadRadius: 0.0,
-            offset: Offset(5.0, 5.0), // shadow direction: bottom right
+            color: backgroundColor.withOpacity(0.2),
+            blurRadius: 10.0,
+            offset: Offset(0, 10),
           )
         ],
       ),
@@ -342,8 +348,8 @@ class ProfilePicture extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          width: 140,
-          height: 140,
+          width: 70,
+          height: 70,
           decoration: BoxDecoration(
             color: Colors.blue,
             shape: BoxShape.circle,
@@ -362,7 +368,7 @@ class ProfilePicture extends StatelessWidget {
                             currentUser["lastName"][0],
                         style: Theme.of(context)
                             .textTheme
-                            .headline4
+                            .headline3
                             .copyWith(color: Colors.white),
                       )
                     : Container(
@@ -376,29 +382,29 @@ class ProfilePicture extends StatelessWidget {
                   ),
           ),
         ),
-        Positioned(
-          right: 5,
-          top: 5,
-          child: isLoggedIn
-              ? Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(5),
-                    child: Icon(
-                      Icons.edit,
-                      size: 20,
-                      color: Colors.white,
-                    ),
-                  ),
-                )
-              : Container(
-                  height: 0,
-                  width: 0,
-                ),
-        ),
+        // Positioned(
+        //   right: 5,
+        //   top: 5,
+        //   child: isLoggedIn
+        //       ? Container(
+        //           decoration: BoxDecoration(
+        //             color: Theme.of(context).primaryColor,
+        //             shape: BoxShape.circle,
+        //           ),
+        //           child: Padding(
+        //             padding: EdgeInsets.all(5),
+        //             child: Icon(
+        //               Icons.edit,
+        //               size: 20,
+        //               color: Colors.white,
+        //             ),
+        //           ),
+        //         )
+        //       : Container(
+        //           height: 0,
+        //           width: 0,
+        //         ),
+        // ),
       ],
     );
   }

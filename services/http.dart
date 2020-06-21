@@ -43,7 +43,7 @@ Future<List> getEvaluationItineraryFromActivities(
 }
 
 Future<List> getItineraryFromActivities(List activities, int day, Map travel,
-    Map accommodation, Preferences preferences, List window) async {
+    Map accommodation, Preferences preferences, List window, int destId) async {
   String activitiesJson = jsonEncode(activities).replaceAll("&", "%26");
   String windowJson = jsonEncode(window);
   String travelJson = jsonEncode(travel);
@@ -52,7 +52,7 @@ Future<List> getItineraryFromActivities(List activities, int day, Map travel,
   String softPrefs = encodePrefs(preferences.softPreferences);
   String prefScores = jsonEncode(preferences.preferenceScores);
   String params =
-      "activities=$activitiesJson&day=$day&window=$windowJson&travel=$travelJson&accommodation=$accommodationJson&constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores";
+      "destId=$destId&activities=$activitiesJson&day=$day&window=$windowJson&travel=$travelJson&accommodation=$accommodationJson&constraints=$constraints&softprefs=$softPrefs&pref_scores=$prefScores";
   var itinerary;
   try {
     itinerary = await makeGetRequest("itinerary", params);

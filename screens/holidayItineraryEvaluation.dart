@@ -128,7 +128,8 @@ class ItineraryOptionState extends State<ItineraryOption> {
                                       itemBuilder:
                                           (BuildContext context, int index) {
                                         return Padding(
-                                          padding: EdgeInsets.only(top: 20),
+                                          padding: EdgeInsets.only(
+                                              top: 20, left: 10, right: 10),
                                           child: ActivityOption(
                                               key: Key(itinerary[day.toString()]
                                                       [index]["id"] +
@@ -152,7 +153,7 @@ class ItineraryOptionState extends State<ItineraryOption> {
                     );
                   },
                   itemCount: itinerary.keys.length,
-                  viewportFraction: 0.9,
+                  viewportFraction: 1.0,
                   scale: 0.5,
                   control: SwiperControl(
                     padding: EdgeInsets.only(bottom: 5000),

@@ -337,10 +337,12 @@ class ResultsPageState extends State<ResultsPage> {
                                       return CachedNetworkImage(
                                         fit: BoxFit.cover,
                                         imageUrl: imageURLs[index],
-                                        placeholder: (context, url) => Image(
-                                            image: AssetImage(
-                                                "assets/images/mountains.jpg"),
-                                            fit: BoxFit.cover),
+                                        placeholder: (context, url) =>
+                                            Container(
+                                          height: 10000,
+                                          width: 10000,
+                                          color: CustomColors.lightGrey,
+                                        ),
                                         errorWidget: (context, url, error) =>
                                             Image(
                                           image: AssetImage(
@@ -785,25 +787,22 @@ class ActivityOptionState extends State<ActivityOption> {
   Widget build(BuildContext context) {
     return AnimatedButton(
       callback: clickActivity,
-      child: ClipRRect(
-        borderRadius: BorderRadius.all(Radius.circular(15)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.4),
+              blurRadius: 10.0,
+              spreadRadius: 0,
+              offset: Offset(0, 5),
+            )
+          ],
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(15)),
-              child: Container(
-                height: 100,
-                width: 140,
-                child: CachedNetworkImage(
-                  placeholder: (context, url) => Image(
-                      image: AssetImage("assets/images/mountains.jpg"),
-                      fit: BoxFit.cover),
-                  imageUrl: bestPhotoURL,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.only(left: 20, right: 10),
@@ -853,6 +852,25 @@ class ActivityOptionState extends State<ActivityOption> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(15)),
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  child: CachedNetworkImage(
+                    placeholder: (context, url) => Container(
+                      width: 100,
+                      height: 100,
+                      color: CustomColors.lightGrey,
+                    ),
+                    imageUrl: bestPhotoURL,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -955,7 +973,7 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
             Padding(
               padding: EdgeInsets.only(top: 30),
               child: Container(
-                height: 350,
+                height: 400,
                 child: Swiper(
                   key: key,
                   onIndexChanged: (value) {
@@ -985,7 +1003,8 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                                       itemBuilder:
                                           (BuildContext context, int index) {
                                         return Padding(
-                                          padding: EdgeInsets.only(top: 20),
+                                          padding: EdgeInsets.only(
+                                              top: 20, left: 10, right: 10),
                                           child: ActivityOption(
                                               key: Key(itinerary[day.toString()]
                                                       [index]["id"] +
@@ -1012,7 +1031,7 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                     );
                   },
                   itemCount: numDays,
-                  viewportFraction: 0.9,
+                  viewportFraction: 1.0,
                   scale: 0.5,
                   control: SwiperControl(
                     padding: EdgeInsets.only(bottom: 5000),

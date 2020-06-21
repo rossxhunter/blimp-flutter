@@ -407,6 +407,18 @@ class SubmitButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromRGBO(
+                (Theme.of(context).primaryColor.red * 0.8).round(),
+                (Theme.of(context).primaryColor.green * 0.8).round(),
+                (Theme.of(context).primaryColor.blue * 0.8).round(),
+                1),
+            blurRadius: 0.0,
+            spreadRadius: 0,
+            offset: Offset(0, 5),
+          )
+        ],
       ),
       child: Padding(
         padding: EdgeInsets.all(20),

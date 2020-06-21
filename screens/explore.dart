@@ -388,16 +388,23 @@ class ExploreOptionState extends State<ExploreOption> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: CustomColors.lightGrey,
-                width: 2,
-              ),
+              // border: Border.all(
+              //   color: CustomColors.lightGrey,
+              //   width: 2,
+              // ),
+              // boxShadow: [
+              //   BoxShadow(
+              //     color: CustomColors.lightGrey,
+              //     blurRadius: 0.0,
+              //     spreadRadius: 0.0,
+              //     offset: Offset(0.0, 5.0), // shadow direction: bottom right
+              //   )
+              // ],
               boxShadow: [
                 BoxShadow(
-                  color: CustomColors.lightGrey,
-                  blurRadius: 0.0,
-                  spreadRadius: 0.0,
-                  offset: Offset(5.0, 5.0), // shadow direction: bottom right
+                  color: Colors.grey.withOpacity(0.4),
+                  blurRadius: 20.0,
+                  offset: Offset(0, 5),
                 )
               ],
             ),
@@ -475,58 +482,64 @@ class ExploreOptionState extends State<ExploreOption> {
           Positioned(
             bottom: 20,
             left: -20,
-            child: Container(
-              height: 135,
-              width: 155,
-              // decoration: BoxDecoration(
-              //   borderRadius: BorderRadius.circular(10),
-              //   boxShadow: [
-              //     BoxShadow(
-              //       color: CustomColors.lightGrey,
-              //       blurRadius: 0.0,
-              //       spreadRadius: 0.0,
-              //       offset: Offset(4.0, 4.0),
-              //     )
-              //   ],
-              // ),
-              child: Swiper(
-                // autoplay: true,
-                // curve: Curves.elasticIn,
-                itemWidth: 5000,
-                itemHeight: 3000,
-                layout: SwiperLayout.TINDER,
-                itemBuilder: (BuildContext context, int i) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    child: CachedNetworkImage(
-                      fit: BoxFit.cover,
-                      imageUrl: getExploreSuggestions()[name][index]["images"]
-                          [i],
-                      // placeholder: (context, url) => Image(
-                      //     image: AssetImage("assets/images/mountains.jpg"),
-                      //     fit: BoxFit.cover),
-                      errorWidget: (context, url, error) => Image(
-                        image: AssetImage("assets/images/mountains.jpg"),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
-                itemCount:
-                    getExploreSuggestions()[name][index]["images"].length,
-                viewportFraction: 1,
-                scale: 1,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: 130,
+                width: 145,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: CustomColors.lightGrey,
+                      blurRadius: 10.0,
+                      spreadRadius: 0.0,
+                      offset: Offset(0, 4.0),
+                    )
+                  ],
+                ),
+                child:
+                    // Swiper(
+                    //   // autoplay: true,
+                    //   // curve: Curves.elasticIn,
+                    //   itemWidth: 5000,
+                    //   itemHeight: 3000,
+                    //   layout: SwiperLayout.TINDER,
+                    //   itemBuilder: (BuildContext context, int i) {
+                    //     return ClipRRect(
+                    //       borderRadius: BorderRadius.all(Radius.circular(10)),
+                    //       child: CachedNetworkImage(
+                    //         fit: BoxFit.cover,
+                    //         imageUrl: getExploreSuggestions()[name][index]["images"]
+                    //             [i],
+                    //         // placeholder: (context, url) => Image(
+                    //         //     image: AssetImage("assets/images/mountains.jpg"),
+                    //         //     fit: BoxFit.cover),
+                    //         errorWidget: (context, url, error) => Image(
+                    //           image: AssetImage("assets/images/mountains.jpg"),
+                    //           fit: BoxFit.cover,
+                    //         ),
+                    //       ),
+                    //     );
+                    //   },
+                    //   itemCount:
+                    //       getExploreSuggestions()[name][index]["images"].length,
+                    //   viewportFraction: 1,
+                    //   scale: 1,
+                    // ),
+                    CachedNetworkImage(
+                  fit: BoxFit.cover,
+                  imageUrl: getExploreSuggestions()[name][index]["images"][0],
+                  placeholder: (context, url) => Container(
+                    width: 10000,
+                    height: 10000,
+                    color: CustomColors.lightGrey,
+                  ),
+                  errorWidget: (context, url, error) => Image(
+                      image: AssetImage("assets/images/mountains.jpg"),
+                      fit: BoxFit.cover),
+                ),
               ),
-              // CachedNetworkImage(
-              //   fit: BoxFit.cover,
-              //   imageUrl: getExploreSuggestions()[name][index]["image"],
-              //   placeholder: (context, url) => Image(
-              //       image: AssetImage("assets/images/mountains.jpg"),
-              //       fit: BoxFit.cover),
-              //   errorWidget: (context, url, error) => Image(
-              //       image: AssetImage("assets/images/mountains.jpg"),
-              //       fit: BoxFit.cover),
-              // ),
             ),
           ),
         ],

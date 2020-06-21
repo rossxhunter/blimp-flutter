@@ -39,7 +39,10 @@ class SettingsPage extends StatelessWidget {
       ),
       body: Padding(
         padding: EdgeInsets.only(top: 0),
-        child: SettingsList(sections: _getSettingsSections(context)),
+        child: SettingsList(
+          sections: _getSettingsSections(context),
+          backgroundColor: CustomColors.greyBackground,
+        ),
       ),
     );
   }

@@ -25,66 +25,82 @@ class HotelOptionState extends State<HotelOption> {
   int _currentIndex = 0;
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          child: Stack(
-            children: [
-              hotelDetails["images"].length == 0
-                  ? CachedNetworkImage(
-                      imageUrl: getDefaultAccommodationImageURL(),
-                      fit: BoxFit.cover,
-                      width: 10000,
-                      height: 250,
-                    )
-                  : SizedBox(
-                      height: 250,
-                      width: 100000,
-                      child: Swiper(
-                        onIndexChanged: (value) {
-                          setState(() {
-                            _currentIndex = value;
-                          });
-                        },
-                        pagination: SwiperPagination(
-                          margin:
-                              EdgeInsets.only(left: 10, right: 10, bottom: 5),
-                        ),
-                        itemBuilder: (BuildContext context, int index) {
-                          return CachedNetworkImage(
-                            fit: BoxFit.cover,
-                            imageUrl: hotelDetails["images"][index],
-                            errorWidget: (context, url, error) => Image(
-                              image: NetworkImage(
-                                  getDefaultAccommodationImageURL()),
-                              fit: BoxFit.cover,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.4),
+            blurRadius: 20.0,
+            offset: Offset(0, 5),
+          )
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
+        child: Column(
+          children: <Widget>[
+            ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              child: Stack(
+                children: [
+                  hotelDetails["images"].length == 0
+                      ? CachedNetworkImage(
+                          imageUrl: getDefaultAccommodationImageURL(),
+                          fit: BoxFit.cover,
+                          width: 10000,
+                          height: 250,
+                        )
+                      : SizedBox(
+                          height: 250,
+                          width: 100000,
+                          child: Swiper(
+                            onIndexChanged: (value) {
+                              setState(() {
+                                _currentIndex = value;
+                              });
+                            },
+                            pagination: SwiperPagination(
+                              margin: EdgeInsets.only(
+                                  left: 10, right: 10, bottom: 5),
                             ),
-                          );
-                        },
-                        itemCount: hotelDetails["images"].length,
-                        viewportFraction: 1,
-                        scale: 1,
-                      ),
+                            itemBuilder: (BuildContext context, int index) {
+                              return CachedNetworkImage(
+                                fit: BoxFit.cover,
+                                imageUrl: hotelDetails["images"][index],
+                                errorWidget: (context, url, error) => Image(
+                                  image: NetworkImage(
+                                      getDefaultAccommodationImageURL()),
+                                  fit: BoxFit.cover,
+                                ),
+                              );
+                            },
+                            itemCount: hotelDetails["images"].length,
+                            viewportFraction: 1,
+                            scale: 1,
+                          ),
+                        ),
+                  Positioned(
+                    left: 10,
+                    top: 10,
+                    child: Visibility(
+                      visible: hotelDetails["rating"] != null,
+                      child: RatingBox(rating: hotelDetails["rating"]),
                     ),
-              Positioned(
-                left: 10,
-                top: 10,
-                child: Visibility(
-                  visible: hotelDetails["rating"] != null,
-                  child: RatingBox(rating: hotelDetails["rating"]),
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 10, right: 10, top: 10),
+              child: HotelDetails(
+                hotelDetails: hotelDetails,
+              ),
+            )
+          ],
         ),
-        Padding(
-          padding: EdgeInsets.only(left: 10, right: 10, top: 10),
-          child: HotelDetails(
-            hotelDetails: hotelDetails,
-          ),
-        )
-      ],
+      ),
     );
   }
 }

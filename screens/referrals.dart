@@ -19,83 +19,97 @@ class ReferralsPageState extends State<ReferralsPage> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(top: 30),
+          padding: EdgeInsets.only(top: 30, left: 10, right: 10, bottom: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                FontAwesomeIcons.handsHelping,
-                size: 40,
-                color: Theme.of(context).primaryColor,
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: Text(
-                  "Refer a friend - they get £10 off their next holiday and so do you!",
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headline3,
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 30, left: 30, right: 30),
-                child: Text(
-                  "Send this code to your friends",
-                  style: Theme.of(context).textTheme.headline1,
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 10, left: 30, right: 30),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "BGHSJKBN",
-                      style: Theme.of(context).textTheme.headline4,
+              Column(
+                children: [
+                  Icon(
+                    FontAwesomeIcons.handsHelping,
+                    size: 40,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Text(
+                      "Refer a friend - they get £10 off their next holiday and so do you!",
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headline3,
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 10),
-                      child: AnimatedButton(
-                        callback: () {
-                          Clipboard.setData(ClipboardData(text: "BGHSJKBN"));
-                        },
-                        child: Icon(
-                          Icons.content_copy,
-                          size: 30,
-                          color: Theme.of(context).primaryColor,
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 30, left: 30, right: 30),
+                    child: Text(
+                      "Send this code to your friends",
+                      style: Theme.of(context).textTheme.headline1,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 10, left: 30, right: 30),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "BGHSJKBN",
+                          style: Theme.of(context).textTheme.headline4,
                         ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 10),
-                      child: AnimatedButton(
-                        callback: () {
-                          Share.share(
-                              'Get £10 off your next holiday with Blimp! Use code BGHSJKBN when you sign up. You get £10 off and so does Alice! https://blimptrips.com',
-                              subject: "£10 off holidays with Blimp");
-                        },
-                        child: Icon(
-                          Icons.share,
-                          size: 30,
-                          color: Theme.of(context).primaryColor,
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: AnimatedButton(
+                            callback: () {
+                              Clipboard.setData(
+                                  ClipboardData(text: "BGHSJKBN"));
+                            },
+                            child: Icon(
+                              Icons.content_copy,
+                              size: 30,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
                         ),
-                      ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: AnimatedButton(
+                            callback: () {
+                              Share.share(
+                                  'Get £10 off your next holiday with Blimp! Use code BGHSJKBN when you sign up. You get £10 off and so does Alice! https://blimptrips.com',
+                                  subject: "£10 off holidays with Blimp");
+                            },
+                            child: Icon(
+                              Icons.share,
+                              size: 30,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: EdgeInsets.only(top: 30, left: 30, right: 30),
-                child: Text(
-                  "Been referred by a friend?",
-                  style: Theme.of(context).textTheme.headline1,
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 10, left: 30, right: 30),
-                child: AnimatedButton(
-                  callback: () {},
-                  child: ActionButton(text: "Add Referral Code"),
-                ),
+              Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 30, left: 30, right: 30),
+                    child: Text(
+                      "Been referred by a friend?",
+                      style: Theme.of(context).textTheme.headline1,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 10, left: 30, right: 30),
+                    child: AnimatedButton(
+                      callback: () {},
+                      child: ActionButton(text: "Add Referral Code"),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -116,10 +130,14 @@ class ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Color.fromRGBO(220, 20, 20, 1),
+            color: Color.fromRGBO(
+                (Theme.of(context).primaryColor.red * 0.8).round(),
+                (Theme.of(context).primaryColor.green * 0.8).round(),
+                (Theme.of(context).primaryColor.blue * 0.8).round(),
+                1),
             blurRadius: 0.0,
-            spreadRadius: 0.0,
-            offset: Offset(5.0, 5.0), // shadow direction: bottom right
+            spreadRadius: 0,
+            offset: Offset(0, 5),
           )
         ],
       ),
