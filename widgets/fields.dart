@@ -96,6 +96,7 @@ class OriginDestinationFieldState extends State<OriginDestinationField> {
                                   //     width: 2,
                                   //   ),
                                   // ),
+
                                   ),
                             ),
                             suggestionsCallback: (pattern) {

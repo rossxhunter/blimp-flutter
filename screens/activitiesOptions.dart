@@ -63,7 +63,7 @@ class ActivitiesOptionsState extends State<ActivitiesOptions> {
                             max: 24,
                             lowerValue: windowTimes[0],
                             upperValue: windowTimes[1],
-                            step: 1 / 100,
+                            step: 1,
                             minDistance: 1,
                           ),
                         ),

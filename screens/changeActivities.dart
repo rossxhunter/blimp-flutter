@@ -72,7 +72,6 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
   List<List> _activities;
   List<double> windowTimes;
   List<List<double>> windows;
-  ScrollController _scrollController = ScrollController();
 
   ChangeActivitiesScreenState(
       {this.itinerary,
@@ -94,7 +93,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     }
   }
 
-  void addNewActivity(Map activity, bool isRandom) {
+  void addNewActivity(Map activity) {
     List<Map> newActivities = List<Map>();
     for (Map a in _activities[day]) {
       newActivities.add(a);
@@ -112,14 +111,8 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
             "poi_id": activity["id"],
             "dest_id": destId,
             "itinNum": itinNum,
-            "isRandom": isRandom,
           });
         });
-        _scrollController.animateTo(
-          _activities[day].length * 80.0,
-          curve: Curves.easeOut,
-          duration: const Duration(milliseconds: 300),
-        );
       }).catchError((e) {
         showDialog(
           context: context,
@@ -452,15 +445,12 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                 padding: EdgeInsets.only(left: 20, right: 20, bottom: 30),
                 child: AnimatedButton(
                   callback: () {
-                    registerClick("change_activities_done", mode, {
-                      "dest_id": destId,
-                      "itinNum": itinNum,
-                    });
                     for (int i = 0; i < _activities.length; i++) {
                       itinerary[i.toString()] = _activities[i];
                     }
-
+                    // Future.delayed(Duration(microseconds: 10000), () {
                     Navigator.of(context).pop();
+                    // });
                     showDialog(
                         context: context,
                         barrierColor: Color.fromRGBO(40, 40, 40, 0.2),

@@ -315,7 +315,7 @@ class DoubleSliderState extends State<DoubleSlider> {
       realValue = 50.0 * (realValue / 50).ceil();
       return min(realValue, exp(maxVal));
     }
-    return value.round().toDouble();
+    return value;
   }
 }
 
