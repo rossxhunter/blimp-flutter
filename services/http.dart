@@ -42,6 +42,18 @@ Future<List> getEvaluationItineraryFromActivities(
   return json.decode(itinerary);
 }
 
+Future<Map> getCityDetailsFromId(int cityId) async {
+  var details;
+  var params = "";
+  try {
+    details = await makeGetRequest("city_details/" + cityId.toString(), params);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(details);
+}
+
 Future<List> getItineraryFromActivities(List activities, int day, Map travel,
     Map accommodation, Preferences preferences, List window, int destId) async {
   String activitiesJson = jsonEncode(activities).replaceAll("&", "%26");
@@ -171,6 +183,6 @@ Future<String> makeGetRequest(String path, String params) async {
 }
 
 String _hostname() {
-  // return "http://localhost:5000";
-  return "http://blimp-dev-env.eu-west-2.elasticbeanstalk.com";
+  return "http://localhost:5000";
+  // return "http://blimp-dev-env.eu-west-2.elasticbeanstalk.com";
 }

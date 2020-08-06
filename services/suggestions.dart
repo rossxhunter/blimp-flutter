@@ -2,12 +2,15 @@ import 'dart:convert';
 
 import 'package:async/async.dart';
 import 'package:blimp/services/http.dart';
+import 'package:flutter_launcher_icons/constants.dart';
 
 List destinationSuggestions;
 List activitySuggestions;
 Map currencySuggestions;
 Map exploreSuggestions;
 List testingSuggestions;
+List attractionsSuggestions;
+Map searchSuggestions;
 
 Future<void> getSuggestions() async {
   try {
@@ -19,12 +22,18 @@ Future<void> getSuggestions() async {
         await makeGetRequest("suggestions/currencies", "");
     String exploreSuggestionsResponse =
         await makeGetRequest("suggestions/explore", "");
+    String attractionsSuggestionsResponse =
+        await makeGetRequest("suggestions/attractions", "");
+    String searchSuggestionsResponse =
+        await makeGetRequest("suggestions/search", "");
     String testingSuggestionsResponse =
         await makeGetRequest("suggestions/testing", "");
     destinationSuggestions = json.decode(destinationSuggestionsResponse);
     activitySuggestions = json.decode(activitySuggestionsResponse);
     currencySuggestions = json.decode(currencySuggestionsResponse);
     exploreSuggestions = json.decode(exploreSuggestionsResponse);
+    attractionsSuggestions = json.decode(attractionsSuggestionsResponse);
+    searchSuggestions = json.decode(searchSuggestionsResponse);
     testingSuggestions = json.decode(testingSuggestionsResponse);
   } on Exception catch (e) {
     print(e);
@@ -60,6 +69,29 @@ String getActivityIconFromId(String id) {
   return activitySuggestions.where((a) => a["id"] == id).toList()[0]["icon"];
 }
 
+List getSearchSuggestionsForQuery(String query) {
+  List sug = [];
+  List destinations = searchSuggestions["destinations"];
+  List hotels = searchSuggestions["hotels"];
+  List attractions = searchSuggestions["attractions"];
+  destinations.forEach((s) {
+    if (s["name"].contains(RegExp(query, caseSensitive: false))) {
+      sug.add({"type": "destination", "suggestion": s});
+    }
+  });
+  hotels.forEach((s) {
+    if (s["name"].contains(RegExp(query, caseSensitive: false))) {
+      sug.add({"type": "hotel", "suggestion": s});
+    }
+  });
+  attractions.forEach((s) {
+    if (s["name"].contains(RegExp(query, caseSensitive: false))) {
+      sug.add({"type": "attraction", "suggestion": s});
+    }
+  });
+  return sug;
+}
+
 List getActivitySuggestionsForQuery(String query) {
   List sug = [];
   activitySuggestions.forEach((actSug) {
@@ -92,10 +124,18 @@ Map getExploreSuggestions() {
   return exploreSuggestions;
 }
 
+List getAttractionSuggestions() {
+  return attractionsSuggestions;
+}
+
 List getTestingSuggestions() {
   return testingSuggestions;
 }
 
 List getDestinationSuggestions() {
   return destinationSuggestions;
+}
+
+Map getSearchSuggesions() {
+  return searchSuggestions;
 }

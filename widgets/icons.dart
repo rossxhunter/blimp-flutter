@@ -8,7 +8,7 @@ class IconBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: CustomColors.redGrey,
+        color: Color.fromRGBO(245, 245, 245, 1),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Padding(

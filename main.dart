@@ -137,27 +137,27 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
         textTheme: TextTheme(
           headline4: TextStyle(
             color: Colors.black87,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontFamily: "Futura",
             fontSize: 30,
           ),
           headline3: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
-            fontFamily: "Open Sans",
-            fontSize: 20,
+            fontFamily: "Avenir",
+            fontSize: 24,
           ),
           headline2: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
-            fontFamily: "Open Sans",
+            fontFamily: "Avenir",
             fontSize: 15,
           ),
           headline1: TextStyle(
             color: Colors.black54,
             fontWeight: FontWeight.w500,
-            fontFamily: "Open Sans",
-            fontSize: 12,
+            fontFamily: "Avenir",
+            fontSize: 14,
           ),
           button: TextStyle(
             color: Colors.white,
@@ -206,7 +206,6 @@ class BlimpScaffoldState extends State<BlimpScaffold> {
     ExplorePage(),
     SearchPage(),
     UserPage(),
-    TestingPage()
   ];
   @override
   Widget build(BuildContext context) {
@@ -239,10 +238,6 @@ class BlimpScaffoldState extends State<BlimpScaffold> {
             icon: Icon(Icons.person),
             title: Text("User"),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.lab_flask),
-            title: Text("Testing"),
-          )
         ],
       ),
     );

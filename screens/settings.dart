@@ -113,7 +113,7 @@ class SettingsPage extends StatelessWidget {
     ]));
     sections.add(
       SettingsSection(
-        title: 'Explore',
+        title: 'Explore Page',
         tiles: [
           SettingsTile(
             title: 'Home City',

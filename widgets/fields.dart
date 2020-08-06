@@ -104,10 +104,10 @@ class OriginDestinationFieldState extends State<OriginDestinationField> {
                             },
                             suggestionsBoxDecoration:
                                 CupertinoSuggestionsBoxDecoration(
-                              offsetX: -65,
+                              offsetX: -110,
                               borderRadius: BorderRadius.circular(15),
                               constraints: BoxConstraints(
-                                  minWidth: constraints.maxWidth),
+                                  minWidth: MediaQuery.of(context).size.width),
                             ),
                             hideOnLoading: true,
                             hideSuggestionsOnKeyboardHide: true,
@@ -253,10 +253,10 @@ class ActivitiesFieldState extends State<ActivitiesField> {
                             },
                             suggestionsBoxDecoration:
                                 CupertinoSuggestionsBoxDecoration(
-                              offsetX: -65,
+                              offsetX: -110,
                               borderRadius: BorderRadius.circular(15),
                               constraints: BoxConstraints(
-                                  minWidth: constraints.maxWidth),
+                                  minWidth: MediaQuery.of(context).size.width),
                             ),
                             hideOnLoading: true,
                             hideSuggestionsOnKeyboardHide: true,

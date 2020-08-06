@@ -162,7 +162,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
 
   Future<void> _onTapUp(TapUpDetails details) async {
     await _controller.forward();
-    _controller.reverse();
+    await _controller.reverse();
     callback();
   }
 

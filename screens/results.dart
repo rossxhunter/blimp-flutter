@@ -1428,7 +1428,7 @@ class DestinationInfo extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(top: 20),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 // mainAxisSize: MainAxisSize.max,
                 children: [
                   Row(
@@ -1501,9 +1501,24 @@ class DestinationInfo extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(top: 20),
-              child: Text(
-                wiki,
-                style: Theme.of(context).textTheme.bodyText2,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: CustomColors.lightGrey,
+                    width: 2,
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    "More about " + name,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline2
+                        .copyWith(color: Theme.of(context).primaryColor),
+                  ),
+                ),
               ),
             ),
           ],

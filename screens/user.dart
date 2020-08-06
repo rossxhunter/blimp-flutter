@@ -90,14 +90,10 @@ class UserPageState extends State<UserPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              isLoggedIn
-                                  ? "Hi " + currentUser["firstName"]
-                                  : "Hi there",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline4
-                                  .copyWith(fontWeight: FontWeight.w300),
-                            ),
+                                isLoggedIn
+                                    ? "Hi " + currentUser["firstName"]
+                                    : "Hi there",
+                                style: Theme.of(context).textTheme.headline4),
                           ],
                         ),
                         ProfilePicture(),

@@ -179,57 +179,75 @@ class SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).requestFocus(new FocusNode());
-        },
-        child: SafeArea(
+    return SafeArea(
+      left: true,
+      top: false,
+      right: true,
+      bottom: true,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        // appBar: AppBar(
+        //   backgroundColor: Theme.of(context).primaryColor,
+        //   title: Text(
+        //     "Design your Dream Trip",
+        //     style: Theme.of(context)
+        //         .textTheme
+        //         .headline4
+        //         .copyWith(color: Colors.white),
+        //   ),
+        // ),
+        body: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(new FocusNode());
+          },
           child: Container(
             child: Stack(
               children: <Widget>[
                 Padding(
                   padding:
-                      EdgeInsets.only(left: 0, right: 0, bottom: 20, top: 20),
+                      EdgeInsets.only(left: 0, right: 0, bottom: 0, top: 0),
                   child: SingleChildScrollView(
                     physics: AlwaysScrollableScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Container(
-                          color: Colors.white,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                left: 35, right: 35, top: 0, bottom: 20),
-                            child: Column(
-                              children: <Widget>[
-                                TripType(
-                                  callback: updateSearchFields,
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 30),
-                                  child: OriginDestFields(
-                                    callback: updateSearchFields,
-                                    switchCallback: switchOriginDest,
-                                    origin: searchFields["origin"],
-                                    destination: searchFields["destination"],
+                        Padding(
+                          padding: EdgeInsets.only(left: 0, right: 0, top: 0),
+                          child: Container(
+                            color: Colors.white,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                  left: 35, right: 35, top: 0, bottom: 20),
+                              child: Column(
+                                children: <Widget>[
+                                  // TripType(
+                                  //   callback: updateSearchFields,
+                                  // ),
+                                  SearchTitle(),
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 30),
+                                    child: OriginDestFields(
+                                      callback: updateSearchFields,
+                                      switchCallback: switchOriginDest,
+                                      origin: searchFields["origin"],
+                                      destination: searchFields["destination"],
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 30),
-                                  child: TravellersRow(
-                                    numTravellers: searchFields["travellers"],
-                                    callback: updateSearchFields,
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 30),
+                                    child: TravellersRow(
+                                      numTravellers: searchFields["travellers"],
+                                      callback: updateSearchFields,
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 30),
-                                  child: Dates(
-                                    callback: updateSearchFields,
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 30),
+                                    child: Dates(
+                                      callback: updateSearchFields,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -408,6 +426,32 @@ class SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class SearchTitle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            // decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+            child: Padding(
+              padding: EdgeInsets.only(left: 0, top: 70, right: 30, bottom: 0),
+              child: Text(
+                "Design your trip",
+                // textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .headline4
+                    .copyWith(color: Theme.of(context).primaryColor),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

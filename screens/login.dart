@@ -59,14 +59,15 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
                             Icons.email,
                           ),
                           labelText: 'Email',
-                          border: UnderlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: CustomColors.lightGrey,
-                              width: 4,
-                              style: BorderStyle.solid,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(10.0),
                             ),
+                            borderSide:
+                                BorderSide(width: 0, style: BorderStyle.none),
                           ),
+                          fillColor: Color.fromRGBO(245, 245, 245, 1),
+                          filled: true,
                         ),
                         onSaved: (value) => loginFormValues["email"] = value,
                       ),
@@ -83,15 +84,15 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
                           },
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            // icon: Icon(Icons.lock),
-                            border: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: CustomColors.lightGrey,
-                                width: 4,
-                                style: BorderStyle.solid,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10.0),
                               ),
+                              borderSide:
+                                  BorderSide(width: 0, style: BorderStyle.none),
                             ),
+                            fillColor: Color.fromRGBO(245, 245, 245, 1),
+                            filled: true,
                             prefixIcon: Icon(Icons.lock),
                             suffixIcon: GestureDetector(
                               onTap: () {
@@ -177,14 +178,15 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
                           decoration: InputDecoration(
                             labelText: 'First Name',
                             prefixIcon: Icon(Icons.person),
-                            border: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: CustomColors.lightGrey,
-                                width: 4,
-                                style: BorderStyle.solid,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10.0),
                               ),
+                              borderSide:
+                                  BorderSide(width: 0, style: BorderStyle.none),
                             ),
+                            fillColor: Color.fromRGBO(245, 245, 245, 1),
+                            filled: true,
                           ),
                           onSaved: (value) =>
                               signUpFormValues["firstName"] = value,
@@ -204,14 +206,15 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
                           decoration: InputDecoration(
                             labelText: 'Last Name',
                             prefixIcon: Icon(Icons.people),
-                            border: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: CustomColors.lightGrey,
-                                width: 4,
-                                style: BorderStyle.solid,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10.0),
                               ),
+                              borderSide:
+                                  BorderSide(width: 0, style: BorderStyle.none),
                             ),
+                            fillColor: Color.fromRGBO(245, 245, 245, 1),
+                            filled: true,
                           ),
                           onSaved: (value) =>
                               signUpFormValues["lastName"] = value,
@@ -239,14 +242,15 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
                               Icons.email,
                             ),
                             labelText: 'Email',
-                            border: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: CustomColors.lightGrey,
-                                width: 4,
-                                style: BorderStyle.solid,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10.0),
                               ),
+                              borderSide:
+                                  BorderSide(width: 0, style: BorderStyle.none),
                             ),
+                            fillColor: Color.fromRGBO(245, 245, 245, 1),
+                            filled: true,
                           ),
                           onSaved: (value) => signUpFormValues["email"] = value,
                         ),
@@ -267,14 +271,15 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: Icon(Icons.lock),
-                            border: UnderlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: CustomColors.lightGrey,
-                                width: 4,
-                                style: BorderStyle.solid,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10.0),
                               ),
+                              borderSide:
+                                  BorderSide(width: 0, style: BorderStyle.none),
                             ),
+                            fillColor: Color.fromRGBO(245, 245, 245, 1),
+                            filled: true,
                             suffixIcon: GestureDetector(
                               onTap: () {
                                 setState(() {
@@ -409,14 +414,10 @@ class SubmitButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Color.fromRGBO(
-                (Theme.of(context).primaryColor.red * 0.8).round(),
-                (Theme.of(context).primaryColor.green * 0.8).round(),
-                (Theme.of(context).primaryColor.blue * 0.8).round(),
-                1),
-            blurRadius: 0.0,
+            color: Theme.of(context).primaryColor.withOpacity(0.4),
+            blurRadius: 10,
             spreadRadius: 0,
-            offset: Offset(0, 5),
+            // offset: Offset(2, 2),
           )
         ],
       ),
