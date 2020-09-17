@@ -10,3 +10,11 @@ class CustomColors {
   static const optionBackground = Color.fromRGBO(255, 200, 200, 1);
   static const dialogBackground = Color.fromRGBO(40, 40, 40, 0.2);
 }
+
+List<Color> markerColors = [
+  Colors.green,
+  Colors.blue,
+  Colors.orange,
+  Colors.pink,
+  Colors.indigo
+];

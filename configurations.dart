@@ -25,6 +25,9 @@ List<SoftPreference> softPrefConfig = [
 ];
 
 List<Preferences> prefsConfig = [
-  Preferences(constraintsConfig, softPrefConfig,
-      PreferenceScores(culture: 5, learn: 5, relax: 5))
+  Preferences(
+      constraintsConfig,
+      softPrefConfig,
+      PreferenceScores(
+          culture: 5, active: 5, nature: 5, shopping: 5, food: 5, nightlife: 5))
 ];

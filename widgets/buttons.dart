@@ -120,19 +120,19 @@ class AnimatedButton extends StatefulWidget {
   final Key key;
   AnimatedButton({this.child, this.callback, this.key}) : super(key: key);
   @override
-  _AnimatedButtonState createState() =>
-      _AnimatedButtonState(child: child, callback: callback, key: key);
+  AnimatedButtonState createState() =>
+      AnimatedButtonState(child: child, callback: callback, key: key);
 }
 
-class _AnimatedButtonState extends State<AnimatedButton>
+class AnimatedButtonState extends State<AnimatedButton>
     with SingleTickerProviderStateMixin {
   double _scale;
   AnimationController _controller;
-  final Widget child;
+  Widget child;
   final void Function() callback;
   final Key key;
 
-  _AnimatedButtonState({this.child, this.callback, this.key});
+  AnimatedButtonState({this.child, this.callback, this.key});
 
   @override
   void initState() {

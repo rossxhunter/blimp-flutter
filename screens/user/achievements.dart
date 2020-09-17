@@ -15,6 +15,15 @@ class AchievementsPageState extends State<AchievementsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(
+          "Achievements",
+          style: Theme.of(context)
+              .textTheme
+              .headline3
+              .copyWith(color: Colors.white),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(top: 30, left: 30, right: 30),

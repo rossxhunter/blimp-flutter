@@ -11,9 +11,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class OriginDestinationField extends StatefulWidget {
   final String point;
+  final int originId;
+  final int destId;
   final Function callback;
   final TextEditingController controller;
-  OriginDestinationField({this.point, this.callback, this.controller});
+  OriginDestinationField(
+      {this.point, this.destId, this.originId, this.callback, this.controller});
   @override
   State<StatefulWidget> createState() {
     return OriginDestinationFieldState(
@@ -100,7 +103,8 @@ class OriginDestinationFieldState extends State<OriginDestinationField> {
                                   ),
                             ),
                             suggestionsCallback: (pattern) {
-                              return getDestinationSuggestionsForQuery(pattern);
+                              return getDestinationSuggestionsForQuery(pattern,
+                                  point, widget.originId, widget.destId);
                             },
                             suggestionsBoxDecoration:
                                 CupertinoSuggestionsBoxDecoration(

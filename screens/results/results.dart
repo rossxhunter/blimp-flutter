@@ -1,17 +1,22 @@
+import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/model/preferences.dart';
-import 'package:blimp/screens/accommodation.dart';
+import 'package:blimp/screens/details.dart';
+import 'package:blimp/screens/results/accommodation.dart';
 import 'package:blimp/screens/activityDetails.dart';
 import 'package:blimp/screens/booking.dart';
-import 'package:blimp/screens/changeActivities.dart';
-import 'package:blimp/screens/feedback.dart';
-import 'package:blimp/screens/flights.dart';
+import 'package:blimp/screens/results/changeActivities.dart';
+import 'package:blimp/screens/results/feedback.dart';
+import 'package:blimp/screens/results/flights.dart';
+import 'package:blimp/screens/results/map.dart';
 import 'package:blimp/screens/search.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/images.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/services/util.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
@@ -24,19 +29,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
 import 'package:flutter_multi_carousel/carousel.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:stretchy_header/stretchy_header.dart';
 import 'package:http/http.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 
-import 'explore.dart';
+import '../explore.dart';
 
 class ResultsPage extends StatefulWidget {
   final int destId;
   final Map flights;
   final Map accommodation;
-  final Map itinerary;
+  final List itinerary;
   final List imageURLs;
   final Map weather;
   final String wiki;
@@ -85,7 +93,7 @@ class ResultsPageState extends State<ResultsPage> {
   final int destId;
   Map flights;
   Map accommodation;
-  final Map itinerary;
+  List itinerary;
   final List imageURLs;
   final String wiki;
   final String name;
@@ -120,7 +128,7 @@ class ResultsPageState extends State<ResultsPage> {
         flights["return"]["price"]["amount"] +
         accommodation["price"]["amount"];
     windows = List<List<double>>();
-    for (int i = 0; i < itinerary.keys.length; i++) {
+    for (int i = 0; i < itinerary.length; i++) {
       windows.add([8, 17]);
     }
   }
@@ -216,6 +224,36 @@ class ResultsPageState extends State<ResultsPage> {
     );
   }
 
+  void updateFlights(int selectedFlight) {
+    setState(() {
+      flights = allFlights.where((f) => f["id"] == selectedFlight).toList()[0];
+      getItineraryFromChange(preferences, flights, accommodation, destId)
+          .then((i) {
+        setState(() {
+          itinerary = i;
+        });
+      }).catchError((e) {
+        showErrorToast(context, "Unable to update itinerary - " + e.toString());
+      });
+    });
+  }
+
+  void updateAccommodation(int selectedAccommodation) {
+    setState(() {
+      accommodation = allAccommodation
+          .where((a) => a["id"] == selectedAccommodation)
+          .toList()[0];
+      getItineraryFromChange(preferences, flights, accommodation, destId)
+          .then((i) {
+        setState(() {
+          itinerary = i;
+        });
+      }).catchError((e) {
+        showErrorToast(context, "Unable to update itinerary - " + e.toString());
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // preloadImages(context, allAccommodation, itinerary, imageURLs);
@@ -231,48 +269,127 @@ class ResultsPageState extends State<ResultsPage> {
               physics: AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 SliverAppBar(
-                  shape: ContinuousRectangleBorder(
-                    side: _showTitle
-                        ? BorderSide(color: CustomColors.lightGrey, width: 4)
-                        : BorderSide.none,
-                  ),
+                  // shape: ContinuousRectangleBorder(
+                  //   side: _showTitle
+                  //       ? BorderSide(color: CustomColors.lightGrey, width: 4)
+                  //       : BorderSide.none,
+                  // ),
+                  titleSpacing: 0.0,
                   leading: _showTitle
-                      ? IconButton(
-                          icon: Icon(Icons.arrow_back,
-                              color: Theme.of(context).primaryColor),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
+                      ? Padding(
+                          padding: EdgeInsets.only(left: 10, bottom: 10),
+                          child: AnimatedButton(
+                            key: Key("smallBack"),
+                            callback: () {
+                              Navigator.pop(context);
+                            },
+                            child: Icon(
+                              FontAwesomeIcons.arrowLeft,
+                              color: Theme.of(context).primaryColor,
+                              size: 20,
+                            ),
+                          ),
                         )
-                      : null,
+                      : Padding(
+                          padding: EdgeInsets.only(left: 20, bottom: 0),
+                          child: AnimatedButton(
+                            key: Key("largeBack"),
+                            callback: () {
+                              Navigator.pop(context);
+                            },
+                            child: Icon(
+                              FontAwesomeIcons.arrowLeft,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          ),
+                        ),
+
                   actions: _showTitle
                       ? <Widget>[
-                          AnimatedButton(
-                            key: Key("smallFeeback"),
-                            callback: () => clickFeedback(context),
-                            child: Icon(Icons.refresh,
-                                color: Theme.of(context).primaryColor),
+                          Padding(
+                            padding: EdgeInsets.only(left: 10, bottom: 10),
+                            child: AnimatedButton(
+                              key: Key("smallMap"),
+                              callback: () async {
+                                Navigator.push(
+                                  context,
+                                  PageTransition(
+                                    type: PageTransitionType.downToUp,
+                                    child: MapScreen(
+                                      accommodation: accommodation,
+                                      itinerary: itinerary,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Icon(
+                                FontAwesomeIcons.map,
+                                color: Theme.of(context).primaryColor,
+                                size: 20,
+                              ),
+                            ),
                           ),
                           Padding(
-                            padding: EdgeInsets.only(left: 20, right: 20),
+                            padding: EdgeInsets.only(left: 20, bottom: 10),
+                            child: AnimatedButton(
+                              key: Key("smallFeedback"),
+                              callback: () => clickFeedback(context),
+                              child: Icon(
+                                FontAwesomeIcons.redo,
+                                color: Theme.of(context).primaryColor,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(
+                                left: 20, right: 20, bottom: 10),
                             child: AnimatedButton(
                               key: Key("smallOptions"),
                               child: Icon(
-                                Icons.sort,
+                                FontAwesomeIcons.bars,
                                 color: Theme.of(context).primaryColor,
+                                size: 20,
                               ),
                               callback: () {},
                             ),
                           ),
                         ]
                       : <Widget>[
-                          AnimatedButton(
-                            key: Key("largeFeeback"),
-                            callback: () => clickFeedback(context),
-                            child: Icon(
-                              Icons.refresh,
-                              color: Colors.white,
-                              size: 30,
+                          Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: AnimatedButton(
+                              key: Key("largeMap"),
+                              callback: () {
+                                Navigator.push(
+                                  context,
+                                  PageTransition(
+                                    type: PageTransitionType.downToUp,
+                                    child: MapScreen(
+                                      accommodation: accommodation,
+                                      itinerary: itinerary,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Icon(
+                                FontAwesomeIcons.map,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 20),
+                            child: AnimatedButton(
+                              key: Key("largeFeedback"),
+                              callback: () => clickFeedback(context),
+                              child: Icon(
+                                FontAwesomeIcons.redo,
+                                color: Colors.white,
+                                size: 30,
+                              ),
                             ),
                           ),
                           Padding(
@@ -280,7 +397,7 @@ class ResultsPageState extends State<ResultsPage> {
                             child: AnimatedButton(
                               key: Key("largeOptions"),
                               child: Icon(
-                                Icons.sort,
+                                FontAwesomeIcons.bars,
                                 color: Colors.white,
                                 size: 30,
                               ),
@@ -290,7 +407,7 @@ class ResultsPageState extends State<ResultsPage> {
                         ],
                   backgroundColor: Colors.white,
                   stretch: true,
-                  elevation: 0,
+                  elevation: 15,
                   pinned: true,
                   floating: false,
                   onStretchTrigger: () {
@@ -298,6 +415,23 @@ class ResultsPageState extends State<ResultsPage> {
                     return;
                   },
                   expandedHeight: kExpandedHeight,
+                  title: _showTitle
+                      ? Padding(
+                          padding: EdgeInsets.only(left: 10, bottom: 10),
+                          child: Icon(
+                            FontAwesomeIcons.heart,
+                            color: Theme.of(context).primaryColor,
+                            size: 20,
+                          ),
+                        )
+                      : Padding(
+                          padding: EdgeInsets.only(left: 20, bottom: 0),
+                          child: Icon(
+                            FontAwesomeIcons.heart,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
                   flexibleSpace: Stack(
                     children: <Widget>[
                       FlexibleSpaceBar(
@@ -307,9 +441,12 @@ class ResultsPageState extends State<ResultsPage> {
                         ],
                         centerTitle: true,
                         title: _showTitle
-                            ? Text(
-                                name,
-                                style: Theme.of(context).textTheme.headline3,
+                            ? Padding(
+                                padding: EdgeInsets.only(top: 5),
+                                child: Text(
+                                  name,
+                                  style: Theme.of(context).textTheme.headline3,
+                                ),
                               )
                             : null,
                         collapseMode: CollapseMode.parallax,
@@ -378,21 +515,64 @@ class ResultsPageState extends State<ResultsPage> {
                     ],
                   ),
                 ),
-                ResultsPageContents(
-                  destId: destId,
-                  flights: flights,
-                  accommodation: accommodation,
-                  itinerary: itinerary,
-                  wiki: wiki,
-                  weather: weather,
-                  imageURLs: imageURLs,
-                  name: name,
-                  countryInfo: countryInfo,
-                  allFlights: allFlights,
-                  allAccommodation: allAccommodation,
-                  allActivities: allActivities,
-                  preferences: preferences,
-                  windows: windows,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 100),
+                    child: Container(
+                      color: CustomColors.greyBackground,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          DestinationInfo(
+                            destId: destId,
+                            name: name,
+                            wiki: wiki,
+                            weather: weather,
+                            departureDate: preferences.constraints
+                                .singleWhere(
+                                    (c) => c.property == "departure_date")
+                                .value,
+                            returnDate: preferences.constraints
+                                .singleWhere((c) => c.property == "return_date")
+                                .value,
+                            travelDuration: flights["outbound"]["duration"],
+                            countryInfo: countryInfo,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: FlightsSection(
+                              callback: updateFlights,
+                              flights: flights,
+                              allFlights: allFlights,
+                              destId: destId,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: AccommodationSection(
+                              callback: updateAccommodation,
+                              accommodation: accommodation,
+                              allAccommodation: allAccommodation,
+                              destId: destId,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: ActivitiesSection(
+                              key: Key(itinerary.toString()),
+                              destId: destId,
+                              itinerary: itinerary,
+                              allActivities: allActivities,
+                              travel: flights,
+                              accommodation: accommodation,
+                              preferences: preferences,
+                              windows: windows,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -406,191 +586,6 @@ class ResultsPageState extends State<ResultsPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class ResultsPageContents extends StatefulWidget {
-  final int destId;
-  final Map flights;
-  final Map accommodation;
-  final Map itinerary;
-  final List imageURLs;
-  final String wiki;
-  final String name;
-  final Map weather;
-  final Map countryInfo;
-  final List allFlights;
-  final List allAccommodation;
-  final List allActivities;
-  final Preferences preferences;
-  final List<List<double>> windows;
-  ResultsPageContents(
-      {this.destId,
-      this.flights,
-      this.accommodation,
-      this.itinerary,
-      this.wiki,
-      this.weather,
-      this.countryInfo,
-      this.imageURLs,
-      this.name,
-      this.allFlights,
-      this.allAccommodation,
-      this.allActivities,
-      this.preferences,
-      this.windows});
-  @override
-  State<StatefulWidget> createState() {
-    return ResultsPageContentsState(
-        destId: destId,
-        flights: flights,
-        accommodation: accommodation,
-        itinerary: itinerary,
-        wiki: wiki,
-        weather: weather,
-        imageURLs: imageURLs,
-        name: name,
-        countryInfo: countryInfo,
-        allFlights: allFlights,
-        allAccommodation: allAccommodation,
-        allActivities: allActivities,
-        preferences: preferences,
-        windows: windows);
-  }
-}
-
-class ResultsPageContentsState extends State<ResultsPageContents> {
-  final int destId;
-  Map flights;
-  Map accommodation;
-  Map itinerary;
-  final List imageURLs;
-  final String wiki;
-  final String name;
-  final Map weather;
-  final Map countryInfo;
-  final List allFlights;
-  final List allAccommodation;
-  final List allActivities;
-  final Preferences preferences;
-  List<List<double>> windows;
-  ResultsPageContentsState(
-      {this.destId,
-      this.flights,
-      this.accommodation,
-      this.itinerary,
-      this.wiki,
-      this.weather,
-      this.countryInfo,
-      this.imageURLs,
-      this.name,
-      this.allFlights,
-      this.allAccommodation,
-      this.allActivities,
-      this.preferences,
-      this.windows});
-
-  void updateFlights(int selectedFlight) {
-    setState(() {
-      flights = allFlights.where((f) => f["id"] == selectedFlight).toList()[0];
-      getItineraryFromChange(preferences, flights, accommodation, destId)
-          .then((i) {
-        setState(() {
-          itinerary = i;
-        });
-      }).catchError((e) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to update itinerary - " + e.toString(),
-          ),
-        );
-      });
-    });
-  }
-
-  void updateAccommodation(int selectedAccommodation) {
-    setState(() {
-      accommodation = allAccommodation
-          .where((a) => a["id"] == selectedAccommodation)
-          .toList()[0];
-      getItineraryFromChange(preferences, flights, accommodation, destId)
-          .then((i) {
-        setState(() {
-          itinerary = i;
-        });
-      }).catchError((e) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to update itinerary - " + e.toString(),
-          ),
-        );
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: EdgeInsets.only(bottom: 100),
-        child: Container(
-          color: CustomColors.greyBackground,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              DestinationInfo(
-                name: name,
-                wiki: wiki,
-                weather: weather,
-                departureDate: preferences.constraints
-                    .singleWhere((c) => c.property == "departure_date")
-                    .value,
-                returnDate: preferences.constraints
-                    .singleWhere((c) => c.property == "return_date")
-                    .value,
-                travelDuration: flights["outbound"]["duration"],
-                countryInfo: countryInfo,
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: FlightsSection(
-                  callback: updateFlights,
-                  flights: flights,
-                  allFlights: allFlights,
-                  destId: destId,
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: AccommodationSection(
-                  callback: updateAccommodation,
-                  accommodation: accommodation,
-                  allAccommodation: allAccommodation,
-                  destId: destId,
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: ActivitiesSection(
-                  key: Key(itinerary.toString()),
-                  destId: destId,
-                  itinerary: itinerary,
-                  allActivities: allActivities,
-                  travel: flights,
-                  accommodation: accommodation,
-                  preferences: preferences,
-                  windows: windows,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -623,10 +618,18 @@ class ResultsPageBookBar extends StatelessWidget {
           width: 1000,
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(
-              color: CustomColors.lightGrey,
-              width: 3,
-            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.4),
+                blurRadius: 10.0,
+                offset: Offset(0, 0),
+              )
+            ],
+            // border: Border.all(
+            //   color: CustomColors.lightGrey,
+            //   width: 3,
+            // ),
           ),
           child: Padding(
             padding: EdgeInsets.only(top: 10, bottom: 10, left: 30, right: 30),
@@ -884,7 +887,7 @@ class ActivityOptionState extends State<ActivityOption> {
 class ActivitiesSection extends StatefulWidget {
   final Key key;
   final int destId;
-  final Map itinerary;
+  final List itinerary;
   final List allActivities;
   final Map travel;
   final Map accommodation;
@@ -916,7 +919,7 @@ class ActivitiesSection extends StatefulWidget {
 
 class ActivitiesSectionState extends State<ActivitiesSection> {
   Key key;
-  Map itinerary;
+  List itinerary;
   List allActivities;
   int destId;
   Map travel;
@@ -938,7 +941,7 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
 
   @override
   Widget build(BuildContext context) {
-    int numDays = itinerary.values.length;
+    int numDays = itinerary.length;
     return Container(
       color: Colors.white,
       child: Padding(
@@ -953,21 +956,14 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                   "Activities",
                   style: Theme.of(context).textTheme.headline3,
                 ),
-                // Row(
-                //   children: [
-                //     Icon(
-                //       Icons.settings,
-                //       color: Theme.of(context).primaryColor,
-                //     ),
-                //     Padding(
-                //       padding: EdgeInsets.only(left: 20),
-                //       child: Icon(
-                //         Icons.map,
-                //         color: Theme.of(context).primaryColor,
-                //       ),
-                //     ),
-                //   ],
-                // ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.settings,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ],
+                ),
               ],
             ),
             Padding(
@@ -992,31 +988,28 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(top: 20),
-                            child: itinerary[day.toString()].length != 0
+                            child: itinerary[day].length != 0
                                 ? MediaQuery.removePadding(
                                     context: context,
                                     removeTop: true,
                                     child: ListView.builder(
                                       primary: false,
-                                      itemCount:
-                                          itinerary[day.toString()].length,
+                                      itemCount: itinerary[day].length,
                                       itemBuilder:
                                           (BuildContext context, int index) {
                                         return Padding(
                                           padding: EdgeInsets.only(
                                               top: 20, left: 10, right: 10),
                                           child: ActivityOption(
-                                              key: Key(itinerary[day.toString()]
-                                                      [index]["id"] +
-                                                  itinerary[day.toString()]
-                                                          [index]["startTime"]
+                                              key: Key(itinerary[day][index]
+                                                      ["id"] +
+                                                  itinerary[day][index]
+                                                          ["startTime"]
                                                       .toString() +
-                                                  itinerary[day.toString()]
-                                                          [index]["duration"]
+                                                  itinerary[day][index]
+                                                          ["duration"]
                                                       .toString()),
-                                              activity:
-                                                  itinerary[day.toString()]
-                                                      [index]),
+                                              activity: itinerary[day][index]),
                                         );
                                       },
                                     ),
@@ -1365,6 +1358,7 @@ class FlightsSectionState extends State<FlightsSection> {
 }
 
 class DestinationInfo extends StatelessWidget {
+  final int destId;
   final String name;
   final Map countryInfo;
   final String wiki;
@@ -1374,7 +1368,8 @@ class DestinationInfo extends StatelessWidget {
   final int travelDuration;
 
   DestinationInfo(
-      {this.name,
+      {this.destId,
+      this.name,
       this.countryInfo,
       this.wiki,
       this.weather,
@@ -1501,22 +1496,50 @@ class DestinationInfo extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(top: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: CustomColors.lightGrey,
-                    width: 2,
+              child: AnimatedButton(
+                callback: () {
+                  getCityDetailsFromId(destId).then((details) {
+                    Map cityDetails = details;
+                    // showBarModalBottomSheet(
+                    //   context: context,
+                    //   elevation: 5,
+                    //   barrierColor: Colors.red.withOpacity(0.1),
+                    //   builder: (context, scrollController) => DetailsPage(
+                    //     cityDetails: cityDetails,
+                    //     quickView: true,
+                    //   ),
+                    // );
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return Container(
+                          height: 500,
+                          child: DetailsPage(
+                            cityDetails: cityDetails,
+                            quickView: true,
+                          ),
+                        );
+                      },
+                    );
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: CustomColors.lightGrey,
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    "More about " + name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headline2
-                        .copyWith(color: Theme.of(context).primaryColor),
+                  child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Text(
+                      "More about " + name,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline2
+                          .copyWith(color: Theme.of(context).primaryColor),
+                    ),
                   ),
                 ),
               ),

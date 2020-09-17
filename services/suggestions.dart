@@ -11,6 +11,7 @@ Map exploreSuggestions;
 List testingSuggestions;
 List attractionsSuggestions;
 Map searchSuggestions;
+List availableFlights;
 
 Future<void> getSuggestions() async {
   try {
@@ -26,6 +27,8 @@ Future<void> getSuggestions() async {
         await makeGetRequest("suggestions/attractions", "");
     String searchSuggestionsResponse =
         await makeGetRequest("suggestions/search", "");
+    String availableFlightsResponse =
+        await makeGetRequest("suggestions/available_flights", "");
     String testingSuggestionsResponse =
         await makeGetRequest("suggestions/testing", "");
     destinationSuggestions = json.decode(destinationSuggestionsResponse);
@@ -34,6 +37,7 @@ Future<void> getSuggestions() async {
     exploreSuggestions = json.decode(exploreSuggestionsResponse);
     attractionsSuggestions = json.decode(attractionsSuggestionsResponse);
     searchSuggestions = json.decode(searchSuggestionsResponse);
+    availableFlights = json.decode(availableFlightsResponse);
     testingSuggestions = json.decode(testingSuggestionsResponse);
   } on Exception catch (e) {
     print(e);
@@ -41,20 +45,41 @@ Future<void> getSuggestions() async {
   }
 }
 
-List getDestinationSuggestionsForQuery(String query) {
+List getDestinationSuggestionsForQuery(
+    String query, String point, int originId, int destId) {
   List sug = [];
   destinationSuggestions.forEach((destSug) {
     if (destSug["type"] == "city") {
       if (destSug["cityName"].contains(RegExp(query, caseSensitive: false)) ||
           destSug["countryName"]
               .contains(RegExp(query, caseSensitive: false))) {
-        sug.add(destSug);
+        if (availableFlights
+                .where((f) => point == "From"
+                    ? f["origin"] == destSug["id"] &&
+                        (destId == null || f["destination"] == destId)
+                    : f["destination"] == destSug["id"] &&
+                        f["origin"] == originId)
+                .toList()
+                .length >
+            0) {
+          sug.add(destSug);
+        }
       }
     } else if (destSug["type"] == "airport") {
       if (destSug["airportName"]
               .contains(RegExp(query, caseSensitive: false)) ||
           destSug["cityName"].contains(RegExp(query, caseSensitive: false))) {
-        sug.add(destSug);
+        if (availableFlights
+                .where((f) => point == "From"
+                    ? f["origin"] == destSug["cityId"] &&
+                        (destId == null || f["destination"] == destId)
+                    : f["destination"] == destSug["cityId"] &&
+                        f["origin"] == originId)
+                .toList()
+                .length >
+            0) {
+          sug.add(destSug);
+        }
       }
     }
   });
@@ -138,4 +163,8 @@ List getDestinationSuggestions() {
 
 Map getSearchSuggesions() {
   return searchSuggestions;
+}
+
+List getAvailableFlights() {
+  return availableFlights;
 }

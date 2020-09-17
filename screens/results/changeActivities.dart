@@ -1,11 +1,11 @@
 import 'dart:ui';
 
 import 'package:blimp/model/preferences.dart';
-import 'package:blimp/screens/activitiesOptions.dart';
+import 'package:blimp/screens/results/activitiesOptions.dart';
 import 'package:blimp/screens/explore.dart';
-import 'package:blimp/screens/flights.dart';
-import 'package:blimp/screens/newActivity.dart';
-import 'package:blimp/screens/results.dart';
+import 'package:blimp/screens/results/flights.dart';
+import 'package:blimp/screens/results/newActivity.dart';
+import 'package:blimp/screens/results/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
@@ -20,7 +20,7 @@ import 'package:popup_menu/popup_menu.dart';
 import 'package:reorderables/reorderables.dart';
 
 class ChangeActivitiesScreen extends StatefulWidget {
-  final Map itinerary;
+  final List itinerary;
   final List allActivities;
   final Map travel;
   final Map accommodation;
@@ -60,7 +60,7 @@ class ChangeActivitiesScreen extends StatefulWidget {
 
 class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  Map itinerary;
+  List itinerary;
   int day;
   final List allActivities;
   final Map travel;
@@ -85,9 +85,9 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
       this.preferences,
       this.windows}) {
     _activities = List<List>();
-    for (int i = 0; i < itinerary.keys.length; i++) {
+    for (int i = 0; i < itinerary.length; i++) {
       _activities.add(List());
-      for (Map activity in itinerary[i.toString()]) {
+      for (Map activity in itinerary[i]) {
         _activities[i].add(activity);
       }
     }
@@ -114,13 +114,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
           });
         });
       }).catchError((e) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to add activity - " + e.toString(),
-          ),
-        );
+        showErrorToast(context, "Unable to add activity - " + e.toString());
       });
   }
 
@@ -172,14 +166,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
           });
         });
       }).catchError((e) {
-        showDialog(
-          context: context,
-          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to change duration - " + e.toString(),
-          ),
-        );
+        showErrorToast(context, "Unable to change duration - " + e.toString());
       });
   }
 
@@ -210,14 +197,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
           });
         });
       }).catchError((e) {
-        showDialog(
-          context: context,
-          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to change duration - " + e.toString(),
-          ),
-        );
+        showErrorToast(context, "Unable to change duration - " + e.toString());
       });
   }
 
@@ -236,14 +216,7 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
               {"dest_id": destId, "itinNum": itinNum, "new_times": times});
         });
       }).catchError((e) {
-        showDialog(
-          context: context,
-          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to change window - " + e.toString(),
-          ),
-        );
+        showErrorToast(context, "Unable to change window - " + e.toString());
       });
   }
 
@@ -293,8 +266,8 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
     }
 
     PopupMenu.context = context;
-    TabController _controller = TabController(
-        vsync: this, length: itinerary.keys.length, initialIndex: day);
+    TabController _controller =
+        TabController(vsync: this, length: itinerary.length, initialIndex: day);
     _controller.addListener(() {
       setState(() {
         day = _controller.index;
@@ -387,14 +360,13 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                     labelPadding: EdgeInsets.only(left: 20, right: 20),
                     indicator: CircleTabIndicator(
                         color: Theme.of(context).primaryColor, radius: 4),
-                    tabs: _getActivityTabs(itinerary.keys.length),
+                    tabs: _getActivityTabs(itinerary.length),
                   ),
                   Expanded(
                     child: TabBarView(
                         controller: _controller,
                         physics: AlwaysScrollableScrollPhysics(),
-                        children:
-                            _getTabNums(itinerary.keys.length).map((int d) {
+                        children: _getTabNums(itinerary.length).map((int d) {
                           return Padding(
                             padding: EdgeInsets.only(
                                 bottom: 80, top: 10, left: 10, right: 10),
@@ -446,23 +418,12 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                 child: AnimatedButton(
                   callback: () {
                     for (int i = 0; i < _activities.length; i++) {
-                      itinerary[i.toString()] = _activities[i];
+                      itinerary[i] = _activities[i];
                     }
                     // Future.delayed(Duration(microseconds: 10000), () {
                     Navigator.of(context).pop();
                     // });
-                    showDialog(
-                        context: context,
-                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-                        builder: (context) {
-                          Future.delayed(Duration(seconds: 1), () {
-                            Navigator.of(context).pop(true);
-                          });
-                          return SuccessDialog(
-                            title: "Success",
-                            description: "Activities Updated",
-                          );
-                        });
+                    showSuccessToast(context, "Activities Updated");
                   },
                   child: ConfirmButton(),
                 ),
@@ -505,14 +466,8 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
           _activities[day][journeyNum]["travelMethodToNext"] = oldMethod;
           _activities[day][journeyNum]["travelMethodChanged"] = false;
         });
-        showDialog(
-          context: context,
-          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to change travel method - " + e.toString(),
-          ),
-        );
+        showErrorToast(
+            context, "Unable to change travel method - " + e.toString());
       });
   }
 
@@ -589,14 +544,8 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
           _activities[day] = oldActivities;
           _isScreenDisabled = false;
         });
-        showDialog(
-          context: context,
-          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to reorder activities - " + e.toString(),
-          ),
-        );
+        showErrorToast(
+            context, "Unable to reorder activities - " + e.toString());
       });
   }
 

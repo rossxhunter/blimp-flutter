@@ -1,3 +1,4 @@
+import 'package:blimp/services/http.dart';
 import 'package:blimp/services/user.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
@@ -344,14 +345,20 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
         .signInWithEmailAndPassword(
             email: loginFormValues["email"],
             password: loginFormValues["password"])
-        .then((result) {
-      isLoggedIn = true;
-      currentUser["firstName"] = "Alice";
-      currentUser["lastName"] = "Miller";
-      // currentUser["profilePictureURL"] = "assets/images/alice.jpeg";
-      widget.callback();
-      Navigator.pop(context);
-    });
+        .then(
+      (result) async {
+        var user = result.user;
+        if (user.isEmailVerified) {
+          isLoggedIn = true;
+          currentUser = await getUserDetails(user.uid);
+          // currentUser["profilePictureURL"] = "assets/images/alice.jpeg";
+          widget.callback();
+          Navigator.pop(context);
+        } else {
+          showErrorToast(context, "Please verify your email before you login");
+        }
+      },
+    );
   }
 
   Future<void> _addNewUser() async {
@@ -364,25 +371,23 @@ class LoginSignupScreenState extends State<LoginSignupScreen> {
     )
         .then((u) async {
       Navigator.pop(context);
-      showDialog(
-          context: context,
-          barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-          builder: (BuildContext context) => SuccessDialog(
-                description: "Nice one " +
-                    signUpFormValues["firstName"] +
-                    "! We've sent a verification link to " +
-                    signUpFormValues["email"] +
-                    "\nClick that link and log in!",
-                title: "Hooray!",
-              ));
+      showSuccessToast(
+          context,
+          "Nice one " +
+              signUpFormValues["firstName"] +
+              "! We've sent a verification link to " +
+              signUpFormValues["email"] +
+              "\nClick that link and log in!");
       user = await _auth.currentUser();
       UserUpdateInfo updateInfo = UserUpdateInfo();
       updateInfo.displayName = signUpFormValues["firstName"];
       await user.updateProfile(updateInfo);
-
       user.sendEmailVerification();
 
       print(user.displayName);
+
+      await addNewUserDetails(user.uid, user.email,
+          signUpFormValues["firstName"], signUpFormValues["lastName"]);
     }).catchError((exception) {
       if (exception.code == "ERROR_EMAIL_ALREADY_IN_USE") {
         print("Email in use");
@@ -411,13 +416,12 @@ class SubmitButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).primaryColor.withOpacity(0.4),
-            blurRadius: 10,
-            spreadRadius: 0,
-            // offset: Offset(2, 2),
+            color: Colors.grey.withOpacity(0.4),
+            blurRadius: 10.0,
+            offset: Offset(0, 5),
           )
         ],
       ),

@@ -3,10 +3,11 @@ import 'package:blimp/screens/explore.dart';
 import 'package:blimp/screens/search.dart';
 import 'package:blimp/screens/settings.dart';
 import 'package:blimp/screens/testing.dart';
-import 'package:blimp/screens/trips.dart';
-import 'package:blimp/screens/user.dart';
+import 'package:blimp/screens/user/trips.dart';
+import 'package:blimp/screens/user/user.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/widgets/buttons.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
@@ -123,6 +124,8 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Blimp',
+      builder: BotToastInit(),
+      navigatorObservers: [BotToastNavigatorObserver()], //
       theme: ThemeData(
         primarySwatch: Theme.of(context).primaryColor,
         primaryColor: Color.fromRGBO(230, 20, 60, 1),
@@ -151,7 +154,7 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
             color: Colors.black87,
             fontWeight: FontWeight.bold,
             fontFamily: "Avenir",
-            fontSize: 15,
+            fontSize: 16,
           ),
           headline1: TextStyle(
             color: Colors.black54,

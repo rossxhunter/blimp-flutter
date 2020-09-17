@@ -3,9 +3,10 @@ import 'dart:math';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/model/properties.dart';
 import 'package:blimp/routes.dart';
-import 'package:blimp/screens/results.dart';
+import 'package:blimp/screens/results/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/services/util.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
@@ -18,7 +19,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
-import 'package:date_range_picker/date_range_picker.dart' as DateRagePicker;
+import 'package:blimp/widgets/date_range_picker.dart' as DateRangePicker;
 
 class SearchPage extends StatefulWidget {
   final Preferences preferences;
@@ -36,12 +37,16 @@ const INITIAL_BUDGET_LEQ = 600;
 const INITIAL_ACCOMMODATION_TYPE = "Hotel";
 const INITIAL_ACCOMMODATION_STARS = 3.0;
 const INITIAL_BUDGET_CURRENCY = "GBP";
-DateTime initialOutboundDate = DateTime.now().add(Duration(days: 120));
-DateTime initialReturnDate = DateTime.now().add(Duration(days: 123));
+DateTime initialOutboundDate = DateTime.now();
+DateTime initialReturnDate = DateTime.now().add(Duration(days: 1));
 
 class SearchPageState extends State<SearchPage> {
   Preferences preferences;
   Map searchFields;
+  List<Map<String, DateTime>> validDates = [];
+  int originId;
+  int destId;
+  bool blankDates = true;
 
   SearchPageState({this.preferences}) {
     searchFields = {
@@ -66,8 +71,11 @@ class SearchPageState extends State<SearchPage> {
       "outboundDate": preferences != null
           ? preferences.constraints
               .firstWhere((c) => c.property == "departure_date")
-          : initialOutboundDate,
-      "returnDate": initialReturnDate,
+          : null,
+      "returnDate": preferences != null
+          ? preferences.constraints
+              .firstWhere((c) => c.property == "return_date")
+          : null,
       "accommodationType": INITIAL_ACCOMMODATION_TYPE,
       "accommodationStars": INITIAL_ACCOMMODATION_STARS,
       "accommodationAmenities": [],
@@ -77,24 +85,30 @@ class SearchPageState extends State<SearchPage> {
       "budgetLEQ": INITIAL_BUDGET_LEQ,
       "budgetCurrency": INITIAL_BUDGET_CURRENCY,
       "preferenceScores": PreferenceScores(
-          culture: 3,
-          learn: 3,
-          relax: 3,
-          action: 3,
-          party: 3,
-          family: 3,
-          romantic: 3,
-          nature: 3,
-          shopping: 3,
-          food: 3,
-          sport: 3)
+        culture: 3,
+        active: 3,
+        nature: 3,
+        shopping: 3,
+        food: 3,
+        nightlife: 3,
+      ),
     };
   }
 
   //CALLBACK
   void updateSearchFields(String field, var value) {
     setState(() {
+      blankDates = true;
       searchFields[field] = value;
+      if (field == "origin") {
+        originId = value["originId"];
+        updateValidDates();
+      } else if (field == "destination") {
+        destId = value["destId"];
+        updateValidDates();
+      } else {
+        blankDates = false;
+      }
     });
     print(searchFields);
   }
@@ -103,12 +117,31 @@ class SearchPageState extends State<SearchPage> {
     var origin = searchFields["origin"];
     searchFields["origin"] = searchFields["destination"];
     searchFields["destination"] = origin;
+    updateValidDates();
     print(searchFields);
   }
 
+  void updateValidDates() {
+    setState(() {
+      validDates = [];
+      List availableFlights = getAvailableFlights();
+      for (Map flight in availableFlights) {
+        if ((originId == null || originId == flight["origin"]) &&
+            (destId == null || destId == flight["destination"])) {
+          validDates.add({
+            "departureDate": DateTime.parse(flight["departureDate"]),
+            "returnDate": DateTime.parse(flight["returnDate"])
+          });
+        }
+      }
+    });
+  }
+
   bool searchFieldsValid() {
-    if (searchFields["origin"].length == 0 ||
-        searchFields["destination"].length == 0) {
+    if (searchFields["origin"]["originId"] == null ||
+        searchFields["destination"]["destId"] == null ||
+        searchFields["outboundDate"] == null ||
+        searchFields["returnDate"] == null) {
       return false;
     }
     return true;
@@ -166,15 +199,21 @@ class SearchPageState extends State<SearchPage> {
         );
       }).catchError((e) {
         Navigator.pop(context);
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => CustomDialog(
-            title: "Error",
-            description: "Unable to fetch holiday - " + e.toString(),
-          ),
-        );
+        showErrorToast(context, "Unable to fetch holiday - " + e.toString());
       });
     }
+  }
+
+  @override
+  void initState() {
+    List availableFlights = getAvailableFlights();
+    for (Map flight in availableFlights) {
+      validDates.add({
+        "departureDate": DateTime.parse(flight["departureDate"]),
+        "returnDate": DateTime.parse(flight["returnDate"])
+      });
+    }
+    super.initState();
   }
 
   @override
@@ -243,6 +282,8 @@ class SearchPageState extends State<SearchPage> {
                                   Padding(
                                     padding: EdgeInsets.only(top: 30),
                                     child: Dates(
+                                      validDates: validDates,
+                                      blankDates: blankDates,
                                       callback: updateSearchFields,
                                     ),
                                   ),
@@ -478,35 +519,10 @@ class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
         "title": "Cultural",
         "icon": Icons.location_city
       },
-      "learn": {
-        "score": initialPrefScores.learn.toDouble(),
-        "title": "Educational",
-        "icon": Icons.local_library
-      },
-      "relax": {
-        "score": initialPrefScores.relax.toDouble(),
-        "title": "Relaxing",
-        "icon": Icons.beach_access
-      },
-      "action": {
-        "score": initialPrefScores.action.toDouble(),
-        "title": "Action",
+      "active": {
+        "score": initialPrefScores.active.toDouble(),
+        "title": "Active",
         "icon": Icons.directions_run
-      },
-      "party": {
-        "score": initialPrefScores.party.toDouble(),
-        "title": "Party",
-        "icon": Icons.local_bar
-      },
-      "sport": {
-        "score": initialPrefScores.sport.toDouble(),
-        "title": "Sport",
-        "icon": Icons.directions_bike
-      },
-      "food": {
-        "score": initialPrefScores.food.toDouble(),
-        "title": "Foody",
-        "icon": Icons.restaurant
       },
       "nature": {
         "score": initialPrefScores.nature.toDouble(),
@@ -518,15 +534,15 @@ class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
         "title": "Shopping",
         "icon": Icons.shopping_basket
       },
-      "romantic": {
-        "score": initialPrefScores.romantic.toDouble(),
-        "title": "Romantic",
-        "icon": CupertinoIcons.heart_solid
+      "food": {
+        "score": initialPrefScores.food.toDouble(),
+        "title": "Foody",
+        "icon": Icons.restaurant
       },
-      "family": {
-        "score": initialPrefScores.family.toDouble(),
-        "title": "Family",
-        "icon": Icons.child_friendly
+      "nightlife": {
+        "score": initialPrefScores.nightlife.toDouble(),
+        "title": "Nightlife",
+        "icon": Icons.local_bar
       },
     };
   }
@@ -570,18 +586,12 @@ class PreferenceScoresSectionState extends State<PreferenceScoresSection> {
                                 prefScores[pref]["score"] = value;
                                 PreferenceScores newPrefScores =
                                     PreferenceScores(
-                                        culture: prefScores["culture"]["score"]
-                                            .toInt(),
-                                        learn: prefScores["learn"]["score"]
-                                            .toInt(),
-                                        relax: prefScores["relax"]["score"]
-                                            .toInt(),
-                                        action: prefScores["action"]["score"]
-                                            .toInt(),
-                                        party: prefScores["party"]["score"]
-                                            .toInt(),
-                                        sport: prefScores["sport"]["score"]
-                                            .toInt());
+                                  culture:
+                                      prefScores["culture"]["score"].toInt(),
+                                  active: prefScores["active"]["score"].toInt(),
+                                  nightlife:
+                                      prefScores["nightlife"]["score"].toInt(),
+                                );
                                 callback("preferenceScores", newPrefScores);
                               });
                             },
@@ -872,7 +882,11 @@ class SearchSectionTitle extends StatelessWidget {
 
 class Dates extends StatefulWidget {
   final Function callback;
-  Dates({this.callback});
+  final List<Map<String, DateTime>> validDates;
+  final bool blankDates;
+  Dates({this.callback, this.validDates, this.blankDates}) {
+    createState();
+  }
   @override
   State<StatefulWidget> createState() {
     return DatesState();
@@ -880,26 +894,70 @@ class Dates extends StatefulWidget {
 }
 
 class DatesState extends State<Dates> {
-  DateTime outboundDate = initialOutboundDate;
-  DateTime returnDate = initialReturnDate;
+  DateTime outboundDate;
+  DateTime returnDate;
+  bool isValid;
+  // @override
+  // void initState() {
+  //   outboundDate = widget.validDates[0]["departureDate"];
+  //   returnDate = widget.validDates[0]["returnDate"];
+  //   super.initState();
+  // }
+
   var formatter = new DateFormat('d MMMM');
   @override
   Widget build(BuildContext context) {
+    if (widget.validDates.length == 0) {
+      isValid = false;
+    } else {
+      isValid = true;
+    }
+    if (widget.blankDates) {
+      outboundDate = null;
+      returnDate = null;
+    }
     return GestureDetector(
       onTap: () async {
-        final List<DateTime> picked = await DateRagePicker.showDatePicker(
+        if (isValid) {
+          final List<DateTime> picked = await DateRangePicker.showDatePicker(
             context: context,
-            initialFirstDate: outboundDate,
-            initialLastDate: returnDate,
-            firstDate: new DateTime(2020),
-            lastDate: new DateTime(2021));
-        if (picked != null && picked.length == 2) {
-          setState(() {
-            outboundDate = picked[0];
-            returnDate = picked[1];
-            widget.callback("outboundDate", outboundDate);
-            widget.callback("returnDate", returnDate);
-          });
+            initialFirstDate:
+                outboundDate ?? widget.validDates[0]["departureDate"],
+            initialLastDate: returnDate ?? widget.validDates[0]["returnDate"],
+            firstDate: DateTime.now(),
+            lastDate: DateTime.now().add(Duration(days: 90)),
+            selectableDayPredicate: (day, firstDay, lastDay) {
+              if (firstDay == null) {
+                return isDateAllowed(
+                    day,
+                    widget.validDates
+                        .map((vd) => vd["departureDate"])
+                        .toList());
+              } else if (lastDay == null) {
+                return isDateAllowed(
+                    day,
+                    widget.validDates
+                        .where((vd) =>
+                            areDatesEqual(vd["departureDate"], firstDay))
+                        .map((vd) => vd["returnDate"])
+                        .toList());
+              } else {
+                return isDateAllowed(
+                    day,
+                    widget.validDates
+                        .map((vd) => vd["departureDate"])
+                        .toList());
+              }
+            },
+          );
+          if (picked != null && picked.length == 2) {
+            setState(() {
+              outboundDate = picked[0];
+              returnDate = picked[1];
+              widget.callback("outboundDate", outboundDate);
+              widget.callback("returnDate", returnDate);
+            });
+          }
         }
       },
       child: Container(
@@ -915,8 +973,8 @@ class DatesState extends State<Dates> {
             Padding(
               padding: EdgeInsets.only(left: 20),
               child: DatesSelector(
-                outboundDate: formatter.format(outboundDate),
-                returnDate: formatter.format(returnDate),
+                outboundDate: outboundDate,
+                returnDate: returnDate,
               ),
             ),
           ],
@@ -995,6 +1053,8 @@ class OriginDestFieldsState extends State<OriginDestFields> {
   TextEditingController destinationController = TextEditingController();
   Map origin;
   Map destination;
+  int originId;
+  int destId;
 
   OriginDestFieldsState({this.origin, this.destination}) {
     if (origin.keys.length != 0) {
@@ -1026,8 +1086,24 @@ class OriginDestFieldsState extends State<OriginDestFields> {
       state = {"type": value["type"], "id": value["id"]};
     }
     if (point == "From") {
+      setState(() {
+        if (value["type"] == "airport") {
+          originId = value["cityId"];
+        } else {
+          originId = value["id"];
+        }
+        state["originId"] = originId;
+      });
       widget.callback("origin", state);
     } else if (point == "Destination") {
+      setState(() {
+        if (value["type"] == "airport") {
+          destId = value["cityId"];
+        } else {
+          destId = value["id"];
+        }
+        state["destId"] = destId;
+      });
       widget.callback("destination", state);
     }
   }
@@ -1055,6 +1131,7 @@ class OriginDestFieldsState extends State<OriginDestFields> {
                 Expanded(
                   child: OriginDestinationField(
                     point: "From",
+                    destId: destId,
                     callback: updateSearchFields,
                     controller: originController,
                   ),
@@ -1065,6 +1142,7 @@ class OriginDestFieldsState extends State<OriginDestFields> {
               padding: EdgeInsets.only(top: 10),
               child: OriginDestinationField(
                 point: "Destination",
+                originId: originId,
                 callback: updateSearchFields,
                 controller: destinationController,
               ),

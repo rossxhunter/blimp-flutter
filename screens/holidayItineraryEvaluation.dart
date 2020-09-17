@@ -1,5 +1,5 @@
-import 'package:blimp/screens/changeActivities.dart';
-import 'package:blimp/screens/results.dart';
+import 'package:blimp/screens/results/changeActivities.dart';
+import 'package:blimp/screens/results/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/buttons.dart';
@@ -60,7 +60,7 @@ class HolidayItineraryEvaluation extends StatelessWidget {
 
 class ItineraryOption extends StatefulWidget {
   final int itinNum;
-  final Map itinerary;
+  final List itinerary;
   final List allActivities;
   final int destId;
   ItineraryOption(
@@ -77,7 +77,7 @@ class ItineraryOption extends StatefulWidget {
 
 class ItineraryOptionState extends State<ItineraryOption> {
   final int itinNum;
-  Map itinerary;
+  List itinerary;
   final List allActivities;
   final int destId;
   ItineraryOptionState(
@@ -117,34 +117,31 @@ class ItineraryOptionState extends State<ItineraryOption> {
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(top: 20),
-                            child: itinerary[day.toString()].length != 0
+                            child: itinerary[day].length != 0
                                 ? MediaQuery.removePadding(
                                     context: context,
                                     removeTop: true,
                                     child: ListView.builder(
                                       primary: true,
-                                      itemCount:
-                                          itinerary[day.toString()].length,
+                                      itemCount: itinerary[day].length,
                                       itemBuilder:
                                           (BuildContext context, int index) {
                                         return Padding(
                                           padding: EdgeInsets.only(
                                               top: 20, left: 10, right: 10),
                                           child: ActivityOption(
-                                              key: Key(itinerary[day.toString()]
-                                                      [index]["id"] +
-                                                  itinerary[day.toString()]
-                                                          [index]["startTime"]
+                                              key: Key(itinerary[day][index]
+                                                      ["id"] +
+                                                  itinerary[day][index]
+                                                          ["startTime"]
                                                       .toString()),
-                                              activity:
-                                                  itinerary[day.toString()]
-                                                      [index]),
+                                              activity: itinerary[day][index]),
                                         );
                                       },
                                     ),
                                   )
                                 : NoActivities(
-                                    numDays: itinerary.keys.length,
+                                    numDays: itinerary.length,
                                     day: day,
                                   ),
                           ),
@@ -152,7 +149,7 @@ class ItineraryOptionState extends State<ItineraryOption> {
                       ],
                     );
                   },
-                  itemCount: itinerary.keys.length,
+                  itemCount: itinerary.length,
                   viewportFraction: 1.0,
                   scale: 0.5,
                   control: SwiperControl(

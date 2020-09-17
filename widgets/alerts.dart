@@ -1,4 +1,7 @@
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Consts {
   Consts._();
@@ -183,5 +186,77 @@ dialogContent(BuildContext context, String title, String description) {
         ),
       ),
     ],
+  );
+}
+
+class CustomToast extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.0),
+          color: Colors.greenAccent,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check),
+            SizedBox(
+              width: 12.0,
+            ),
+            Text("Saved"),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void showErrorToast(BuildContext context, String text) {
+  BotToast.showNotification(
+    borderRadius: 15,
+    leading: (c) => Icon(
+      FontAwesomeIcons.times,
+      color: Colors.red,
+      size: 26,
+    ),
+    title: (cancelFunc) => Padding(
+      padding: EdgeInsets.only(right: 40),
+      child: AutoSizeText(
+        text,
+        style:
+            Theme.of(context).textTheme.headline2.copyWith(color: Colors.black),
+        textAlign: TextAlign.center,
+      ),
+    ),
+    backgroundColor: Colors.white,
+    contentPadding: EdgeInsets.only(left: 20, right: 20, top: 15, bottom: 15),
+    align: Alignment.topCenter.add(Alignment(0, 0.02)),
+  );
+}
+
+void showSuccessToast(BuildContext context, String text) {
+  BotToast.showNotification(
+    borderRadius: 15,
+    leading: (c) => Icon(
+      FontAwesomeIcons.checkCircle,
+      color: Colors.green,
+      size: 26,
+    ),
+    title: (cancelFunc) => Padding(
+      padding: EdgeInsets.only(right: 40),
+      child: AutoSizeText(
+        text,
+        style:
+            Theme.of(context).textTheme.headline2.copyWith(color: Colors.black),
+        textAlign: TextAlign.center,
+      ),
+    ),
+    backgroundColor: Colors.white,
+    contentPadding: EdgeInsets.only(left: 20, right: 20, top: 15, bottom: 15),
+    align: Alignment.topCenter.add(Alignment(0, 0.02)),
   );
 }

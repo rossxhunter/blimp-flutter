@@ -1,17 +1,22 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/configurations.dart';
 import 'package:blimp/model/preferences.dart';
+import 'package:blimp/model/properties.dart';
 import 'package:blimp/routes.dart';
 import 'package:blimp/screens/activityDetails.dart';
 import 'package:blimp/screens/explore.dart';
-import 'package:blimp/screens/results.dart';
-import 'package:blimp/screens/trips.dart';
+import 'package:blimp/screens/results/results.dart';
+import 'package:blimp/screens/settings.dart';
+import 'package:blimp/screens/user/trips.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/services/util.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
+import 'package:blimp/widgets/icons.dart';
 import 'package:blimp/widgets/loading.dart';
+import 'package:blimp/widgets/selectors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
@@ -20,34 +25,38 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:blimp/widgets/date_range_picker.dart' as DateRangePicker;
 
 class DetailsPage extends StatefulWidget {
   final Map cityDetails;
-  final List imageURLs;
-  DetailsPage({this.cityDetails, this.imageURLs});
+  final bool quickView;
+  DetailsPage({this.cityDetails, this.quickView});
   @override
   State<StatefulWidget> createState() {
-    return DetailsPageState(cityDetails: cityDetails, imageURLs: imageURLs);
+    return DetailsPageState(cityDetails: cityDetails, quickView: quickView);
   }
 }
 
 class DetailsPageState extends State<DetailsPage> {
-  List imageURLs;
   Map cityDetails;
-  DetailsPageState({this.cityDetails, this.imageURLs});
+  bool quickView;
+  DetailsPageState({this.cityDetails, this.quickView});
   ScrollController _scrollController;
   int _currentIndex;
   bool _needsToSetState = true;
   bool _isShowingTitle = true;
-  double kExpandedHeight = 300.0;
+  double kExpandedHeight;
+
   bool get _showTitle {
-    return _scrollController.hasClients &&
-        _scrollController.offset > kExpandedHeight - kToolbarHeight;
+    return quickView ||
+        (_scrollController.hasClients &&
+            _scrollController.offset > kExpandedHeight - kToolbarHeight);
   }
 
   @override
   void initState() {
     super.initState();
+    kExpandedHeight = !quickView ? 300.0 : 30.0;
     _scrollController = ScrollController()
       ..addListener(() {
         if (_isShowingTitle != _showTitle) {
@@ -77,29 +86,38 @@ class DetailsPageState extends State<DetailsPage> {
                 physics: AlwaysScrollableScrollPhysics(),
                 slivers: <Widget>[
                   SliverAppBar(
-                    shape: ContinuousRectangleBorder(
-                      side: _showTitle
-                          ? BorderSide(color: CustomColors.lightGrey, width: 4)
-                          : BorderSide.none,
-                    ),
+                    // shape: ContinuousRectangleBorder(
+                    //   side: _showTitle && !quickView
+                    //       ? BorderSide(color: CustomColors.lightGrey, width: 4)
+                    //       : BorderSide.none,
+                    // ),
                     leading: _showTitle
-                        ? IconButton(
-                            icon: Icon(Icons.arrow_back,
-                                color: Theme.of(context).primaryColor),
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
+                        ? Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: IconButton(
+                              icon: Icon(
+                                quickView ? Icons.close : Icons.arrow_back,
+                                color: Theme.of(context).primaryColor,
+                                size: 30,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
                           )
                         : null,
                     actions: _showTitle
                         ? <Widget>[
                             Padding(
-                              padding: EdgeInsets.only(right: 20),
+                              padding: EdgeInsets.only(right: 20, top: 10),
                               child: AnimatedButton(
                                 key: Key("smallShare"),
                                 // callback: () => clickFeedback(context),
-                                child: Icon(Icons.share,
-                                    color: Theme.of(context).primaryColor),
+                                child: Icon(
+                                  Icons.share,
+                                  color: Theme.of(context).primaryColor,
+                                  size: 30,
+                                ),
                               ),
                             ),
                             // Padding(
@@ -142,89 +160,107 @@ class DetailsPageState extends State<DetailsPage> {
                           ],
                     backgroundColor: Colors.white,
                     stretch: true,
-                    elevation: 0,
+                    elevation: !quickView ? 15 : 0,
                     pinned: true,
                     floating: false,
+                    bottom: PreferredSize(
+                      preferredSize: Size.fromHeight(10.0),
+                      child: Text(''),
+                    ),
                     onStretchTrigger: () {
-                      // Function callback for stretch
                       return;
                     },
                     expandedHeight: kExpandedHeight,
-                    flexibleSpace: Stack(
-                      children: <Widget>[
-                        FlexibleSpaceBar(
-                          stretchModes: <StretchMode>[
-                            StretchMode.zoomBackground,
-                            StretchMode.fadeTitle,
-                          ],
-                          centerTitle: true,
-                          title: _showTitle
-                              ? Text(
-                                  cityDetails["name"],
-                                  style: Theme.of(context).textTheme.headline3,
-                                )
-                              : null,
-                          collapseMode: CollapseMode.parallax,
-                          background: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Swiper(
-                                onIndexChanged: (value) {
-                                  setState(() {
-                                    _currentIndex = value;
-                                  });
-                                },
-                                pagination: SwiperPagination(
-                                  margin: EdgeInsets.only(
-                                      left: 10, right: 10, bottom: 40),
+                    flexibleSpace: quickView == false
+                        ? Stack(
+                            children: <Widget>[
+                              FlexibleSpaceBar(
+                                stretchModes: <StretchMode>[
+                                  StretchMode.zoomBackground,
+                                  StretchMode.fadeTitle,
+                                ],
+                                centerTitle: true,
+                                title: _showTitle
+                                    ? Text(
+                                        cityDetails["name"],
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline3,
+                                      )
+                                    : null,
+                                collapseMode: CollapseMode.parallax,
+                                background: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Swiper(
+                                      onIndexChanged: (value) {
+                                        setState(() {
+                                          _currentIndex = value;
+                                        });
+                                      },
+                                      pagination: SwiperPagination(
+                                        margin: EdgeInsets.only(
+                                            left: 10, right: 10, bottom: 40),
+                                      ),
+                                      itemWidth: 3000,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return CachedNetworkImage(
+                                          fit: BoxFit.cover,
+                                          imageUrl: cityDetails["images"]
+                                              [index],
+                                          placeholder: (context, url) =>
+                                              Container(
+                                            height: 10000,
+                                            width: 10000,
+                                            color: CustomColors.lightGrey,
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              Image(
+                                            image: AssetImage(
+                                                "assets/images/mountains.jpg"),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        );
+                                      },
+                                      itemCount: cityDetails["images"].length,
+                                      viewportFraction: 1,
+                                      scale: 1,
+                                    ),
+                                  ],
                                 ),
-                                itemWidth: 3000,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return CachedNetworkImage(
-                                    fit: BoxFit.cover,
-                                    imageUrl: cityDetails["images"][index],
-                                    placeholder: (context, url) => Container(
-                                      height: 10000,
-                                      width: 10000,
-                                      color: CustomColors.lightGrey,
+                              ),
+                              Positioned(
+                                bottom: -1,
+                                left: 0,
+                                right: 0,
+                                child: Visibility(
+                                  visible: !_showTitle,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(30),
+                                        topRight: Radius.circular(30)),
+                                    child: Container(
+                                      height: 30,
+                                      color: Colors.white,
                                     ),
-                                    errorWidget: (context, url, error) => Image(
-                                      image: AssetImage(
-                                          "assets/images/mountains.jpg"),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  );
-                                },
-                                itemCount: cityDetails["images"].length,
-                                viewportFraction: 1,
-                                scale: 1,
+                                  ),
+                                ),
                               ),
                             ],
+                          )
+                        : Container(
+                            height: 0,
+                            width: 0,
                           ),
-                        ),
-                        Positioned(
-                          bottom: -1,
-                          left: 0,
-                          right: 0,
-                          child: Visibility(
-                            visible: !_showTitle,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(30),
-                                  topRight: Radius.circular(30)),
-                              child: Container(
-                                height: 30,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: 100),
+                      padding: EdgeInsets.only(
+                          bottom:
+                              cityDetails["validDates"].length > 0 && !quickView
+                                  ? 120
+                                  : 30),
                       child: DestinationDetails(
                         cityDetails: cityDetails,
                       ),
@@ -235,8 +271,271 @@ class DetailsPageState extends State<DetailsPage> {
             ),
             Positioned.fill(
               top: null,
-              child: DetailsFindHolidayBar(
-                cityDetails: cityDetails,
+              child: cityDetails["validDates"].length > 0 && !quickView
+                  ? DetailsFindHolidayBar(
+                      cityDetails: cityDetails,
+                    )
+                  : Container(
+                      height: 0,
+                      width: 0,
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DetailsFindHolidayBar extends StatefulWidget {
+  final Map cityDetails;
+
+  DetailsFindHolidayBar({this.cityDetails});
+  @override
+  State<StatefulWidget> createState() {
+    List<Map<String, DateTime>> validDates = [];
+    for (Map vd in cityDetails["validDates"]) {
+      validDates.add({
+        "departureDate": DateTime.parse(vd["departureDate"]),
+        "returnDate": DateTime.parse(vd["returnDate"])
+      });
+    }
+
+    DateTime departureDate = validDates[0]["departureDate"];
+    DateTime returnDate = validDates[0]["returnDate"];
+    Travellers travellers = Travellers(adults: 2);
+
+    return DetailsFindHolidayBarState(
+      cityDetails: cityDetails,
+      departureDate: departureDate,
+      returnDate: returnDate,
+      travellers: travellers,
+      validDates: validDates,
+    );
+  }
+}
+
+class DetailsFindHolidayBarState extends State<DetailsFindHolidayBar> {
+  Map cityDetails;
+  DateTime departureDate;
+  DateTime returnDate;
+  Travellers travellers;
+  List<Map<String, DateTime>> validDates;
+  DetailsFindHolidayBarState({
+    this.cityDetails,
+    this.departureDate,
+    this.returnDate,
+    this.travellers,
+    this.validDates,
+  });
+
+  String getTravellersText() {
+    String text = "";
+    if (travellers.adults > 0) {
+      text += travellers.adults.toString() + " adults";
+    }
+    if (travellers.children > 0) {
+      text += ", " + travellers.children.toString() + " children";
+    }
+    return text;
+  }
+
+  void updateDetails(Map values) {
+    setState(() {
+      travellers = values["travellers"];
+      departureDate = values["departureDate"];
+      returnDate = values["returnDate"];
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 120,
+      width: 1000,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.4),
+            blurRadius: 10.0,
+            offset: Offset(0, 0),
+          )
+        ],
+        // border: Border.all(
+        //   color: CustomColors.lightGrey,
+        //   width: 3,
+        // ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: 10, bottom: 10, left: 15, right: 15),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: Colors.grey.withOpacity(0.4),
+                  //     blurRadius: 10.0,
+                  //     offset: Offset(0, 5),
+                  //   ),
+                  // ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            FontAwesomeIcons.users,
+                            size: 15,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Text(
+                              getTravellersText(),
+                              style: Theme.of(context).textTheme.headline1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 5),
+                        child: Row(
+                          children: [
+                            Icon(
+                              FontAwesomeIcons.calendar,
+                              size: 15,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text(
+                                DateFormat("d MMM").format(departureDate) +
+                                    " - " +
+                                    DateFormat("d MMM").format(returnDate),
+                                style: Theme.of(context).textTheme.headline1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 5),
+                        child: AnimatedButton(
+                          callback: () {
+                            showDialog(
+                                context: context,
+                                barrierColor: CustomColors.dialogBackground,
+                                builder: (BuildContext context) {
+                                  return ChangeHolidayOptions(
+                                    travellers: travellers,
+                                    departureDate: departureDate,
+                                    returnDate: returnDate,
+                                    validDates: validDates,
+                                    callback: updateDetails,
+                                  );
+                                });
+                          },
+                          child: Text(
+                            "Change",
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline2
+                                .copyWith(
+                                    color: Theme.of(context).primaryColor),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            AnimatedButton(
+              callback: () {
+                showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return LoadingIndicator();
+                    });
+                Preferences prefs = prefsConfig[0];
+                prefs.constraints
+                    .removeWhere((c) => c.property == "departure_date");
+                prefs.constraints
+                    .removeWhere((c) => c.property == "return_date");
+                prefs.constraints
+                    .removeWhere((c) => c.property == "destination");
+                prefs.constraints
+                    .removeWhere((c) => c.property == "travellers");
+                prefs.constraints.add(Constraint("departure_date",
+                    DateFormat('yyyy-MM-dd').format(departureDate)));
+                prefs.constraints.add(Constraint("return_date",
+                    DateFormat('yyyy-MM-dd').format(returnDate)));
+                prefs.constraints.add(Constraint("travellers", travellers));
+                prefs.constraints.add(
+                  Constraint(
+                    "destination",
+                    {"type": "city", "id": cityDetails["id"]},
+                  ),
+                );
+                getHoliday(prefs).then((holiday) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ResultsPageRoute(holiday, prefs).page(),
+                    ),
+                  );
+                }).catchError((e) {
+                  Navigator.pop(context);
+                  // showDialog(
+                  //   context: context,
+                  //   builder: (BuildContext context) => CustomDialog(
+                  //     title: "Error",
+                  //     description: "Can't get holiday - " + e.toString(),
+                  //   ),
+                  // );
+                  showErrorToast(context, "No flights found");
+                });
+              },
+              child: Container(
+                child: Padding(
+                  padding:
+                      EdgeInsets.only(top: 20, bottom: 20, left: 40, right: 40),
+                  child: Text(
+                    "Find Holiday",
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline2
+                        .copyWith(color: Colors.white),
+                  ),
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.4),
+                      blurRadius: 10.0,
+                      offset: Offset(0, 10),
+                    )
+                  ],
+                ),
               ),
             ),
           ],
@@ -246,129 +545,296 @@ class DetailsPageState extends State<DetailsPage> {
   }
 }
 
-class DetailsFindHolidayBar extends StatelessWidget {
-  final Map cityDetails;
-  DetailsFindHolidayBar({this.cityDetails});
+class ChangeHolidayOptions extends StatefulWidget {
+  final Travellers travellers;
+  final DateTime departureDate;
+  final DateTime returnDate;
+  final Function callback;
+  final List<Map<String, DateTime>> validDates;
+  ChangeHolidayOptions({
+    this.travellers,
+    this.departureDate,
+    this.returnDate,
+    this.validDates,
+    this.callback,
+  });
+
+  @override
+  State<StatefulWidget> createState() {
+    return ChangeHolidayOptionsState(
+      callback: callback,
+      travellers: travellers,
+      departureDate: departureDate,
+      returnDate: returnDate,
+      validDates: validDates,
+    );
+  }
+}
+
+class ChangeHolidayOptionsState extends State<ChangeHolidayOptions> {
+  Travellers travellers;
+  DateTime departureDate;
+  DateTime returnDate;
+  Function callback;
+  List<Map<String, DateTime>> validDates;
+  ChangeHolidayOptionsState({
+    this.travellers,
+    this.departureDate,
+    this.returnDate,
+    this.validDates,
+    this.callback,
+  });
+
+  void updateNumTravellers(String travellerType, String action) {
+    setState(() {
+      if (travellerType == "Adults") {
+        if (action == "fewer" && travellers.adults > 0) {
+          travellers.adults -= 1;
+        } else if (action == "more" && travellers.adults < 9) {
+          travellers.adults += 1;
+        }
+      } else if (travellerType == "Children") {
+        if (action == "fewer" && travellers.children > 0) {
+          travellers.children -= 1;
+        } else if (action == "more" && travellers.children < 9) {
+          travellers.children += 1;
+        }
+      }
+    });
+  }
+
+  void updateNumChildren(int numChildren) {
+    setState(() {
+      travellers.children = numChildren;
+    });
+  }
+
+  void updateDates(List<DateTime> picked) {
+    setState(() {
+      departureDate = picked[0];
+      returnDate = picked[1];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Consts.padding),
+      ),
+      elevation: 0.0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        // height: 400,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: <Widget>[
+                  IconBox(
+                    icon: FontAwesomeIcons.users,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 20),
+                    child: TravellerNumberChoice(
+                      travellerType: "Adults",
+                      numTravellers: travellers.adults,
+                      callback: updateNumTravellers,
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: Row(
+                  children: <Widget>[
+                    IconBox(
+                      icon: FontAwesomeIcons.child,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: 20),
+                      child: TravellerNumberChoice(
+                        travellerType: "Children",
+                        numTravellers: travellers.children,
+                        callback: updateNumTravellers,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () async {
+                    final List<DateTime> picked =
+                        await DateRangePicker.showDatePicker(
+                      context: context,
+                      initialFirstDate: departureDate,
+                      initialLastDate: returnDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(Duration(days: 90)),
+                      selectableDayPredicate: (day, firstDay, lastDay) {
+                        if (firstDay == null) {
+                          return isDateAllowed(
+                              day,
+                              validDates
+                                  .map((vd) => vd["departureDate"])
+                                  .toList());
+                        } else if (lastDay == null) {
+                          return isDateAllowed(
+                              day,
+                              validDates
+                                  .where((vd) => areDatesEqual(
+                                      vd["departureDate"], firstDay))
+                                  .map((vd) => vd["returnDate"])
+                                  .toList());
+                        } else {
+                          return isDateAllowed(
+                              day,
+                              validDates
+                                  .map((vd) => vd["departureDate"])
+                                  .toList());
+                        }
+                      },
+                    );
+                    if (picked != null && picked.length == 2) {
+                      updateDates(picked);
+                    }
+                  },
+                  child: Row(
+                    children: <Widget>[
+                      IconBox(
+                        icon: Icons.calendar_today,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 20),
+                        child: DatesSelector(
+                          outboundDate: departureDate,
+                          returnDate: returnDate,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: AnimatedButton(
+                  callback: () {
+                    Navigator.pop(context);
+                    callback({
+                      "travellers": travellers,
+                      "departureDate": departureDate,
+                      "returnDate": returnDate
+                    });
+                  },
+                  child: GenericSaveButton(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class GenericSaveButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withOpacity(0.2),
+            blurRadius: 10.0,
+            offset: Offset(0, 10),
+          )
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Center(
+          child: Text(
+            "Save",
+            style: Theme.of(context)
+                .textTheme
+                .button
+                .copyWith(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class TravellerNumberChoice extends StatelessWidget {
+  final String travellerType;
+  final int numTravellers;
+  final Function callback;
+  TravellerNumberChoice({
+    this.travellerType,
+    this.numTravellers,
+    this.callback,
+  });
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: <Widget>[
-        Container(
-          height: 100,
-          width: 1000,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.4),
-                blurRadius: 10.0,
-                offset: Offset(0, 0),
-              )
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          travellerType,
+          // style: Theme.of(context).textTheme.headline1,
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: 10),
+          child: Row(
+            children: [
+              AnimatedButton(
+                callback: () {
+                  callback(travellerType, "fewer");
+                },
+                child: Icon(
+                  FontAwesomeIcons.minusCircle,
+                  color: Theme.of(context).primaryColor,
+                  size: 20,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 15),
+                child: Text(
+                  numTravellers.toString(),
+                  style: Theme.of(context).textTheme.headline2,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 15),
+                child: AnimatedButton(
+                  callback: () {
+                    callback(travellerType, "more");
+                  },
+                  child: Icon(
+                    FontAwesomeIcons.plusCircle,
+                    color: Theme.of(context).primaryColor,
+                    size: 20,
+                  ),
+                ),
+              ),
             ],
-            // border: Border.all(
-            //   color: CustomColors.lightGrey,
-            //   width: 3,
-            // ),
           ),
-          child: Padding(
-            padding: EdgeInsets.only(top: 10, bottom: 10, left: 30, right: 30),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Flexible(
-                  flex: 2,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.4),
-                          blurRadius: 10.0,
-                          offset: Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(15),
-                      child: Text(
-                        "2 adults, cheapest dates",
-                        style: Theme.of(context).textTheme.bodyText1,
-                      ),
-                    ),
-                  ),
-                ),
-                Flexible(
-                  flex: 2,
-                  child: AnimatedButton(
-                    callback: () {
-                      showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return LoadingIndicator();
-                          });
-                      Preferences prefs = prefsConfig[0];
-                      prefs.constraints
-                          .removeWhere((c) => c.property == "departure_date");
-                      prefs.constraints
-                          .removeWhere((c) => c.property == "return_date");
-                      prefs.constraints
-                          .removeWhere((c) => c.property == "destination");
-                      prefs.constraints
-                          .add(Constraint("departure_date", "2020-10-27"));
-                      prefs.constraints
-                          .add(Constraint("return_date", "2020-10-30"));
-                      prefs.constraints.add(
-                        Constraint(
-                          "destination",
-                          {"type": "city", "id": cityDetails["id"]},
-                        ),
-                      );
-                      getHoliday(prefs).then((holiday) {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ResultsPageRoute(holiday, prefs).page(),
-                          ),
-                        );
-                      }).catchError((e) {
-                        Navigator.pop(context);
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) => CustomDialog(
-                            title: "Error",
-                            description: "Can't get holiday - " + e.toString(),
-                          ),
-                        );
-                      });
-                    },
-                    child: Container(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            top: 20, bottom: 20, left: 40, right: 40),
-                        child: Text(
-                          "Find Holiday",
-                          style: Theme.of(context)
-                              .textTheme
-                              .headline2
-                              .copyWith(color: Colors.white),
-                        ),
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        )
+        ),
       ],
     );
   }
@@ -424,13 +890,13 @@ class DestinationDetails extends StatelessWidget {
               children: [
                 CircularPercentIndicator(
                   radius: 60,
-                  percent: 0.6,
+                  percent: cityDetails["culture"] / 10,
                   lineWidth: 10,
                   animationDuration: 1000,
                   circularStrokeCap: CircularStrokeCap.round,
                   animation: true,
                   center: Text(
-                    "6.7",
+                    cityDetails["culture"].toStringAsFixed(1),
                     style: Theme.of(context).textTheme.headline1,
                   ),
                   footer: Text(
@@ -440,13 +906,13 @@ class DestinationDetails extends StatelessWidget {
                 ),
                 CircularPercentIndicator(
                   radius: 60,
-                  percent: 0.6,
+                  percent: cityDetails["shopping"] / 10,
                   lineWidth: 10,
                   animationDuration: 1000,
                   circularStrokeCap: CircularStrokeCap.round,
                   animation: true,
                   center: Text(
-                    "6.7",
+                    cityDetails["shopping"].toStringAsFixed(1),
                     style: Theme.of(context).textTheme.headline1,
                   ),
                   footer: Text(
@@ -456,13 +922,13 @@ class DestinationDetails extends StatelessWidget {
                 ),
                 CircularPercentIndicator(
                   radius: 60,
-                  percent: 0.6,
+                  percent: cityDetails["nightlife"] / 10,
                   lineWidth: 10,
                   animationDuration: 1000,
                   circularStrokeCap: CircularStrokeCap.round,
                   animation: true,
                   center: Text(
-                    "6.7",
+                    cityDetails["nightlife"].toStringAsFixed(1),
                     style: Theme.of(context).textTheme.headline1,
                   ),
                   footer: Text(
@@ -647,7 +1113,7 @@ class DestinationDetails extends StatelessWidget {
                 context: context,
                 removeLeft: true,
                 child: ListView.builder(
-                  itemCount: getExploreSuggestions()["Europe"].length,
+                  itemCount: cityDetails["similarDestinations"].length,
                   scrollDirection: Axis.horizontal,
                   physics: BouncingScrollPhysics(),
                   itemBuilder: (BuildContext context, int index) {

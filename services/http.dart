@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/services/clicks.dart';
+import 'package:blimp/services/user.dart';
 import 'package:http/http.dart';
 
 String encodePrefs(List prefs) {
@@ -44,7 +45,9 @@ Future<List> getEvaluationItineraryFromActivities(
 
 Future<Map> getCityDetailsFromId(int cityId) async {
   var details;
-  var params = "";
+  String currency = isLoggedIn ? currentUser["currency"] ?? "GBP" : "GBP";
+  int origin = isLoggedIn ? currentUser["origin"] ?? 2643743 : 2643743;
+  var params = "currency=$currency&origin=${origin.toString()}";
   try {
     details = await makeGetRequest("city_details/" + cityId.toString(), params);
   } catch (e) {
@@ -92,7 +95,7 @@ Future<Map> getHolidayWithFeedback(Preferences prefs, Map feedback) async {
   return json.decode(itinerary);
 }
 
-Future<Map> getItineraryFromChange(
+Future<List> getItineraryFromChange(
     Preferences prefs, Map travel, Map accommodation, int destId) async {
   String constraints = encodePrefs(prefs.constraints);
   String softPrefs = encodePrefs(prefs.softPreferences);
@@ -108,7 +111,7 @@ Future<Map> getItineraryFromChange(
     print(e);
     throw e;
   }
-  Map decodedResponse = json.decode(itinerary);
+  List decodedResponse = json.decode(itinerary);
   return decodedResponse;
 }
 
@@ -135,11 +138,8 @@ Future<Map> getHoliday(Preferences prefs) async {
 Future<void> registerClick(String click, String mode, Map metadata) async {
   if (testingSwitchOn == true || mode == "evaluation") {
     try {
-      await makePostRequest("clicks/$clicksId/$click", {
-        "credentials": 'same-origin',
-        "mode": mode,
-        "metadata": jsonEncode(metadata)
-      });
+      await makePostRequest("clicks/$clicksId/$click",
+          {"mode": mode, "metadata": jsonEncode(metadata)});
     } catch (e) {
       print(e);
       throw e;
@@ -147,9 +147,79 @@ Future<void> registerClick(String click, String mode, Map metadata) async {
   }
 }
 
-Future<void> makePostRequest(String path, Map<String, String> headers) async {
+Future<List> addNewTraveller() async {
+  var newValue;
+  try {
+    newValue = await makePostRequest(
+        "user/${currentUser["id"].toString()}/traveller", {});
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  List decodedResponse = json.decode(newValue);
+  return decodedResponse;
+}
+
+Future<List> removeTraveller(int travellerId) async {
+  var newValue;
+  try {
+    newValue = await makeDeleteRequest(
+        "user/${currentUser["id"].toString()}/traveller/$travellerId", {});
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  List decodedResponse = json.decode(newValue);
+  return decodedResponse;
+}
+
+Future<List> updateTravellerAddress(int travellerId, Map values) async {
+  var newValue;
+  try {
+    newValue = await makePutRequest(
+        "user/${currentUser["id"].toString()}/traveller/$travellerId/address",
+        values);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  List decodedResponse = json.decode(newValue);
+  return decodedResponse;
+}
+
+Future<void> addNewUserDetails(
+    String id, String email, String firstName, String lastName) async {
+  try {
+    await makePostRequest("user", {
+      "id": id,
+      "email": email,
+      "first_name": firstName,
+      "last_name": lastName
+    });
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+}
+
+Future<Map> getUserDetails(String id) async {
+  var userDetails;
+  try {
+    userDetails = await makeGetRequest("user/$id", "");
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(userDetails);
+}
+
+Future<dynamic> makePutRequest(String path, Map body) async {
   String url = '${_hostname()}/$path';
-  Response response = await post(url, headers: headers).catchError((e) {
+  Map<String, String> headers = {
+    "credentials": 'same-origin',
+  };
+  Response response =
+      await put(url, headers: headers, body: body).catchError((e) {
     print(e);
     throw e;
   });
@@ -162,6 +232,50 @@ Future<void> makePostRequest(String path, Map<String, String> headers) async {
     }
     throw Exception(decodedResponseBody["message"]);
   }
+  return response.body;
+}
+
+Future<dynamic> makeDeleteRequest(String path, Map<String, String> body) async {
+  String url = '${_hostname()}/$path';
+  Map<String, String> headers = {
+    "credentials": 'same-origin',
+  };
+  Response response = await delete(url, headers: headers).catchError((e) {
+    print(e);
+    throw e;
+  });
+  if (response.statusCode != 200) {
+    Map decodedResponseBody;
+    try {
+      decodedResponseBody = json.decode(response.body);
+    } catch (e) {
+      throw Exception("Unexpected Error");
+    }
+    throw Exception(decodedResponseBody["message"]);
+  }
+  return response.body;
+}
+
+Future<dynamic> makePostRequest(String path, Map<String, String> body) async {
+  String url = '${_hostname()}/$path';
+  Map<String, String> headers = {
+    "credentials": 'same-origin',
+  };
+  Response response =
+      await post(url, headers: headers, body: body).catchError((e) {
+    print(e);
+    throw e;
+  });
+  if (response.statusCode != 200) {
+    Map decodedResponseBody;
+    try {
+      decodedResponseBody = json.decode(response.body);
+    } catch (e) {
+      throw Exception("Unexpected Error");
+    }
+    throw Exception(decodedResponseBody["message"]);
+  }
+  return response.body;
 }
 
 Future<String> makeGetRequest(String path, String params) async {

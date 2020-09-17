@@ -1,5 +1,5 @@
-import 'package:blimp/screens/results.dart';
-import 'package:blimp/screens/results.dart';
+import 'package:blimp/screens/results/results.dart';
+import 'package:blimp/screens/results/results.dart';
 import 'package:flutter/material.dart';
 
 import 'model/preferences.dart';

@@ -5,6 +5,7 @@ import 'package:blimp/styles/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_xlider/flutter_xlider.dart';
+import 'package:intl/intl.dart';
 
 class TravellersSelector extends StatelessWidget {
   final int numTravellers;
@@ -77,8 +78,8 @@ class Incrementor extends StatelessWidget {
 }
 
 class DatesSelector extends StatelessWidget {
-  String outboundDate;
-  String returnDate;
+  final DateTime outboundDate;
+  final DateTime returnDate;
   DatesSelector({this.outboundDate, this.returnDate});
   @override
   Widget build(BuildContext context) {
@@ -88,10 +89,17 @@ class DatesSelector extends StatelessWidget {
         Text("Dates"),
         Padding(
           padding: EdgeInsets.only(top: 10),
-          child: Text(
-            outboundDate + " - " + returnDate,
-            style: Theme.of(context).textTheme.headline2,
-          ),
+          child: outboundDate != null
+              ? Text(
+                  DateFormat('d MMM').format(outboundDate) +
+                      " - " +
+                      DateFormat('d MMM').format(returnDate),
+                  style: Theme.of(context).textTheme.headline2,
+                )
+              : Text(
+                  "Select Dates",
+                  style: Theme.of(context).textTheme.headline2,
+                ),
         ),
       ],
     );

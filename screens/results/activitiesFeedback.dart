@@ -1,5 +1,5 @@
 import 'package:blimp/model/preferences.dart';
-import 'package:blimp/screens/feedback.dart';
+import 'package:blimp/screens/results/feedback.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:flutter/cupertino.dart';

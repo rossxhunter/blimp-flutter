@@ -101,13 +101,8 @@ class TestOption extends StatelessWidget {
           );
         }).catchError((e) {
           Navigator.pop(context);
-          showDialog(
-            context: context,
-            builder: (BuildContext context) => CustomDialog(
-              title: "Error",
-              description: "Unable to get itineraries - " + e.toString(),
-            ),
-          );
+          showErrorToast(
+              context, "Unable to get itineraries - " + e.toString());
         });
       },
       child: SizedBox.expand(

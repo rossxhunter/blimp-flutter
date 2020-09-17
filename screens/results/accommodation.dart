@@ -152,18 +152,7 @@ class AccommodationScreenState extends State<AccommodationScreen> {
                   callback: () {
                     callback(selectedAccommodation);
                     Navigator.pop(context);
-                    showDialog(
-                        context: context,
-                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-                        builder: (context) {
-                          Future.delayed(Duration(seconds: 1), () {
-                            Navigator.of(context).pop(true);
-                          });
-                          return SuccessDialog(
-                            title: "Success",
-                            description: "Accommodation Changed",
-                          );
-                        });
+                    showSuccessToast(context, "Accommodation Changed");
                   },
                   child: ConfirmButton(),
                 ),

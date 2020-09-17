@@ -5,7 +5,7 @@ import 'package:blimp/configurations.dart';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/routes.dart';
 import 'package:blimp/screens/details.dart';
-import 'package:blimp/screens/results.dart';
+import 'package:blimp/screens/results/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
@@ -20,6 +20,7 @@ import 'package:flutter_emoji/flutter_emoji.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:flutter_typeahead/cupertino_flutter_typeahead.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
@@ -128,7 +129,7 @@ class ExplorePage extends StatelessWidget {
                       children: [
                         QuickExploreBox(
                           text: "Flight",
-                          color: Colors.indigo,
+                          color: Theme.of(context).primaryColor,
                           icon: Icons.flight,
                         ),
                         QuickExploreBox(
@@ -138,13 +139,13 @@ class ExplorePage extends StatelessWidget {
                         ),
                         QuickExploreBox(
                           text: "Attraction",
-                          color: Colors.red,
+                          color: Color.fromRGBO(46, 204, 113, 1),
                           icon: Icons.camera,
                         ),
                         QuickExploreBox(
-                          text: "COVID",
+                          text: "Inspiration",
                           color: Colors.orange,
-                          icon: FontAwesomeIcons.virus,
+                          icon: FontAwesomeIcons.lightbulb,
                         ),
                       ],
                     ),
@@ -174,7 +175,7 @@ class ExplorePage extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => DetailsPage(
                                       cityDetails: cityDetails,
-                                      imageURLs: [],
+                                      quickView: false,
                                     ),
                                   ),
                                 );
@@ -202,18 +203,16 @@ class ExplorePage extends StatelessWidget {
                                     ),
                                   ),
                                   Container(
-                                    height: 10000,
-                                    width: 10000,
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        stops: [0, 1],
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        stops: [0, 0.5],
                                         colors: [
-                                          Colors.transparent,
                                           Theme.of(context)
                                               .primaryColor
-                                              .withOpacity(0.5)
+                                              .withOpacity(0.5),
+                                          Colors.transparent,
                                         ],
                                       ),
                                     ),
@@ -286,7 +285,7 @@ class ExplorePage extends StatelessWidget {
                                             MaterialPageRoute(
                                               builder: (context) => DetailsPage(
                                                 cityDetails: cityDetails,
-                                                imageURLs: [],
+                                                quickView: false,
                                               ),
                                             ),
                                           );
@@ -317,7 +316,7 @@ class ExplorePage extends StatelessWidget {
                     padding: EdgeInsets.only(
                         left: 20, right: 20, bottom: 20, top: 0),
                     child: Container(
-                      height: 300,
+                      height: 310,
                       child: MediaQuery.removePadding(
                         context: context,
                         removeLeft: true,
@@ -333,51 +332,51 @@ class ExplorePage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                        left: 30, right: 30, bottom: 20, top: 20),
-                    child: Text(
-                      "Holiday Themes",
-                      style: Theme.of(context).textTheme.headline3,
-                    ),
-                  ),
-                  Padding(
-                    padding:
-                        EdgeInsets.only(left: 30, right: 30, bottom: 0, top: 0),
-                    child: GridView.count(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 10,
-                      children: [
-                        QuickExploreBox(
-                            text: "Relax",
-                            color: Colors.indigo,
-                            icon: Icons.spa),
-                        QuickExploreBox(
-                            text: "Cultural",
-                            color: Colors.blue,
-                            icon: FontAwesomeIcons.landmark),
-                        QuickExploreBox(
-                            text: "Active",
-                            color: Colors.orange,
-                            icon: Icons.directions_run),
-                        QuickExploreBox(
-                            text: "Family",
-                            color: Colors.purple,
-                            icon: Icons.people),
-                        QuickExploreBox(
-                            text: "Romantic",
-                            color: Colors.red,
-                            icon: FontAwesomeIcons.solidHeart),
-                        QuickExploreBox(
-                            text: "Nature",
-                            color: Colors.green,
-                            icon: FontAwesomeIcons.tree),
-                      ],
-                    ),
-                  ),
+                  //       Padding(
+                  //         padding: EdgeInsets.only(
+                  //             left: 30, right: 30, bottom: 20, top: 20),
+                  //         child: Text(
+                  //           "Holiday Themes",
+                  //           style: Theme.of(context).textTheme.headline3,
+                  //         ),
+                  //       ),
+                  //       Padding(
+                  //         padding:
+                  //             EdgeInsets.only(left: 30, right: 30, bottom: 0, top: 0),
+                  //         child: GridView.count(
+                  //           shrinkWrap: true,
+                  //           physics: NeverScrollableScrollPhysics(),
+                  //           crossAxisCount: 3,
+                  //           crossAxisSpacing: 20,
+                  //           mainAxisSpacing: 10,
+                  //           children: [
+                  //             QuickExploreBox(
+                  //                 text: "Relax",
+                  //                 color: Colors.indigo,
+                  //                 icon: Icons.spa),
+                  //             QuickExploreBox(
+                  //                 text: "Cultural",
+                  //                 color: Colors.blue,
+                  //                 icon: FontAwesomeIcons.landmark),
+                  //             QuickExploreBox(
+                  //                 text: "Active",
+                  //                 color: Colors.orange,
+                  //                 icon: Icons.directions_run),
+                  //             QuickExploreBox(
+                  //                 text: "Family",
+                  //                 color: Colors.purple,
+                  //                 icon: Icons.people),
+                  //             QuickExploreBox(
+                  //                 text: "Romantic",
+                  //                 color: Colors.red,
+                  //                 icon: FontAwesomeIcons.solidHeart),
+                  //             QuickExploreBox(
+                  //                 text: "Nature",
+                  //                 color: Colors.green,
+                  //                 icon: FontAwesomeIcons.tree),
+                  //           ],
+                  //         ),
+                  // ),
                 ],
               ),
             ),
@@ -398,7 +397,7 @@ class AttractionsOption extends StatelessWidget {
       padding: EdgeInsets.only(left: 10, right: 10, bottom: 20),
       child: Container(
         width: 240,
-        height: 320,
+        // height: 30,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
@@ -437,6 +436,9 @@ class AttractionsOption extends StatelessWidget {
                         child: AutoSizeText(
                           attraction["name"],
                           maxLines: 2,
+                          minFontSize: 14,
+                          maxFontSize: 20,
+                          overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.headline3,
                         ),
                       ),
@@ -551,12 +553,12 @@ class DestinationOption extends StatelessWidget {
                             children: [
                               CircularPercentIndicator(
                                 radius: 40,
-                                percent: 0.6,
+                                percent: option["culture"] / 10,
                                 animationDuration: 1000,
                                 circularStrokeCap: CircularStrokeCap.round,
                                 animation: true,
                                 center: Text(
-                                  "6.7",
+                                  option["culture"].toStringAsFixed(1),
                                   style: Theme.of(context).textTheme.headline1,
                                 ),
                                 footer: Text(
@@ -566,12 +568,12 @@ class DestinationOption extends StatelessWidget {
                               ),
                               CircularPercentIndicator(
                                 radius: 40,
-                                percent: 0.6,
+                                percent: option["shopping"] / 10,
                                 animationDuration: 1000,
                                 circularStrokeCap: CircularStrokeCap.round,
                                 animation: true,
                                 center: Text(
-                                  "6.7",
+                                  option["shopping"].toStringAsFixed(1),
                                   style: Theme.of(context).textTheme.headline1,
                                 ),
                                 footer: Text(
@@ -581,12 +583,12 @@ class DestinationOption extends StatelessWidget {
                               ),
                               CircularPercentIndicator(
                                 radius: 40,
-                                percent: 0.6,
+                                percent: option["nightlife"] / 10,
                                 animationDuration: 1000,
                                 circularStrokeCap: CircularStrokeCap.round,
                                 animation: true,
                                 center: Text(
-                                  "6.7",
+                                  option["nightlife"].toStringAsFixed(1),
                                   style: Theme.of(context).textTheme.headline1,
                                 ),
                                 footer: Text(
@@ -661,36 +663,39 @@ class QuickExploreBox extends StatelessWidget {
   QuickExploreBox({this.text, this.color, this.icon});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.2),
-                blurRadius: 10,
-                offset: Offset(5, 5),
+    return Container(
+      // width: 80,
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: Offset(5, 5),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(15),
+              child: Icon(
+                icon,
+                color: Colors.white,
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(15),
-            child: Icon(
-              icon,
-              color: Colors.white,
             ),
           ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: 5),
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.headline2,
+          Padding(
+            padding: EdgeInsets.only(top: 5),
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.headline2,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -996,13 +1001,7 @@ class RandomHolidayButton extends StatelessWidget {
           );
         }).catchError((e) {
           Navigator.pop(context);
-          showDialog(
-            context: context,
-            builder: (BuildContext context) => CustomDialog(
-              title: "Error",
-              description: "Can't get holiday - " + e.toString(),
-            ),
-          );
+          showErrorToast(context, "Can't get holiday - " + e.toString());
         });
       },
     );

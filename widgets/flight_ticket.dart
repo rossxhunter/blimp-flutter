@@ -81,31 +81,32 @@ class FlightTicketDetails extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                CachedNetworkImage(
-                  errorWidget: (context, url, error) => Icon(
+            child: CachedNetworkImage(
+              alignment: Alignment.centerLeft,
+              errorWidget: (context, url, error) => Row(
+                children: [
+                  Icon(
                     Icons.flight_takeoff,
                     size: 20,
                     color: Theme.of(context).primaryColor,
                   ),
-                  imageUrl: ticketDetails["carrierLogo"],
-                  height: 20,
-                  width: 20,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 5),
-                    child: Text(
-                      ticketDetails["carrierName"],
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 5),
+                      child: Text(
+                        ticketDetails["carrierName"],
+                        style: Theme.of(context).textTheme.headline2,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              imageUrl: ticketDetails["carrierLogo"],
+              height: 30,
+              width: 90,
             ),
           ),
           AutoSizeText(
@@ -159,16 +160,16 @@ class FlightTicketLogistics extends StatelessWidget {
                     padding: EdgeInsets.only(top: 5),
                     child: Text(
                       ticketDetails["departure"]["airportCode"],
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline3
-                          .copyWith(color: Theme.of(context).primaryColor),
+                      style: Theme.of(context).textTheme.headline3.copyWith(
+                          color: ticketDetails["journey"] == "Outbound"
+                              ? Colors.orange
+                              : Colors.blue),
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 5),
                     child: Text(
-                      "London",
+                      ticketDetails["origin"],
                       style: Theme.of(context).textTheme.headline1,
                     ),
                   ),
@@ -177,9 +178,53 @@ class FlightTicketLogistics extends StatelessWidget {
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Icon(
-                    FontAwesomeIcons.plane,
-                    color: Theme.of(context).primaryColor,
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: ticketDetails["journey"] == "Outbound"
+                              ? Colors.orange
+                              : Colors.blue,
+                        ),
+                        width: 10,
+                        height: 10,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Dash(
+                          length: 30,
+                          dashColor: Colors.grey,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Icon(
+                          FontAwesomeIcons.plane,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Dash(
+                          length: 30,
+                          dashColor: Colors.grey,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: ticketDetails["journey"] == "Return"
+                                ? Colors.orange
+                                : Colors.blue,
+                          ),
+                          width: 10,
+                          height: 10,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -193,16 +238,16 @@ class FlightTicketLogistics extends StatelessWidget {
                     padding: EdgeInsets.only(top: 5),
                     child: Text(
                       ticketDetails["arrival"]["airportCode"],
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline3
-                          .copyWith(color: Colors.blue),
+                      style: Theme.of(context).textTheme.headline3.copyWith(
+                          color: ticketDetails["journey"] == "Return"
+                              ? Colors.orange
+                              : Colors.blue),
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 5),
                     child: Text(
-                      "Budapest",
+                      ticketDetails["destination"],
                       style: Theme.of(context).textTheme.headline1,
                     ),
                   ),

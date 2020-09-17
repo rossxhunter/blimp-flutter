@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/routes.dart';
-import 'package:blimp/screens/activitiesFeedback.dart';
-import 'package:blimp/screens/results.dart';
+import 'package:blimp/screens/results/activitiesFeedback.dart';
+import 'package:blimp/screens/results/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
@@ -309,13 +309,7 @@ void fetchFeedbackHoliday(
     },
   ).catchError((e) {
     Navigator.pop(context);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomDialog(
-        title: "Error",
-        description: "Unable to fetch holiday - " + e.toString(),
-      ),
-    );
+    showErrorToast(context, "Unable to fetch holiday - " + e.toString());
     registerClick(feedback["type"], "standard", {
       "previous_dest_id": feedback["previous_dest_id"],
       "error": e.toString()

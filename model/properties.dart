@@ -35,7 +35,7 @@ class Travellers {
   Travellers(
       {this.adults = 0,
       this.children = 0,
-      this.infants,
+      this.infants = 0,
       this.students = 0,
       this.oap = 0});
 

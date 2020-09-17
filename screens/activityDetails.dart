@@ -32,7 +32,7 @@ class ActivityDetailsDialog extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.rectangle,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(30),
         ),
         child: ActivityDetailsOption(
           activity: activity,
@@ -53,7 +53,9 @@ class ActivityDetailsOption extends StatelessWidget {
       children: <Widget>[
         ClipRRect(
           borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
           child: CachedNetworkImage(
             imageUrl: activity["bestPhoto"] ?? getDefaultActivityImageURL(),
             width: 10000,
@@ -74,7 +76,7 @@ class ActivityDetailsOption extends StatelessWidget {
             // ),
           ),
           child: Padding(
-            padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 20),
+            padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 50),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
