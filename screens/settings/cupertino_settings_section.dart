@@ -62,7 +62,7 @@ class CupertinoSettingsSection extends StatelessWidget {
 
     columnChildren.add(
       Container(
-        padding: EdgeInsets.only(top: 5, bottom: 5),
+        padding: EdgeInsets.only(top: 0, bottom: 0),
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.light
               ? CupertinoColors.white

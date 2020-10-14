@@ -1,13 +1,16 @@
+import 'package:blimp/screens/results/accommodationDetails.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/flight_ticket.dart';
 import 'package:blimp/widgets/hotel_option.dart';
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class AccommodationScreen extends StatefulWidget {
   final List allAccommodation;
-  final int selectedAccommodation;
+  final String selectedAccommodation;
   final Function callback;
 
   AccommodationScreen(
@@ -23,25 +26,39 @@ class AccommodationScreen extends StatefulWidget {
 
 class AccommodationScreenState extends State<AccommodationScreen> {
   final List allAccommodation;
-  int selectedAccommodation;
+  String selectedAccommodation;
   final Function callback;
   List shownAccommodation;
-  int _selectedAccommodation = 0;
 
   AccommodationScreenState(
       {this.allAccommodation, this.selectedAccommodation, this.callback}) {
     shownAccommodation = List.from(allAccommodation);
-    shownAccommodation.removeWhere((a) => a["id"] == selectedAccommodation);
+    shownAccommodation
+        .removeWhere((a) => a["hotelId"] == selectedAccommodation);
     shownAccommodation.insert(
         0,
         allAccommodation
-            .where((a) => a["id"] == selectedAccommodation)
+            .where((a) => a["hotelId"] == selectedAccommodation)
             .toList()[0]);
   }
+
+  void updateOffer(int index, Map newOffer) {
+    setState(() {
+      shownAccommodation[index]["selectedOffer"] = newOffer;
+    });
+  }
+
+  void updateState(String hotelId) {
+    setState(() {
+      selectedAccommodation = hotelId;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    ItemScrollController _scrollController = ItemScrollController();
     return Scaffold(
-      // backgroundColor: Colors.white,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -94,8 +111,9 @@ class AccommodationScreenState extends State<AccommodationScreen> {
           Padding(
             padding: EdgeInsets.only(bottom: 80),
             child: Container(
-              color: Colors.white,
-              child: ListView.builder(
+              color: CustomColors.greyBackground,
+              child: ScrollablePositionedList.builder(
+                itemScrollController: _scrollController,
                 itemCount: allAccommodation.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Padding(
@@ -104,33 +122,60 @@ class AccommodationScreenState extends State<AccommodationScreen> {
                       color: Colors.white,
                       child: Stack(
                         children: <Widget>[
-                          AnimatedButton(
-                            callback: () {
-                              setState(() {
-                                _selectedAccommodation = index;
-                                selectedAccommodation =
-                                    shownAccommodation[index]["id"];
-                              });
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                  top: 20, left: 20, right: 20, bottom: 20),
-                              child: Column(
-                                children: <Widget>[
-                                  HotelOption(
+                          Padding(
+                            padding: EdgeInsets.only(
+                                top: 10, left: 10, right: 10, bottom: 10),
+                            child: Column(
+                              children: <Widget>[
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      PageTransition(
+                                        type: PageTransitionType.downToUp,
+                                        child: AccommodationDetails(
+                                          details: shownAccommodation[index],
+                                          index: index,
+                                          callback: updateOffer,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: HotelOption(
+                                    key: Key(
+                                        shownAccommodation[index]["hotelId"]),
                                     hotelDetails: shownAccommodation[index],
+                                    isSelected: selectedAccommodation ==
+                                        shownAccommodation[index]["hotelId"],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                           Positioned(
                             top: 10,
                             right: 10,
-                            child: Visibility(
-                              visible: selectedAccommodation ==
-                                  shownAccommodation[index]["id"],
-                              child: SelectedIcon(),
+                            child: GestureDetector(
+                              key: ValueKey(
+                                shownAccommodation[index]["hotelId"].toString(),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  selectedAccommodation =
+                                      shownAccommodation[index]["hotelId"];
+                                });
+
+                                _scrollController.scrollTo(
+                                    index: index,
+                                    duration: Duration(milliseconds: 500));
+                              },
+                              child: SelectedIcon(
+                                  key: ValueKey(
+                                    shownAccommodation[index]["hotelId"]
+                                        .toString(),
+                                  ),
+                                  isSelected: selectedAccommodation ==
+                                      shownAccommodation[index]["hotelId"]),
                             ),
                           ),
                         ],
@@ -166,18 +211,22 @@ class AccommodationScreenState extends State<AccommodationScreen> {
 }
 
 class SelectedIcon extends StatelessWidget {
+  final bool isSelected;
+  SelectedIcon({this.isSelected, ValueKey<String> key});
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
+        color: isSelected
+            ? Theme.of(context).primaryColor
+            : CustomColors.lightGrey,
         borderRadius: BorderRadius.circular(300),
       ),
       child: Padding(
         padding: EdgeInsets.all(10),
         child: Icon(
           Icons.check,
-          color: Colors.white,
+          color: isSelected ? Colors.white : Colors.grey,
         ),
       ),
     );

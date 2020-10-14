@@ -73,10 +73,12 @@ class ActivitiesFeedbackScreenState extends State<ActivitiesFeedbackScreen> {
                       }),
                       child: FeedbackOption(
                         text: "More " +
-                            getActivityFromId(preferredActivities[index]),
+                            suggestions
+                                .getActivityFromId(preferredActivities[index]),
                         icon: Image(
                           image: NetworkImage(
-                            getActivityIconFromId(preferredActivities[index]) +
+                            suggestions.getActivityIconFromId(
+                                    preferredActivities[index]) +
                                 "32.png",
                           ),
                         ),

@@ -147,6 +147,36 @@ Future<void> registerClick(String click, String mode, Map metadata) async {
   }
 }
 
+Future<void> saveHoliday(String userId, Map holiday) async {
+  var newValue;
+  try {
+    newValue = await makePostRequest("holiday", {
+      "type": "saved",
+      "user": userId,
+      "destination": holiday["destination"].toString(),
+      "departure_date": holiday["departure_date"],
+      "return_date": holiday["return_date"],
+    });
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  List decodedResponse = json.decode(newValue);
+  currentUser["trips"]["saved"] = decodedResponse;
+}
+
+Future<List> deleteHoliday(String userId, int holidayId, String type) async {
+  var newValue;
+  try {
+    newValue = await makeDeleteRequest("holiday/$type/$userId/$holidayId", {});
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  List decodedResponse = json.decode(newValue);
+  return decodedResponse;
+}
+
 Future<List> addNewTraveller() async {
   var newValue;
   try {
@@ -158,6 +188,19 @@ Future<List> addNewTraveller() async {
   }
   List decodedResponse = json.decode(newValue);
   return decodedResponse;
+}
+
+Future<void> incrementSearches(String userId) async {
+  var newValue;
+  try {
+    newValue = await makePutRequest("user/searches/$userId", {});
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  Map decodedResponse = json.decode(newValue);
+  currentUser["searches"] = decodedResponse["searches"];
+  currentUser["score"] = decodedResponse["score"];
 }
 
 Future<List> removeTraveller(int travellerId) async {
@@ -173,12 +216,24 @@ Future<List> removeTraveller(int travellerId) async {
   return decodedResponse;
 }
 
-Future<List> updateTravellerAddress(int travellerId, Map values) async {
+Future<Map> updateUserDetails(Map values) async {
+  var newValue;
+  try {
+    newValue =
+        await makePutRequest("user/${currentUser["id"].toString()}", values);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  Map decodedResponse = json.decode(newValue);
+  return decodedResponse;
+}
+
+Future<List> updateTraveller(int travellerId, Map values) async {
   var newValue;
   try {
     newValue = await makePutRequest(
-        "user/${currentUser["id"].toString()}/traveller/$travellerId/address",
-        values);
+        "user/${currentUser["id"].toString()}/traveller/$travellerId", values);
   } catch (e) {
     print(e);
     throw e;

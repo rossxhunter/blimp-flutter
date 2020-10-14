@@ -138,10 +138,10 @@ class MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     Completer<GoogleMapController> _controller = Completer();
-    double minLat = accommodation["latitude"];
-    double maxLat = accommodation["latitude"];
-    double minLng = accommodation["longitude"];
-    double maxLng = accommodation["longitude"];
+    double minLat = accommodation["latitude"] - 0.005;
+    double maxLat = accommodation["latitude"] + 0.005;
+    double minLng = accommodation["longitude"] - 0.005;
+    double maxLng = accommodation["longitude"] + 0.005;
 
     for (List day in itinerary) {
       for (Map activity in day) {
@@ -179,7 +179,7 @@ class MapScreenState extends State<MapScreen> {
               markers: shownMarkers,
               initialCameraPosition: CameraPosition(
                 target: LatLng(maxLat, maxLng),
-                zoom: 20,
+                zoom: 15,
               ),
               cameraTargetBounds: CameraTargetBounds(
                 LatLngBounds(
@@ -196,7 +196,7 @@ class MapScreenState extends State<MapScreen> {
                       southwest: southWest,
                       northeast: northEast,
                     ),
-                    20,
+                    15,
                   ),
                 );
               },

@@ -124,7 +124,7 @@ class SearchPageState extends State<SearchPage> {
   void updateValidDates() {
     setState(() {
       validDates = [];
-      List availableFlights = getAvailableFlights();
+      List availableFlights = suggestions.getAvailableFlights();
       for (Map flight in availableFlights) {
         if ((originId == null || originId == flight["origin"]) &&
             (destId == null || destId == flight["destination"])) {
@@ -206,7 +206,7 @@ class SearchPageState extends State<SearchPage> {
 
   @override
   void initState() {
-    List availableFlights = getAvailableFlights();
+    List availableFlights = suggestions.getAvailableFlights();
     for (Map flight in availableFlights) {
       validDates.add({
         "departureDate": DateTime.parse(flight["departureDate"]),
@@ -798,13 +798,15 @@ class BudgetState extends State<Budget> {
           child: Text(
             NumberFormat.currency(
                         name: widget.currency,
-                        symbol: getCurrencySuggestions()[widget.currency]
+                        symbol: suggestions
+                                .getCurrencySuggestions()[widget.currency]
                             ["symbol"])
                     .format(_lowerValue) +
                 " - " +
                 NumberFormat.currency(
                         name: widget.currency,
-                        symbol: getCurrencySuggestions()[widget.currency]
+                        symbol: suggestions
+                                .getCurrencySuggestions()[widget.currency]
                             ["symbol"])
                     .format(_upperValue),
             style: Theme.of(context).textTheme.bodyText1,
@@ -1058,7 +1060,7 @@ class OriginDestFieldsState extends State<OriginDestFields> {
 
   OriginDestFieldsState({this.origin, this.destination}) {
     if (origin.keys.length != 0) {
-      Map o = getDestinationSuggestions().firstWhere(
+      Map o = suggestions.getDestinationSuggestions().firstWhere(
           (s) => s["id"] == origin["id"] && s["type"] == origin["type"]);
 
       if (o["type"] == "airport") {
@@ -1068,7 +1070,7 @@ class OriginDestFieldsState extends State<OriginDestFields> {
       }
     }
     if (destination.keys.length != 0) {
-      Map d = getDestinationSuggestions().firstWhere((s) =>
+      Map d = suggestions.getDestinationSuggestions().firstWhere((s) =>
           s["id"] == destination["id"] && s["type"] == destination["type"]);
       if (d["type"] == "airport") {
         destinationController.text = d["airportName"];

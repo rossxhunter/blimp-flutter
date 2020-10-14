@@ -17,7 +17,7 @@ import 'package:flutter_dash/flutter_dash.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:popup_menu/popup_menu.dart';
-import 'package:reorderables/reorderables.dart';
+// import 'package:reorderables/reorderables.dart';
 
 class ChangeActivitiesScreen extends StatefulWidget {
   final List itinerary;
@@ -281,18 +281,18 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
           Scaffold(
             backgroundColor: Colors.white,
             appBar: AppBar(
-              centerTitle: true,
+              centerTitle: false,
               backgroundColor: Colors.white,
               elevation: 0,
-              shape: ContinuousRectangleBorder(
-                side: BorderSide(
-                  color: CustomColors.lightGrey,
-                  width: 4,
-                ),
-              ),
+              // shape: ContinuousRectangleBorder(
+              //   side: BorderSide(
+              //     color: CustomColors.lightGrey,
+              //     width: 4,
+              //   ),
+              // ),
               title: Text(
                 "Activities",
-                style: Theme.of(context).textTheme.headline3,
+                style: Theme.of(context).textTheme.headline4,
               ),
               leading: Padding(
                 padding: EdgeInsets.only(left: 20),

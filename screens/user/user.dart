@@ -20,13 +20,13 @@ class UserPage extends StatefulWidget {
   }
 }
 
-class UserPageState extends State<UserPage> {
+class UserPageState extends State<UserPage> with TickerProviderStateMixin {
+  void _refreshUserPage() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    void _refreshUserPage() {
-      setState(() {});
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -36,91 +36,13 @@ class UserPageState extends State<UserPage> {
           },
           child: Padding(
             padding: EdgeInsets.only(left: 20, right: 20, top: 0, bottom: 20),
-            child: Stack(
-              // crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: 50,
+            child: isLoggedIn
+                ? UserPageLoggedIn(
+                    callback: _refreshUserPage,
+                  )
+                : UserPageLoggedOut(
+                    callback: _refreshUserPage,
                   ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 20),
-                          child: Container(
-                            width: double.infinity,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                ProfilePicture(),
-                                Padding(
-                                  padding: EdgeInsets.only(top: 20),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        isLoggedIn
-                                            ? currentUser["firstName"] +
-                                                " " +
-                                                currentUser["lastName"]
-                                            : "Guest",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline4,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 20),
-                          child: isLoggedIn
-                              ? UserPageLoggedIn()
-                              : UserPageLoggedOut(callback: _refreshUserPage),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        children: [
-                          UserQuickStat(
-                            statName: "Blimp Score",
-                            statNum: 798,
-                          )
-                        ],
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.settings,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SettingsPage(
-                                  logoutCallback: _refreshUserPage),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -180,7 +102,7 @@ class UserPageLoggedOut extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(left: 30, right: 30),
+      padding: EdgeInsets.only(left: 30, right: 30, top: 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -232,13 +154,6 @@ class UserPageLoggedOut extends StatelessWidget {
   }
 }
 
-class UserPageLoggedIn extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return UserPageLoggedInState();
-  }
-}
-
 class UserQuickStat extends StatelessWidget {
   final String statName;
   final int statNum;
@@ -263,98 +178,177 @@ class UserQuickStat extends StatelessWidget {
   }
 }
 
-class UserPageLoggedInState extends State<UserPageLoggedIn>
-    with TickerProviderStateMixin {
-  TabController _controller;
-
+class UserPageLoggedIn extends StatefulWidget {
+  final Function callback;
+  UserPageLoggedIn({this.callback});
   @override
-  void initState() {
-    super.initState();
-    _controller = TabController(vsync: this, length: 4, initialIndex: 0);
+  State<StatefulWidget> createState() {
+    return UserPageLoggedInState();
   }
+}
 
+class UserPageLoggedInState extends State<UserPageLoggedIn> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(top: 0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              UserQuickStat(
-                statName: "Bookings",
-                statNum: 4,
-              ),
-              UserQuickStat(
-                statName: "Searches",
-                statNum: 58,
-              ),
-              UserQuickStat(
-                statName: "Shares",
-                statNum: 8,
-              ),
-            ],
+    return Stack(
+      // crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(
+            top: 50,
           ),
-          Padding(
-            padding: EdgeInsets.only(top: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: SingleChildScrollView(
+            child: Column(
               children: [
-                AnimatedButton(
-                  callback: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      builder: (BuildContext context) {
-                        return GiftsPage();
-                      },
-                    );
-                  },
-                  child: UserOption(
-                    text: "Redeem",
-                    color: Theme.of(context).primaryColor,
-                    icon: FontAwesomeIcons.ticketAlt,
+                Padding(
+                  padding: EdgeInsets.only(top: 20),
+                  child: Container(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ProfilePicture(),
+                        Padding(
+                          padding: EdgeInsets.only(top: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isLoggedIn
+                                    ? currentUser["firstName"] +
+                                        " " +
+                                        currentUser["lastName"]
+                                    : "Guest",
+                                style: Theme.of(context).textTheme.headline4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                AnimatedButton(
-                  callback: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      builder: (BuildContext context) {
-                        return ReferralsPage();
-                      },
-                    );
-                  },
-                  child: UserOption(
-                    text: "Referrals",
-                    color: Color.fromRGBO(243, 156, 18, 1),
-                    icon: FontAwesomeIcons.bullhorn,
-                  ),
-                ),
-                AnimatedButton(
-                  callback: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      builder: (BuildContext context) {
-                        return GiftsPage();
-                      },
-                    );
-                  },
-                  child: UserOption(
-                    text: "Gifts",
-                    color: Color.fromRGBO(46, 204, 113, 1),
-                    icon: FontAwesomeIcons.gift,
+                Padding(
+                  padding: EdgeInsets.only(top: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          UserQuickStat(
+                            statName: "Bookings",
+                            statNum: currentUser["bookings"],
+                          ),
+                          UserQuickStat(
+                            statName: "Searches",
+                            statNum: currentUser["searches"],
+                          ),
+                          UserQuickStat(
+                            statName: "Shares",
+                            statNum: currentUser["shares"],
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            AnimatedButton(
+                              callback: () {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: true,
+                                  builder: (BuildContext context) {
+                                    return GiftsPage();
+                                  },
+                                );
+                              },
+                              child: UserOption(
+                                text: "Redeem",
+                                color: Theme.of(context).primaryColor,
+                                icon: FontAwesomeIcons.ticketAlt,
+                              ),
+                            ),
+                            AnimatedButton(
+                              callback: () {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: true,
+                                  builder: (BuildContext context) {
+                                    return ReferralsPage();
+                                  },
+                                );
+                              },
+                              child: UserOption(
+                                text: "Referrals",
+                                color: Color.fromRGBO(243, 156, 18, 1),
+                                icon: FontAwesomeIcons.bullhorn,
+                              ),
+                            ),
+                            AnimatedButton(
+                              callback: () {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: true,
+                                  builder: (BuildContext context) {
+                                    return GiftsPage();
+                                  },
+                                );
+                              },
+                              child: UserOption(
+                                text: "Gifts",
+                                color: Color.fromRGBO(46, 204, 113, 1),
+                                icon: FontAwesomeIcons.gift,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TripsSection(),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          TripsSection(),
-        ],
-      ),
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              isLoggedIn
+                  ? UserQuickStat(
+                      statName: "Blimp Score",
+                      statNum: currentUser["score"],
+                    )
+                  : Container(
+                      width: 0,
+                      height: 0,
+                    ),
+              IconButton(
+                icon: Icon(
+                  Icons.settings,
+                  color: Theme.of(context).primaryColor,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SettingsPage(
+                        logoutCallback: widget.callback,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -431,12 +425,12 @@ class UserOption extends StatelessWidget {
                 ],
               ),
               child: Padding(
-                padding: EdgeInsets.all(25),
+                padding: EdgeInsets.all(20),
                 child: Center(
                   child: FaIcon(
                     icon,
                     color: Colors.white,
-                    size: 40,
+                    size: 35,
                   ),
                 ),
               ),

@@ -155,7 +155,7 @@ class NewActivityFieldState extends State<NewActivityField> {
             decoration: BoxDecoration(),
           ),
           suggestionsCallback: (pattern) {
-            return getSpecificActivitySuggestionsForQuery(
+            return suggestions.getSpecificActivitySuggestionsForQuery(
                 allActivities, pattern);
           },
           suggestionsBoxDecoration: CupertinoSuggestionsBoxDecoration(

@@ -10,6 +10,7 @@ import 'package:blimp/screens/settings.dart';
 import 'package:blimp/screens/user/trips.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/services/user.dart';
 import 'package:blimp/services/util.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/alerts.dart';
@@ -24,7 +25,6 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:blimp/widgets/date_range_picker.dart' as DateRangePicker;
 
 class DetailsPage extends StatefulWidget {
@@ -493,6 +493,9 @@ class DetailsFindHolidayBarState extends State<DetailsFindHolidayBar> {
                   ),
                 );
                 getHoliday(prefs).then((holiday) {
+                  if (isLoggedIn) {
+                    incrementSearches(currentUser["id"]);
+                  }
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -503,13 +506,6 @@ class DetailsFindHolidayBarState extends State<DetailsFindHolidayBar> {
                   );
                 }).catchError((e) {
                   Navigator.pop(context);
-                  // showDialog(
-                  //   context: context,
-                  //   builder: (BuildContext context) => CustomDialog(
-                  //     title: "Error",
-                  //     description: "Can't get holiday - " + e.toString(),
-                  //   ),
-                  // );
                   showErrorToast(context, "No flights found");
                 });
               },
@@ -845,13 +841,13 @@ class DestinationDetails extends StatelessWidget {
 
   DestinationDetails({this.cityDetails});
 
-  YoutubePlayerController _controller = YoutubePlayerController(
-    initialVideoId: 'iLnmTe5Q2Qw',
-    flags: YoutubePlayerFlags(
-      autoPlay: true,
-      mute: true,
-    ),
-  );
+  // YoutubePlayerController _controller = YoutubePlayerController(
+  //   initialVideoId: 'iLnmTe5Q2Qw',
+  //   flags: YoutubePlayerFlags(
+  //     autoPlay: true,
+  //     mute: true,
+  //   ),
+  // );
   @override
   Widget build(BuildContext context) {
     var parser = EmojiParser();

@@ -49,13 +49,13 @@ class TestingPageState extends State<TestingPage> {
                   child: Padding(
                     padding: EdgeInsets.only(top: 50),
                     child: ListView.builder(
-                      itemCount: getTestingSuggestions().length,
+                      itemCount: suggestions.getTestingSuggestions().length,
                       itemExtent: 100,
                       itemBuilder: (BuildContext ctxt, int index) {
                         return Padding(
                           padding: EdgeInsets.only(bottom: 20),
                           child: TestOption(
-                            city: getTestingSuggestions()[index],
+                            city: suggestions.getTestingSuggestions()[index],
                           ),
                         );
                       },

@@ -130,17 +130,17 @@ class ExplorePage extends StatelessWidget {
                         QuickExploreBox(
                           text: "Flight",
                           color: Theme.of(context).primaryColor,
-                          icon: Icons.flight,
+                          icon: FontAwesomeIcons.plane,
                         ),
                         QuickExploreBox(
                           text: "Hotel",
                           color: Colors.blue,
-                          icon: Icons.hotel,
+                          icon: FontAwesomeIcons.hotel,
                         ),
                         QuickExploreBox(
                           text: "Attraction",
                           color: Color.fromRGBO(46, 204, 113, 1),
-                          icon: Icons.camera,
+                          icon: FontAwesomeIcons.umbrellaBeach,
                         ),
                         QuickExploreBox(
                           text: "Inspiration",
@@ -165,9 +165,9 @@ class ExplorePage extends StatelessWidget {
                         itemBuilder: (BuildContext context, int index) {
                           return AnimatedButton(
                             callback: () {
-                              getCityDetailsFromId(
-                                      getExploreSuggestions()["For You"][index]
-                                          ["id"])
+                              getCityDetailsFromId(suggestions
+                                          .getExploreSuggestions()["For You"]
+                                      [index]["id"])
                                   .then((details) {
                                 Map cityDetails = details;
                                 Navigator.push(
@@ -188,7 +188,8 @@ class ExplorePage extends StatelessWidget {
                                 children: [
                                   CachedNetworkImage(
                                     fit: BoxFit.cover,
-                                    imageUrl: getExploreSuggestions()["For You"]
+                                    imageUrl: suggestions
+                                            .getExploreSuggestions()["For You"]
                                         [index]["images"][1],
                                     placeholder: (context, url) => Container(
                                       height: 10000,
@@ -197,8 +198,8 @@ class ExplorePage extends StatelessWidget {
                                     ),
                                     errorWidget: (context, url, error) => Image(
                                       image: NetworkImage(
-                                          getExploreSuggestions()["For You"]
-                                              [index]["images"][1]),
+                                          suggestions.getExploreSuggestions()[
+                                              "For You"][index]["images"][1]),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -221,8 +222,8 @@ class ExplorePage extends StatelessWidget {
                                     bottom: 20,
                                     left: 20,
                                     child: Text(
-                                      getExploreSuggestions()["For You"][index]
-                                          ["name"],
+                                      suggestions.getExploreSuggestions()[
+                                          "For You"][index]["name"],
                                       style: Theme.of(context)
                                           .textTheme
                                           .headline3
@@ -234,7 +235,9 @@ class ExplorePage extends StatelessWidget {
                             ),
                           );
                         },
-                        itemCount: getExploreSuggestions()["For You"].length,
+                        itemCount: suggestions
+                            .getExploreSuggestions()["For You"]
+                            .length,
                         viewportFraction: 0.8,
                         scale: 0.8,
                       ),
@@ -265,7 +268,8 @@ class ExplorePage extends StatelessWidget {
                                 context: context,
                                 removeLeft: true,
                                 child: ListView.builder(
-                                  itemCount: getExploreSuggestions()[
+                                  itemCount: suggestions
+                                      .getExploreSuggestions()[
                                           _continents[contIndex]]
                                       .length,
                                   scrollDirection: Axis.horizontal,
@@ -274,10 +278,10 @@ class ExplorePage extends StatelessWidget {
                                       (BuildContext context, int index) {
                                     return AnimatedButton(
                                       callback: () {
-                                        getCityDetailsFromId(
-                                                getExploreSuggestions()[
-                                                        _continents[contIndex]]
-                                                    [index]["id"])
+                                        getCityDetailsFromId(suggestions
+                                                    .getExploreSuggestions()[
+                                                _continents[
+                                                    contIndex]][index]["id"])
                                             .then((details) {
                                           Map cityDetails = details;
                                           Navigator.push(
@@ -292,7 +296,8 @@ class ExplorePage extends StatelessWidget {
                                         });
                                       },
                                       child: DestinationOption(
-                                          option: getExploreSuggestions()[
+                                          option: suggestions
+                                                  .getExploreSuggestions()[
                                               _continents[contIndex]][index]),
                                     );
                                   },
@@ -326,7 +331,8 @@ class ExplorePage extends StatelessWidget {
                           physics: BouncingScrollPhysics(),
                           itemBuilder: (BuildContext context, int index) {
                             return AttractionsOption(
-                                attraction: getAttractionSuggestions()[index]);
+                                attraction: suggestions
+                                    .getAttractionSuggestions()[index]);
                           },
                         ),
                       ),
@@ -668,6 +674,8 @@ class QuickExploreBox extends StatelessWidget {
       child: Column(
         children: [
           Container(
+            height: 55,
+            width: 55,
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(15),
@@ -679,9 +687,8 @@ class QuickExploreBox extends StatelessWidget {
                 ),
               ],
             ),
-            child: Padding(
-              padding: EdgeInsets.all(15),
-              child: Icon(
+            child: Center(
+              child: FaIcon(
                 icon,
                 color: Colors.white,
               ),
@@ -753,7 +760,7 @@ class ExploreSearchBarState extends State<ExploreSearchBar> {
                     ),
                   ),
                   suggestionsCallback: (pattern) {
-                    return getSearchSuggestionsForQuery(pattern);
+                    return suggestions.getSearchSuggestionsForQuery(pattern);
                   },
                   suggestionsBoxDecoration: CupertinoSuggestionsBoxDecoration(
                     offsetX: -80,

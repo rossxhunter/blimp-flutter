@@ -111,12 +111,12 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
   initState() {
     super.initState();
 
-    _future = getSuggestions();
+    _future = suggestions.getSuggestions();
   }
 
   void tryAgain() {
     setState(() {
-      _future = getSuggestions();
+      _future = suggestions.getSuggestions();
     });
   }
 

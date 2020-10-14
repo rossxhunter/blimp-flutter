@@ -1,4 +1,6 @@
+import 'package:blimp/screens/results/accommodation.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/services/user.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/icons.dart';
@@ -38,32 +40,77 @@ class BookingPageState extends State<BookingPage> {
         publishableKey: "pk_test_K12DQ53LJmA1a3iVswAArWMw00IU5SbUD1"));
   }
 
+  List<int> selectedTravellers = [];
+
+  void travellerSelected(bool sel, int id) {
+    setState(() {
+      if (sel) {
+        selectedTravellers.add(id);
+      } else {
+        selectedTravellers.remove(id);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        elevation: 0,
+        toolbarHeight: kToolbarHeight + 40,
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        centerTitle: false,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).primaryColor,
+        ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(
+            FontAwesomeIcons.arrowLeft,
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
         title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              destinationName,
+              "Booking",
               style: Theme.of(context)
                   .textTheme
-                  .headline3
-                  .copyWith(color: Colors.white),
+                  .headline4
+                  .copyWith(color: Theme.of(context).primaryColor),
             ),
-            Text(
-              DateFormat("d MMM").format(
-                    DateTime.parse(flights["outbound"]["departure"]["date"]),
-                  ) +
-                  " - " +
-                  DateFormat("d MMM").format(
-                    DateTime.parse(flights["return"]["departure"]["date"]),
-                  ),
-              style: Theme.of(context)
-                  .textTheme
-                  .headline2
-                  .copyWith(color: Colors.white),
+            Row(
+              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  destinationName,
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline2
+                      .copyWith(color: Theme.of(context).primaryColor),
+                ),
+                Text(
+                  " (" +
+                      DateFormat("d MMM").format(
+                        DateTime.parse(
+                            flights["outbound"]["departure"]["date"]),
+                      ) +
+                      " - " +
+                      DateFormat("d MMM").format(
+                        DateTime.parse(flights["return"]["departure"]["date"]),
+                      ) +
+                      ")",
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline2
+                      .copyWith(color: Theme.of(context).primaryColor),
+                ),
+              ],
             ),
           ],
         ),
@@ -101,63 +148,6 @@ class BookingPageState extends State<BookingPage> {
                         ),
                       ),
                     ),
-                    // Padding(
-                    //   padding: EdgeInsets.only(top: 10),
-                    //   child: Container(
-                    //     width: double.infinity,
-                    //     color: Colors.white,
-                    //     child: Padding(
-                    //       padding: EdgeInsets.only(
-                    //         left: 30,
-                    //         right: 30,
-                    //         top: 30,
-                    //         bottom: 30,
-                    //       ),
-                    //       child: Column(
-                    //         crossAxisAlignment: CrossAxisAlignment.start,
-                    //         children: [
-                    //           Text("Flights",
-                    //               style: Theme.of(context)
-                    //                   .textTheme
-                    //                   .headline4),
-                    //           Padding(
-                    //             padding: EdgeInsets.only(top: 20),
-                    //             child: FlightPriceDetails(flights: flights),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
-                    // Padding(
-                    //   padding: EdgeInsets.only(top: 10),
-                    //   child: Container(
-                    //     width: double.infinity,
-                    //     color: Colors.white,
-                    //     child: Padding(
-                    //       padding: EdgeInsets.only(
-                    //         left: 30,
-                    //         right: 30,
-                    //         top: 30,
-                    //         bottom: 30,
-                    //       ),
-                    //       child: Column(
-                    //         crossAxisAlignment: CrossAxisAlignment.start,
-                    //         children: [
-                    //           Text("Accommodation",
-                    //               style: Theme.of(context)
-                    //                   .textTheme
-                    //                   .headline4),
-                    //           Padding(
-                    //             padding: EdgeInsets.only(top: 20),
-                    //             child: AccommodationPriceDetails(
-                    //                 accommodation: accommodation),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
                     Padding(
                       padding: EdgeInsets.only(top: 10),
                       child: Container(
@@ -169,68 +159,28 @@ class BookingPageState extends State<BookingPage> {
                             top: 30,
                             bottom: 30,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Payment",
-                                  style: Theme.of(context).textTheme.headline4),
-                              Padding(
-                                padding: EdgeInsets.only(top: 20),
-                                child: Column(
-                                  children: [
-                                    Form(
-                                      child: Column(
-                                        children: [
-                                          Padding(
-                                            padding: EdgeInsets.all(20),
-                                            child: PaymentBreakdown(
-                                              flightsPrice: flights["outbound"]
-                                                      ["price"]["amount"] +
-                                                  flights["return"]["price"]
-                                                      ["amount"],
-                                              accommodationPrice:
-                                                  accommodation["price"]
-                                                      ["amount"],
-                                              currency: flights["outbound"]
-                                                  ["price"]["currency"],
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 10),
-                                            child: AnimatedButton(
-                                              child: PaymentButton(
-                                                  text: 'Pay with VISA 4292',
-                                                  color: Colors.white,
-                                                  icon: FontAwesomeIcons.ccVisa,
-                                                  backgroundColor: Colors.blue),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 10),
-                                            child: AnimatedButton(
-                                              callback: () {
-                                                StripePayment
-                                                        .paymentRequestWithCardForm(
-                                                            CardFormPaymentRequest())
-                                                    .then((paymentMethod) {});
-                                              },
-                                              child: PaymentButton(
-                                                text: 'Pay with New Card',
-                                                icon: Icons.credit_card,
-                                                color: Colors.white,
-                                                backgroundColor:
-                                                    Colors.blueGrey[700],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // PayButton(),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          child: TravellersSection(
+                            selected: selectedTravellers,
+                            requiredNum: 2,
+                            callback: travellerSelected,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: Container(
+                        color: Colors.white,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: 30,
+                            right: 30,
+                            top: 30,
+                            bottom: 30,
+                          ),
+                          child: PaymentSection(
+                            flights: flights,
+                            accommodation: accommodation,
                           ),
                         ),
                       ),
@@ -242,6 +192,171 @@ class BookingPageState extends State<BookingPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class TravellersSection extends StatelessWidget {
+  final List<int> selected;
+  final int requiredNum;
+  final Function callback;
+  TravellersSection({this.selected, this.requiredNum, this.callback});
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Travellers (" +
+              selected.length.toString() +
+              "/" +
+              requiredNum.toString() +
+              ")",
+          style: Theme.of(context).textTheme.headline4,
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: ListView.builder(
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: TravellerOption(
+                  traveller: currentUser["travellers"][index],
+                  isSelected:
+                      selected.contains(currentUser["travellers"][index]["id"]),
+                  callback: callback,
+                ),
+              );
+            },
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: currentUser["travellers"].length,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class TravellerOption extends StatelessWidget {
+  final Map traveller;
+  final bool isSelected;
+  final Function callback;
+  TravellerOption({this.traveller, this.isSelected, this.callback});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            blurRadius: 10.0,
+            offset: Offset(0, 0),
+          )
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: 20, bottom: 20, left: 20, right: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  FontAwesomeIcons.solidUser,
+                  size: 20,
+                  color: Theme.of(context).primaryColor,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                    traveller["fullName"],
+                    style: Theme.of(context).textTheme.headline2,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () {
+                callback(!isSelected, traveller["id"]);
+              },
+              child: SelectedIcon(
+                isSelected: isSelected,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PaymentSection extends StatelessWidget {
+  final Map flights;
+  final Map accommodation;
+  PaymentSection({this.flights, this.accommodation});
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Payment",
+          style: Theme.of(context).textTheme.headline4,
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: Column(
+            children: [
+              Form(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child: PaymentBreakdown(
+                        flightsPrice: flights["outbound"]["price"]["amount"] +
+                            flights["return"]["price"]["amount"],
+                        accommodationPrice: accommodation["selectedOffer"]
+                            ["price"]["amount"],
+                        currency: flights["outbound"]["price"]["currency"],
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: AnimatedButton(
+                        child: PaymentButton(
+                            text: 'Pay with VISA 4292',
+                            color: Colors.white,
+                            icon: FontAwesomeIcons.ccVisa,
+                            backgroundColor: Colors.blue),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: AnimatedButton(
+                        callback: () {
+                          StripePayment.paymentRequestWithCardForm(
+                                  CardFormPaymentRequest())
+                              .then((paymentMethod) {});
+                        },
+                        child: PaymentButton(
+                          text: 'Pay with New Card',
+                          icon: Icons.credit_card,
+                          color: Colors.white,
+                          backgroundColor: Colors.blueGrey[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // PayButton(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -262,7 +377,8 @@ class PaymentBreakdown extends StatelessWidget {
             Text(
               NumberFormat.currency(
                       name: currency,
-                      symbol: getCurrencySuggestions()[currency]["symbol"])
+                      symbol: suggestions.getCurrencySuggestions()[currency]
+                          ["symbol"])
                   .format(flightsPrice),
             ),
           ],
@@ -276,7 +392,8 @@ class PaymentBreakdown extends StatelessWidget {
               Text(
                 NumberFormat.currency(
                         name: currency,
-                        symbol: getCurrencySuggestions()[currency]["symbol"])
+                        symbol: suggestions.getCurrencySuggestions()[currency]
+                            ["symbol"])
                     .format(accommodationPrice),
               ),
             ],
@@ -288,18 +405,24 @@ class PaymentBreakdown extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Subtotal"),
+              Text(
+                "Subtotal",
+                style: Theme.of(context).textTheme.headline2,
+              ),
               Text(
                 NumberFormat.currency(
                         name: currency,
-                        symbol: getCurrencySuggestions()[currency]["symbol"])
+                        symbol: suggestions.getCurrencySuggestions()[currency]
+                            ["symbol"])
                     .format(flightsPrice + accommodationPrice),
+                style: Theme.of(context).textTheme.headline2,
               ),
             ],
           ),
         ),
+        Divider(color: Colors.grey),
         Padding(
-          padding: EdgeInsets.only(top: 10),
+          padding: EdgeInsets.only(top: 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -307,7 +430,8 @@ class PaymentBreakdown extends StatelessWidget {
               Text(
                 NumberFormat.currency(
                         name: currency,
-                        symbol: getCurrencySuggestions()[currency]["symbol"])
+                        symbol: suggestions.getCurrencySuggestions()[currency]
+                            ["symbol"])
                     .format((flightsPrice + accommodationPrice) * 0.05),
               ),
             ],
@@ -323,9 +447,13 @@ class PaymentBreakdown extends StatelessWidget {
                 "- " +
                     NumberFormat.currency(
                             name: currency,
-                            symbol: getCurrencySuggestions()[currency]
-                                ["symbol"])
+                            symbol: suggestions
+                                .getCurrencySuggestions()[currency]["symbol"])
                         .format(50),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyText2
+                    .copyWith(color: Colors.green),
               ),
             ],
           ),
@@ -340,9 +468,13 @@ class PaymentBreakdown extends StatelessWidget {
                 "- " +
                     NumberFormat.currency(
                             name: currency,
-                            symbol: getCurrencySuggestions()[currency]
-                                ["symbol"])
+                            symbol: suggestions
+                                .getCurrencySuggestions()[currency]["symbol"])
                         .format(5),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyText2
+                    .copyWith(color: Colors.green),
               ),
             ],
           ),
@@ -355,16 +487,17 @@ class PaymentBreakdown extends StatelessWidget {
             children: [
               Text(
                 "Total",
-                style: Theme.of(context).textTheme.headline2,
+                style: Theme.of(context).textTheme.headline3,
               ),
               Text(
                 NumberFormat.currency(
                         name: currency,
-                        symbol: getCurrencySuggestions()[currency]["symbol"])
+                        symbol: suggestions.getCurrencySuggestions()[currency]
+                            ["symbol"])
                     .format((flightsPrice + accommodationPrice) * 0.05 +
                         (flightsPrice + accommodationPrice) -
                         55),
-                style: Theme.of(context).textTheme.headline2,
+                style: Theme.of(context).textTheme.headline3,
               ),
             ],
           ),
@@ -457,8 +590,8 @@ class AccommodationPriceDetails extends StatelessWidget {
               Text(
                 NumberFormat.currency(
                         name: accommodation["price"]["currency"],
-                        symbol: getCurrencySuggestions()[accommodation["price"]
-                            ["currency"]]["symbol"])
+                        symbol: suggestions.getCurrencySuggestions()[
+                            accommodation["price"]["currency"]]["symbol"])
                     .format(accommodation["price"]["amount"]),
               ),
             ),
@@ -524,8 +657,8 @@ class FlightPriceDetails extends StatelessWidget {
               Text(
                 NumberFormat.currency(
                         name: flights["outbound"]["price"]["currency"],
-                        symbol: getCurrencySuggestions()[flights["outbound"]
-                            ["price"]["currency"]]["symbol"])
+                        symbol: suggestions.getCurrencySuggestions()[
+                            flights["outbound"]["price"]["currency"]]["symbol"])
                     .format(flights["outbound"]["price"]["amount"]),
               ),
             ),
@@ -558,8 +691,8 @@ class FlightPriceDetails extends StatelessWidget {
               Text(
                 NumberFormat.currency(
                         name: flights["return"]["price"]["currency"],
-                        symbol: getCurrencySuggestions()[flights["return"]
-                            ["price"]["currency"]]["symbol"])
+                        symbol: suggestions.getCurrencySuggestions()[
+                            flights["return"]["price"]["currency"]]["symbol"])
                     .format(flights["return"]["price"]["amount"]),
               ),
             ),

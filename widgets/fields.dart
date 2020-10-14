@@ -103,8 +103,9 @@ class OriginDestinationFieldState extends State<OriginDestinationField> {
                                   ),
                             ),
                             suggestionsCallback: (pattern) {
-                              return getDestinationSuggestionsForQuery(pattern,
-                                  point, widget.originId, widget.destId);
+                              return suggestions
+                                  .getDestinationSuggestionsForQuery(pattern,
+                                      point, widget.originId, widget.destId);
                             },
                             suggestionsBoxDecoration:
                                 CupertinoSuggestionsBoxDecoration(
@@ -253,7 +254,8 @@ class ActivitiesFieldState extends State<ActivitiesField> {
                               decoration: BoxDecoration(),
                             ),
                             suggestionsCallback: (pattern) {
-                              return getActivitySuggestionsForQuery(pattern);
+                              return suggestions
+                                  .getActivitySuggestionsForQuery(pattern);
                             },
                             suggestionsBoxDecoration:
                                 CupertinoSuggestionsBoxDecoration(
@@ -342,3 +344,165 @@ class CustomCheckboxState extends State<CustomCheckbox> {
     );
   }
 }
+
+class CustomTextFormField extends StatelessWidget {
+  String initialValue;
+  String labelText;
+  IconData prefixIcon;
+  Function onSaved;
+  Function validator;
+  CustomTextFormField({
+    this.initialValue,
+    this.labelText,
+    this.prefixIcon,
+    this.onSaved,
+    this.validator,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      initialValue: initialValue,
+      decoration: InputDecoration(
+        labelText: labelText,
+        prefixIcon: Icon(
+          prefixIcon,
+          size: 20,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(15.0),
+          ),
+          borderSide: BorderSide(
+            width: 1,
+            style: BorderStyle.solid,
+            color: Colors.grey,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(15.0),
+          ),
+          borderSide: BorderSide(
+            width: 1,
+            style: BorderStyle.solid,
+            color: Colors.grey,
+          ),
+        ),
+        fillColor: Colors.white,
+        filled: true,
+      ),
+      onSaved: onSaved,
+      validator: validator,
+    );
+  }
+}
+
+class CustomDropdownButtonFormField extends StatelessWidget {
+  String initialValue;
+  String labelText;
+  IconData prefixIcon;
+  Function onSaved;
+  List items;
+  CustomDropdownButtonFormField({
+    this.initialValue,
+    this.labelText,
+    this.prefixIcon,
+    this.onSaved,
+    this.items,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField(
+      isExpanded: true,
+      value: initialValue,
+      onSaved: onSaved,
+      decoration: InputDecoration(
+        labelText: labelText,
+        prefixIcon: Icon(
+          prefixIcon,
+          size: 20,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(15.0),
+          ),
+          borderSide: BorderSide(
+            width: 1,
+            style: BorderStyle.solid,
+            color: Colors.grey,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(15.0),
+          ),
+          borderSide: BorderSide(
+            width: 1,
+            style: BorderStyle.solid,
+            color: Colors.grey,
+          ),
+        ),
+        fillColor: Colors.white,
+        filled: true,
+      ),
+      onChanged: (value) {},
+      items: _getItems(context),
+    );
+  }
+
+  List<DropdownMenuItem> _getItems(BuildContext context) {
+    var parser = EmojiParser();
+    List<DropdownMenuItem> dropdownItems = [];
+    for (Map item in items) {
+      dropdownItems.add(
+        DropdownMenuItem(
+          value: item["name"],
+          child: IntrinsicWidth(
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Text(
+                  parser.get("flag-" + item["code"].toLowerCase()).code,
+                  style: Theme.of(context).textTheme.headline3,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text(
+                      item["name"],
+                      maxLines: 2,
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return dropdownItems;
+  }
+}
+
+class CustomField {
+  final CustomFieldType type;
+  final String field;
+  final String initialValue;
+  final String labelText;
+  final IconData prefixIcon;
+  final List items;
+  final Function validator;
+
+  CustomField({
+    @required this.type,
+    @required this.field,
+    @required this.initialValue,
+    @required this.labelText,
+    @required this.prefixIcon,
+    this.items,
+    this.validator,
+  });
+}
+
+enum CustomFieldType { text, dropdown }

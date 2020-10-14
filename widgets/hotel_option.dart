@@ -5,36 +5,40 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:recase/recase.dart';
 
-class HotelOption extends StatefulWidget {
-  final Map hotelDetails;
-  final Key key;
-  HotelOption({this.hotelDetails, this.key});
-  @override
-  State<StatefulWidget> createState() {
-    return HotelOptionState(hotelDetails: hotelDetails, key: key);
-  }
-}
+// class HotelOption extends StatefulWidget {
+//   final Map hotelDetails;
+//   final bool isSelected;
+//   final Key key;
+//   HotelOption({this.hotelDetails, this.isSelected, this.key});
+//   @override
+//   State<StatefulWidget> createState() {
+//     return HotelOptionState(hotelDetails: hotelDetails, key: key);
+//   }
+// }
 
-class HotelOptionState extends State<HotelOption> {
+class HotelOption extends StatelessWidget {
   final Map hotelDetails;
+  final bool isSelected;
   final Key key;
-  HotelOptionState({this.hotelDetails, this.key});
-  int _currentIndex = 0;
+  HotelOption({this.hotelDetails, this.isSelected, this.key});
+  // int _currentIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        // color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(10)),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.4),
-            blurRadius: 20.0,
-            offset: Offset(0, 5),
-          )
+          // BoxShadow(
+          //   color: Colors.grey.withOpacity(0.4),
+          //   blurRadius: 20.0,
+          //   offset: Offset(0, 5),
+          // )
         ],
       ),
       child: Padding(
@@ -57,21 +61,18 @@ class HotelOptionState extends State<HotelOption> {
                           width: 100000,
                           child: Swiper(
                             onIndexChanged: (value) {
-                              setState(() {
-                                _currentIndex = value;
-                              });
+                              // setState(() {
+                              //   _currentIndex = value;
+                              // });
                             },
-                            pagination: SwiperPagination(
-                              margin: EdgeInsets.only(
-                                  left: 10, right: 10, bottom: 5),
-                            ),
+                            pagination: SwiperPagination(),
                             itemBuilder: (BuildContext context, int index) {
                               return CachedNetworkImage(
                                 fit: BoxFit.cover,
                                 imageUrl: hotelDetails["images"][index],
                                 errorWidget: (context, url, error) => Image(
                                   image: NetworkImage(
-                                      getDefaultAccommodationImageURL()),
+                                      hotelDetails["images"][index] + "G.JPEG"),
                                   fit: BoxFit.cover,
                                 ),
                               );
@@ -84,9 +85,40 @@ class HotelOptionState extends State<HotelOption> {
                   Positioned(
                     left: 10,
                     top: 10,
-                    child: Visibility(
-                      visible: hotelDetails["rating"] != null,
-                      child: RatingBox(rating: hotelDetails["rating"]),
+                    child: hotelDetails["rating"] != null
+                        ? RatingBox(
+                            rating: hotelDetails["rating"]["overall"] / 10)
+                        : Container(
+                            height: 0,
+                            width: 0,
+                          ),
+                  ),
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Text(
+                          NumberFormat.currency(
+                                  name: hotelDetails["selectedOffer"]["price"]
+                                      ["currency"],
+                                  symbol: suggestions.getCurrencySuggestions()[
+                                      hotelDetails["selectedOffer"]["price"]
+                                          ["currency"]]["symbol"],
+                                  decimalDigits: 0)
+                              .format(hotelDetails["selectedOffer"]["price"]
+                                  ["amount"]),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headline2
+                              .copyWith(color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -96,6 +128,7 @@ class HotelOptionState extends State<HotelOption> {
               padding: EdgeInsets.only(left: 10, right: 10, top: 10),
               child: HotelDetails(
                 hotelDetails: hotelDetails,
+                isSelected: isSelected,
               ),
             )
           ],
@@ -110,13 +143,13 @@ class RatingBox extends StatelessWidget {
   RatingBox({this.rating});
 
   Color _getRatingColor() {
-    if (rating >= 4.5) {
+    if (rating >= 9) {
       return Color.fromRGBO(87, 227, 44, 0.9);
-    } else if (rating >= 4) {
+    } else if (rating >= 8) {
       return Color.fromRGBO(183, 221, 41, 0.9);
-    } else if (rating >= 3.5) {
+    } else if (rating >= 7) {
       return Color.fromRGBO(255, 226, 52, 1);
-    } else if (rating >= 3) {
+    } else if (rating >= 6) {
       return Color.fromRGBO(255, 165, 52, 0.9);
     } else {
       return Color.fromRGBO(255, 69, 69, 0.9);
@@ -157,7 +190,18 @@ class RatingBox extends StatelessWidget {
 
 class HotelDetails extends StatelessWidget {
   final Map hotelDetails;
-  HotelDetails({this.hotelDetails});
+  final bool isSelected;
+  HotelDetails({this.hotelDetails, this.isSelected});
+  String _getEstimatedBedType(Map option) {
+    if (option["roomType"].containsKey("estimatedBedType") &&
+        option["roomType"]["estimatedBedType"] != null) {
+      return " (" +
+          ReCase(option["roomType"]["estimatedBedType"].toString()).titleCase +
+          ")";
+    }
+    return "";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -169,15 +213,18 @@ class HotelDetails extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.star,
+                  FontAwesomeIcons.solidStar,
                   size: 15,
-                  color: Colors.grey,
+                  color: Colors.orange,
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 5),
                   child: Text(
                     hotelDetails["stars"].toString() + " stars",
-                    style: Theme.of(context).textTheme.headline1,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline1
+                        .copyWith(color: Colors.orange),
                   ),
                 ),
               ],
@@ -189,7 +236,7 @@ class HotelDetails extends StatelessWidget {
                   Icon(
                     Icons.location_on,
                     size: 15,
-                    color: Colors.grey,
+                    color: Colors.blue,
                   ),
                   Padding(
                     padding: EdgeInsets.only(left: 5),
@@ -199,31 +246,34 @@ class HotelDetails extends StatelessWidget {
                           hotelDetails["hotelDistance"]["distanceUnit"]
                               .toLowerCase() +
                           " from center",
-                      style: Theme.of(context).textTheme.headline1,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline1
+                          .copyWith(color: Colors.blue),
                     ),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: EdgeInsets.only(left: 10),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.hotel,
-                    size: 15,
-                    color: Colors.grey,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 5),
-                    child: Text(
-                      hotelDetails["nights"].toString() + " nights",
-                      style: Theme.of(context).textTheme.headline1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Padding(
+            //   padding: EdgeInsets.only(left: 10),
+            //   child: Row(
+            //     children: [
+            //       Icon(
+            //         Icons.hotel,
+            //         size: 15,
+            //         color: Colors.grey,
+            //       ),
+            //       Padding(
+            //         padding: EdgeInsets.only(left: 5),
+            //         child: Text(
+            //           hotelDetails["nights"].toString() + " nights",
+            //           style: Theme.of(context).textTheme.headline1,
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
         Padding(
@@ -240,34 +290,67 @@ class HotelDetails extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                NumberFormat.currency(
-                        name: hotelDetails["price"]["currency"],
-                        symbol: getCurrencySuggestions()[hotelDetails["price"]
-                            ["currency"]]["symbol"])
-                    .format(hotelDetails["price"]["amount"]),
-                style: Theme.of(context)
-                    .textTheme
-                    .headline3
-                    .copyWith(color: Theme.of(context).primaryColor),
-              ),
-              Row(
-                children: [
-                  Icon(Icons.hotel, size: 20),
-                  Padding(
-                    padding: EdgeInsets.only(left: 5),
-                    child: Text(
-                      ReCase(hotelDetails["roomType"]["bedType"] ??
-                              hotelDetails["roomType"]["category"])
-                          .titleCase
-                          .replaceAll("_", " "),
+              // Text(
+              //   NumberFormat.currency(
+              //           name: hotelDetails["price"]["currency"],
+              //           symbol: suggestions.getCurrencySuggestions()[
+              //               hotelDetails["price"]["currency"]]["symbol"])
+              //       .format(hotelDetails["price"]["amount"]),
+              //   style: Theme.of(context)
+              //       .textTheme
+              //       .headline3
+              //       .copyWith(color: Theme.of(context).primaryColor),
+              // ),
+              isSelected
+                  ? Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.bed,
+                          size: 20,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Text(
+                              ReCase(hotelDetails["selectedOffer"]["roomType"]
+                                              ["category"] ??
+                                          "Standard Room")
+                                      .titleCase +
+                                  _getEstimatedBedType(
+                                      hotelDetails["selectedOffer"]),
+                              style: Theme.of(context).textTheme.headline2),
+                        ),
+                      ],
+                    )
+                  : Container(
+                      height: 0,
+                      width: 0,
                     ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.end,
+        //   children: [
+        //     Container(
+        //       decoration: BoxDecoration(
+        //         color: Theme.of(context).primaryColor,
+        //         borderRadius: BorderRadius.circular(30),
+        //       ),
+        //       child: Padding(
+        //         padding: EdgeInsets.all(10),
+        //         child: Center(
+        //           child: Text(
+        //             "Select Rooms",
+        //             style: Theme.of(context)
+        //                 .textTheme
+        //                 .headline2
+        //                 .copyWith(color: Colors.white),
+        //           ),
+        //         ),
+        //       ),
+        //     ),
+        //   ],
+        // ),
       ],
     );
   }

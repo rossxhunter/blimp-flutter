@@ -117,7 +117,7 @@ class CupertinoSettingsItemState extends State<CupertinoSettingsItem> {
       Expanded(
         child: Padding(
           padding: const EdgeInsets.only(
-            left: 15.0,
+            left: 20.0,
           ),
           child: titleSection,
         ),
@@ -229,7 +229,7 @@ class CupertinoSettingsItemState extends State<CupertinoSettingsItem> {
       },
       child: Container(
         color: calculateBackgroundColor(context),
-        height: widget.subtitle == null ? 44.0 : 57.0,
+        height: widget.subtitle == null ? 54.0 : 67.0,
         child: Row(
           children: rowChildren,
         ),

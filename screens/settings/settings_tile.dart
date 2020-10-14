@@ -1,9 +1,9 @@
 import 'dart:io';
 
+import 'package:blimp/screens/settings/cupertino_settings_item.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:settings_ui/src/cupertino_settings_item.dart';
 
 enum _SettingsTileType { simple, switchTile }
 

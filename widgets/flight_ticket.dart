@@ -112,8 +112,8 @@ class FlightTicketDetails extends StatelessWidget {
           AutoSizeText(
             NumberFormat.currency(
                     name: ticketDetails["price"]["currency"],
-                    symbol: getCurrencySuggestions()[ticketDetails["price"]
-                        ["currency"]]["symbol"])
+                    symbol: suggestions.getCurrencySuggestions()[
+                        ticketDetails["price"]["currency"]]["symbol"])
                 .format(ticketDetails["price"]["amount"]),
             maxLines: 1,
             style: textThemes["ticket_header_1"],

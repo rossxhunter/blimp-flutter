@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/styles/colors.dart';
+import 'package:blimp/widgets/xlider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:flutter_xlider/flutter_xlider.dart';
 import 'package:intl/intl.dart';
 
 class TravellersSelector extends StatelessWidget {
@@ -258,7 +258,7 @@ class DoubleSliderState extends State<DoubleSlider> {
       rangeSlider: true,
       min: minVal,
       max: maxVal,
-      step: step,
+      step: FlutterSliderStep(step: step),
       // minimumDistance: minDistance,
       tooltip: FlutterSliderTooltip(disabled: true),
       selectByTap: false,
@@ -355,7 +355,7 @@ class BudgetCurrencySelectorState extends State<BudgetCurrencySelector> {
           widget.callback("budgetCurrency", newValue);
         });
       },
-      items: getCurrencySuggestions().keys.map((v) {
+      items: suggestions.getCurrencySuggestions().keys.map((v) {
         return DropdownMenuItem<String>(
           value: v,
           child: Text(v),
