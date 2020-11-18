@@ -3,6 +3,7 @@ import 'package:blimp/services/suggestions.dart';
 import 'package:blimp/services/user.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/buttons.dart';
+import 'package:blimp/widgets/fields.dart';
 import 'package:blimp/widgets/icons.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
@@ -134,17 +135,10 @@ class BookingPageState extends State<BookingPage> {
                       width: double.infinity,
                       child: Padding(
                         padding: EdgeInsets.only(
-                            left: 30, right: 30, top: 30, bottom: 30),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Personal Details",
-                                style: Theme.of(context).textTheme.headline4),
-                            Padding(
-                              padding: EdgeInsets.only(top: 20),
-                              child: PersonalDetailsForm(),
-                            ),
-                          ],
+                            left: 30, right: 30, top: 0, bottom: 30),
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 0),
+                          child: PersonalDetailsForm(),
                         ),
                       ),
                     ),
@@ -216,24 +210,103 @@ class TravellersSection extends StatelessWidget {
         ),
         Padding(
           padding: EdgeInsets.only(top: 20),
-          child: ListView.builder(
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: TravellerOption(
-                  traveller: currentUser["travellers"][index],
-                  isSelected:
-                      selected.contains(currentUser["travellers"][index]["id"]),
-                  callback: callback,
-                ),
-              );
-            },
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: currentUser["travellers"].length,
+          child: Column(
+            children: [
+              ListView.builder(
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 20),
+                    child: TravellerOption(
+                      traveller: currentUser["travellers"][index],
+                      isSelected: selected
+                          .contains(currentUser["travellers"][index]["id"]),
+                      callback: callback,
+                    ),
+                  );
+                },
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: currentUser["travellers"].length,
+              ),
+              NewTravellerOption(),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class NewTravellerOption extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            blurRadius: 10.0,
+            offset: Offset(0, 0),
+          )
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: 20, bottom: 20, left: 20, right: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  FontAwesomeIcons.user,
+                  size: 20,
+                  color: Theme.of(context).primaryColor,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                    "Add new traveller",
+                    style: Theme.of(context).textTheme.headline2,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () {
+                // callback(!isSelected, traveller["id"]);
+              },
+              child: NewTravellerIcon(
+                isSelected: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NewTravellerIcon extends StatelessWidget {
+  final bool isSelected;
+  NewTravellerIcon({this.isSelected});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected
+            ? Theme.of(context).primaryColor
+            : CustomColors.lightGrey,
+        borderRadius: BorderRadius.circular(300),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: Icon(
+          FontAwesomeIcons.plus,
+          color: isSelected ? Colors.white : Colors.grey,
+        ),
+      ),
     );
   }
 }
@@ -751,93 +824,11 @@ class PersonalDetailsForm extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 0),
-            child: TextFormField(
-              autocorrect: false,
-              // autovalidate: true,
-              validator: (value) {
-                if (value.isEmpty) {
-                  return 'Please enter your first name';
-                }
-                return null;
-              },
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.person,
-                ),
-                labelText: 'First Name',
-                border: UnderlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: CustomColors.lightGrey,
-                    width: 4,
-                    style: BorderStyle.solid,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Padding(
             padding: EdgeInsets.only(top: 20),
-            child: Padding(
-              padding: EdgeInsets.only(left: 0),
-              child: TextFormField(
-                autocorrect: false,
-                // autovalidate: false,
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter your last name';
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    Icons.people,
-                  ),
-                  labelText: 'Last Name',
-                  border: UnderlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: CustomColors.lightGrey,
-                      width: 4,
-                      style: BorderStyle.solid,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 20),
-            child: Padding(
-              padding: EdgeInsets.only(left: 0),
-              child: TextFormField(
-                autocorrect: false,
-                // autovalidate: true,
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter your email';
-                  } else if (!EmailValidator.validate(value)) {
-                    return 'Invalid email';
-                  }
-                  return null;
-                },
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    Icons.email,
-                  ),
-                  labelText: 'Email Address',
-                  border: UnderlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: CustomColors.lightGrey,
-                      width: 4,
-                      style: BorderStyle.solid,
-                    ),
-                  ),
-                ),
-              ),
+            child: CustomTextFormField(
+              labelText: "Email Address",
+              prefixIcon: FontAwesomeIcons.envelope,
+              initialValue: currentUser["email"],
             ),
           ),
         ],

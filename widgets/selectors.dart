@@ -5,6 +5,7 @@ import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/xlider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
 class TravellersSelector extends StatelessWidget {
@@ -185,9 +186,19 @@ class AccommodationStarsSelector extends StatelessWidget {
             itemCount: 5,
             itemSize: 30,
             itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
-            itemBuilder: (context, _) => Icon(
-              Icons.star,
-              color: Colors.amber,
+            ratingWidget: RatingWidget(
+              full: Icon(
+                FontAwesomeIcons.solidStar,
+                color: Colors.amber,
+              ),
+              half: Icon(
+                FontAwesomeIcons.solidStarHalf,
+                color: Colors.amber,
+              ),
+              empty: Icon(
+                FontAwesomeIcons.star,
+                color: Colors.amber,
+              ),
             ),
             onRatingUpdate: (rating) {
               callback(rating);

@@ -4,9 +4,9 @@ import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/model/preferences.dart';
-import 'package:blimp/screens/details.dart';
+import 'package:blimp/screens/details/details.dart';
 import 'package:blimp/screens/results/accommodation.dart';
-import 'package:blimp/screens/activityDetails.dart';
+import 'package:blimp/screens/details/activityDetails.dart';
 import 'package:blimp/screens/booking.dart';
 import 'package:blimp/screens/results/accommodationDetails.dart';
 import 'package:blimp/screens/results/changeActivities.dart';
@@ -137,10 +137,28 @@ class ResultsPageState extends State<ResultsPage> {
   int _currentIndex;
   bool _needsToSetState = true;
   bool _isShowingTitle = true;
+  bool _isSaved = false;
+  int holidayId;
 
   bool get _showTitle {
     return _scrollController.hasClients &&
         _scrollController.offset > kExpandedHeight - kToolbarHeight;
+  }
+
+  Map _getHoliday() {
+    return {
+      "destination": destId,
+      "departure_date": DateFormat("y-MM-dd").format(
+        DateTime.parse(
+          flights["outbound"]["departure"]["date"],
+        ),
+      ),
+      "return_date": DateFormat("y-MM-dd").format(
+        DateTime.parse(
+          flights["return"]["departure"]["date"],
+        ),
+      ),
+    };
   }
 
   @override
@@ -307,15 +325,53 @@ class ResultsPageState extends State<ResultsPage> {
 
                   actions: _showTitle
                       ? <Widget>[
+                          GestureDetector(
+                            key: Key("smallHeart"),
+                            onTap: () {
+                              if (isLoggedIn) {
+                                if (!_isSaved) {
+                                  saveHoliday(currentUser["id"], _getHoliday())
+                                      .then((newTrip) {
+                                    setState(() {
+                                      _isSaved = true;
+                                      holidayId = newTrip["id"];
+                                    });
+                                    showSuccessToast(context, "Holiday Saved");
+                                  });
+                                } else {
+                                  deleteHoliday(
+                                          currentUser["id"], holidayId, "saved")
+                                      .then((trips) {
+                                    setState(() {
+                                      currentUser["trips"]["saved"] = trips;
+                                      _isSaved = false;
+                                    });
+                                    showSuccessToast(
+                                        context, "Holiday Unsaved");
+                                  });
+                                }
+                              }
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 10, bottom: 10),
+                              child: Icon(
+                                _isSaved
+                                    ? FontAwesomeIcons.solidHeart
+                                    : FontAwesomeIcons.heart,
+                                color: Theme.of(context).primaryColor,
+                                size: 20,
+                              ),
+                            ),
+                          ),
                           Padding(
-                            padding: EdgeInsets.only(left: 10, bottom: 10),
+                            padding: EdgeInsets.only(left: 20, bottom: 10),
                             child: AnimatedButton(
                               key: Key("smallMap"),
                               callback: () async {
                                 Navigator.push(
                                   context,
                                   PageTransition(
-                                    type: PageTransitionType.downToUp,
+                                    type: PageTransitionType.bottomToTop,
                                     child: MapScreen(
                                       accommodation: accommodation,
                                       itinerary: itinerary,
@@ -340,15 +396,53 @@ class ResultsPageState extends State<ResultsPage> {
                           ),
                         ]
                       : <Widget>[
+                          GestureDetector(
+                            key: Key("largeHeart"),
+                            onTap: () {
+                              if (isLoggedIn) {
+                                if (!_isSaved) {
+                                  saveHoliday(currentUser["id"], _getHoliday())
+                                      .then((newTrip) {
+                                    setState(() {
+                                      _isSaved = true;
+                                      holidayId = newTrip["id"];
+                                    });
+                                    showSuccessToast(context, "Holiday Saved");
+                                  });
+                                } else {
+                                  deleteHoliday(
+                                          currentUser["id"], holidayId, "saved")
+                                      .then((trips) {
+                                    setState(() {
+                                      currentUser["trips"]["saved"] = trips;
+                                      _isSaved = false;
+                                    });
+                                    showSuccessToast(
+                                        context, "Holiday Unsaved");
+                                  });
+                                }
+                              }
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 0),
+                              child: Icon(
+                                _isSaved
+                                    ? FontAwesomeIcons.solidHeart
+                                    : FontAwesomeIcons.heart,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                          ),
                           Padding(
-                            padding: EdgeInsets.only(left: 10),
+                            padding: EdgeInsets.only(left: 20),
                             child: AnimatedButton(
                               key: Key("largeMap"),
                               callback: () {
                                 Navigator.push(
                                   context,
                                   PageTransition(
-                                    type: PageTransitionType.downToUp,
+                                    type: PageTransitionType.bottomToTop,
                                     child: MapScreen(
                                       accommodation: accommodation,
                                       itinerary: itinerary,
@@ -372,8 +466,10 @@ class ResultsPageState extends State<ResultsPage> {
                           ),
                         ],
                   backgroundColor: Colors.white,
+                  automaticallyImplyLeading: false,
+                  centerTitle: false,
                   stretch: true,
-                  elevation: 15,
+                  elevation: 0,
                   pinned: true,
                   floating: false,
                   onStretchTrigger: () {
@@ -381,45 +477,23 @@ class ResultsPageState extends State<ResultsPage> {
                     return;
                   },
                   expandedHeight: kExpandedHeight,
-                  title: _showTitle
-                      ? Padding(
-                          padding: EdgeInsets.only(left: 10, bottom: 10),
-                          child: ShareSaveOptionsPopupMenuButton(
-                            holiday: {
-                              "destination": destId,
-                              "departure_date": DateFormat("y-MM-dd").format(
-                                DateTime.parse(
-                                  flights["outbound"]["departure"]["date"],
-                                ),
-                              ),
-                              "return_date": DateFormat("y-MM-dd").format(
-                                DateTime.parse(
-                                  flights["return"]["departure"]["date"],
-                                ),
-                              ),
-                            },
-                            large: false,
-                          ),
-                        )
-                      : Padding(
-                          padding: EdgeInsets.only(left: 20, bottom: 0),
-                          child: ShareSaveOptionsPopupMenuButton(
-                            holiday: {
-                              "destination": destId,
-                              "departure_date": DateFormat("y-MM-dd").format(
-                                DateTime.parse(
-                                  flights["outbound"]["departure"]["date"],
-                                ),
-                              ),
-                              "return_date": DateFormat("y-MM-dd").format(
-                                DateTime.parse(
-                                  flights["return"]["departure"]["date"],
-                                ),
-                              ),
-                            },
-                            large: true,
-                          ),
-                        ),
+                  // title: _showTitle
+                  //     ? Padding(
+                  //         padding: EdgeInsets.only(left: 10, bottom: 10),
+                  //         child: Icon(
+                  //           FontAwesomeIcons.heart,
+                  //           color: Theme.of(context).primaryColor,
+                  //           size: 20,
+                  //         ),
+                  //       )
+                  //     : Padding(
+                  //         padding: EdgeInsets.only(left: 10),
+                  //         child: Icon(
+                  //           FontAwesomeIcons.heart,
+                  //           color: Colors.white,
+                  //           size: 30,
+                  //         ),
+                  //       ),
                   flexibleSpace: Stack(
                     children: <Widget>[
                       FlexibleSpaceBar(
@@ -427,13 +501,18 @@ class ResultsPageState extends State<ResultsPage> {
                           StretchMode.zoomBackground,
                           StretchMode.fadeTitle,
                         ],
-                        centerTitle: true,
+                        centerTitle: false,
                         title: _showTitle
                             ? Padding(
                                 padding: EdgeInsets.only(top: 5),
                                 child: Text(
                                   name,
-                                  style: Theme.of(context).textTheme.headline3,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline4
+                                      .copyWith(
+                                          color:
+                                              Theme.of(context).primaryColor),
                                 ),
                               )
                             : null,
@@ -627,6 +706,23 @@ class DestinationOptionsPopupMenuButton extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          PopupMenuItem(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(
+                  FontAwesomeIcons.shareAlt,
+                  color: Theme.of(context).primaryColor,
+                  size: 20,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 0),
+                  child: Text("Share",
+                      style: Theme.of(context).textTheme.headline2),
+                ),
+              ],
+            ),
           )
         ];
       },
@@ -773,16 +869,18 @@ class ResultsPageBookBar extends StatelessWidget {
                 ),
                 AnimatedButton(
                   callback: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BookingPage(
-                          destinationName: destinationName,
-                          flights: flights,
-                          accommodation: accommodation,
+                    if (isLoggedIn) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingPage(
+                            destinationName: destinationName,
+                            flights: flights,
+                            accommodation: accommodation,
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   },
                   child: Container(
                     child: Padding(
@@ -875,28 +973,37 @@ class ActivityOptionState extends State<ActivityOption> {
   ActivityOptionState(Map activity) {
     this.activity = activity;
     category = activity["category"] ?? "Activity";
-    bestPhotoURL = activity["bestPhoto"] ?? getDefaultActivityImageURL();
+    bestPhotoURL = activity["images"][0] ?? getDefaultActivityImageURL();
     name = activity["name"];
     time = getActivityTime(activity["startTime"], activity["duration"]);
   }
 
   void clickActivity() {
-    showGeneralDialog(
-      context: context,
-      barrierColor: CustomColors.dialogBackground,
-      transitionDuration: Duration(milliseconds: 100),
-      barrierDismissible: true,
-      barrierLabel: '',
-      transitionBuilder: (context, a1, a2, widget) {
-        return Transform.scale(
-          scale: a1.value,
-          child: ActivityDetails(
-            activity: activity,
-          ),
-        );
-      },
-      pageBuilder: (context, animation1, animation2) {},
+    Navigator.push(
+      context,
+      PageTransition(
+        type: PageTransitionType.bottomToTop,
+        child: ActivityDetails(
+          activity: activity,
+        ),
+      ),
     );
+    // showGeneralDialog(
+    //   context: context,
+    //   barrierColor: CustomColors.dialogBackground,
+    //   transitionDuration: Duration(milliseconds: 100),
+    //   barrierDismissible: true,
+    //   barrierLabel: '',
+    //   transitionBuilder: (context, a1, a2, widget) {
+    //     return Transform.scale(
+    //       scale: a1.value,
+    //       child: ActivityDetails(
+    //         activity: activity,
+    //       ),
+    //     );
+    //   },
+    //   pageBuilder: (context, animation1, animation2) {},
+    // );
   }
 
   @override
@@ -1154,7 +1261,7 @@ class ActivitiesSectionState extends State<ActivitiesSection> {
                   Navigator.push(
                     context,
                     PageTransition(
-                      type: PageTransitionType.downToUp,
+                      type: PageTransitionType.bottomToTop,
                       child: ChangeActivitiesScreen(
                         itinerary: itinerary,
                         day: _currentIndex,
@@ -1321,7 +1428,7 @@ class AccommodationSectionState extends State<AccommodationSection> {
                   Navigator.push(
                     context,
                     PageTransition(
-                      type: PageTransitionType.downToUp,
+                      type: PageTransitionType.bottomToTop,
                       child: AccommodationDetails(
                         details: accommodation,
                         callback: updateOffer,
@@ -1346,7 +1453,7 @@ class AccommodationSectionState extends State<AccommodationSection> {
                   Navigator.push(
                     context,
                     PageTransition(
-                      type: PageTransitionType.downToUp,
+                      type: PageTransitionType.bottomToTop,
                       child: AccommodationScreen(
                         callback: accommodationSelected,
                         selectedAccommodation: accommodation["hotelId"],
@@ -1460,7 +1567,7 @@ class FlightsSectionState extends State<FlightsSection> {
                   Navigator.push(
                     context,
                     PageTransition(
-                      type: PageTransitionType.downToUp,
+                      type: PageTransitionType.bottomToTop,
                       child: FlightsScreen(
                         allFlights: allFlights,
                         selectedFlight: flights["id"],

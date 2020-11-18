@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/services/clicks.dart';
 import 'package:blimp/services/user.dart';
 import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:stripe_payment/stripe_payment.dart';
 
 String encodePrefs(List prefs) {
   Map finalMap = {};
@@ -43,6 +46,43 @@ Future<List> getEvaluationItineraryFromActivities(
   return json.decode(itinerary);
 }
 
+Future<Map> getHotelDetailsFromId(String hotelId) async {
+  var details;
+  try {
+    details = await makeGetRequest("hotel/$hotelId", "");
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(details);
+}
+
+Future<Map> getActivityDetailsFromId(String activityId) async {
+  var details;
+  try {
+    details = await makeGetRequest("activity/$activityId", "");
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(details);
+}
+
+Future<Map> getRandomDestination() async {
+  var dest;
+  try {
+    String currency = isLoggedIn ? currentUser["currency"] ?? "GBP" : "GBP";
+
+    int origin = isLoggedIn ? currentUser["origin"] ?? 2643743 : 2643743;
+    dest = await makeGetRequest(
+        "random_destination", "origin=${origin.toString()}&currency=$currency");
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(dest);
+}
+
 Future<Map> getCityDetailsFromId(int cityId) async {
   var details;
   String currency = isLoggedIn ? currentUser["currency"] ?? "GBP" : "GBP";
@@ -50,6 +90,18 @@ Future<Map> getCityDetailsFromId(int cityId) async {
   var params = "currency=$currency&origin=${origin.toString()}";
   try {
     details = await makeGetRequest("city_details/" + cityId.toString(), params);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  return json.decode(details);
+}
+
+Future<Map> getTourDetails(String id) async {
+  var details;
+  String currency = isLoggedIn ? currentUser["currency"] ?? "GBP" : "GBP";
+  try {
+    details = await makeGetRequest("tour/$id", "currency=$currency");
   } catch (e) {
     print(e);
     throw e;
@@ -147,7 +199,21 @@ Future<void> registerClick(String click, String mode, Map metadata) async {
   }
 }
 
-Future<void> saveHoliday(String userId, Map holiday) async {
+Future<void> addProfilePicture(String userId, String path) async {
+  var request = MultipartRequest(
+      "POST", Uri.parse('${_hostname()}/user/profile_picture/$userId'));
+  request.files.add(await MultipartFile.fromPath(
+    'image',
+    path,
+    contentType: MediaType('application', 'jpeg'),
+  ));
+
+  await request.send().then((response) {
+    if (response.statusCode == 200) print("Uploaded!");
+  });
+}
+
+Future<Map> saveHoliday(String userId, Map holiday) async {
   var newValue;
   try {
     newValue = await makePostRequest("holiday", {
@@ -162,7 +228,12 @@ Future<void> saveHoliday(String userId, Map holiday) async {
     throw e;
   }
   List decodedResponse = json.decode(newValue);
+  Map newTrip = decodedResponse
+      .toSet()
+      .difference(currentUser["trips"]["saved"].toSet())
+      .toList()[0];
   currentUser["trips"]["saved"] = decodedResponse;
+  return newTrip;
 }
 
 Future<List> deleteHoliday(String userId, int holidayId, String type) async {
@@ -175,6 +246,29 @@ Future<List> deleteHoliday(String userId, int holidayId, String type) async {
   }
   List decodedResponse = json.decode(newValue);
   return decodedResponse;
+}
+
+Future<Map> createNewPaymentCard(
+    String userId, Map<String, String> card) async {
+  var newCard;
+  try {
+    newCard = await makePostRequest("user/$userId/payment_card", card);
+  } catch (e) {
+    print(e);
+    throw e;
+  }
+  Map decodedResponse = json.decode(newCard);
+  return decodedResponse;
+}
+
+Future<void> deletePaymentCard(String userId, String cardId) async {
+  var result;
+  try {
+    result = await makeDeleteRequest("user/$userId/payment_card/$cardId", {});
+  } catch (e) {
+    print(e);
+    throw e;
+  }
 }
 
 Future<List> addNewTraveller() async {

@@ -3,10 +3,13 @@ import 'package:blimp/configurations.dart';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/model/properties.dart';
 import 'package:blimp/routes.dart';
-import 'package:blimp/screens/activityDetails.dart';
+import 'package:blimp/screens/details/activityDetails.dart';
+import 'package:blimp/screens/details/topAttractions.dart';
+import 'package:blimp/screens/details/tours.dart';
 import 'package:blimp/screens/explore.dart';
 import 'package:blimp/screens/results/results.dart';
-import 'package:blimp/screens/settings.dart';
+import 'package:blimp/screens/settings/settings.dart';
+import 'package:blimp/screens/details/tourDetails.dart';
 import 'package:blimp/screens/user/trips.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
@@ -21,9 +24,11 @@ import 'package:blimp/widgets/selectors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:blimp/widgets/date_range_picker.dart' as DateRangePicker;
 
@@ -96,71 +101,37 @@ class DetailsPageState extends State<DetailsPage> {
                             padding: EdgeInsets.only(top: 10),
                             child: IconButton(
                               icon: Icon(
-                                quickView ? Icons.close : Icons.arrow_back,
+                                quickView
+                                    ? FontAwesomeIcons.times
+                                    : FontAwesomeIcons.arrowLeft,
                                 color: Theme.of(context).primaryColor,
-                                size: 30,
+                                size: 20,
                               ),
                               onPressed: () {
                                 Navigator.pop(context);
                               },
                             ),
                           )
-                        : null,
-                    actions: _showTitle
-                        ? <Widget>[
-                            Padding(
-                              padding: EdgeInsets.only(right: 20, top: 10),
-                              child: AnimatedButton(
-                                key: Key("smallShare"),
-                                // callback: () => clickFeedback(context),
-                                child: Icon(
-                                  Icons.share,
-                                  color: Theme.of(context).primaryColor,
-                                  size: 30,
-                                ),
+                        : Padding(
+                            padding: EdgeInsets.only(left: 10, top: 10),
+                            child: IconButton(
+                              icon: Icon(
+                                quickView
+                                    ? FontAwesomeIcons.times
+                                    : FontAwesomeIcons.arrowLeft,
+                                color: Colors.white,
+                                size: 30,
                               ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
                             ),
-                            // Padding(
-                            //   padding: EdgeInsets.only(left: 20, right: 20),
-                            //   child: AnimatedButton(
-                            //     key: Key("smallOptions"),
-                            //     child: Icon(
-                            //       Icons.sort,
-                            //       color: Theme.of(context).primaryColor,
-                            //     ),
-                            //     callback: () {},
-                            //   ),
-                            // ),
-                          ]
-                        : <Widget>[
-                            Padding(
-                              padding: EdgeInsets.only(right: 20),
-                              child: AnimatedButton(
-                                key: Key("largeShare"),
-                                // callback: () => clickFeedback(context),
-                                child: Icon(
-                                  Icons.share,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ),
-                            ),
-                            // Padding(
-                            //   padding: EdgeInsets.only(left: 20, right: 20),
-                            //   child: AnimatedButton(
-                            //     key: Key("largeOptions"),
-                            //     child: Icon(
-                            //       Icons.sort,
-                            //       color: Colors.white,
-                            //       size: 30,
-                            //     ),
-                            //     callback: () {},
-                            //   ),
-                            // ),
-                          ],
+                          ),
                     backgroundColor: Colors.white,
                     stretch: true,
-                    elevation: !quickView ? 15 : 0,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    centerTitle: false,
                     pinned: true,
                     floating: false,
                     bottom: PreferredSize(
@@ -179,13 +150,16 @@ class DetailsPageState extends State<DetailsPage> {
                                   StretchMode.zoomBackground,
                                   StretchMode.fadeTitle,
                                 ],
-                                centerTitle: true,
+                                centerTitle: false,
                                 title: _showTitle
                                     ? Text(
                                         cityDetails["name"],
                                         style: Theme.of(context)
                                             .textTheme
-                                            .headline3,
+                                            .headline4
+                                            .copyWith(
+                                                color: Theme.of(context)
+                                                    .primaryColor),
                                       )
                                     : null,
                                 collapseMode: CollapseMode.parallax,
@@ -985,9 +959,22 @@ class DestinationDetails extends StatelessWidget {
                   "Top Attractions",
                   style: Theme.of(context).textTheme.headline3,
                 ),
-                Text(
-                  "See All",
-                  style: Theme.of(context).textTheme.headline2,
+                AnimatedButton(
+                  callback: () {
+                    Navigator.push(
+                      context,
+                      PageTransition(
+                        type: PageTransitionType.bottomToTop,
+                        child: TopAttractions(
+                          attractions: cityDetails["attractions"],
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "See All",
+                    style: Theme.of(context).textTheme.headline2,
+                  ),
                 ),
               ],
             ),
@@ -1038,62 +1025,70 @@ class DestinationDetails extends StatelessWidget {
               ),
             ),
           ),
-          // Padding(
-          //   padding: EdgeInsets.only(top: 50),
-          //   child: Text(
-          //     "Videos",
-          //     style: Theme.of(context).textTheme.headline3,
-          //   ),
-          // ),
-          // Padding(
-          //   padding: EdgeInsets.only(top: 20),
-          //   child: Container(
-          //     height: 300,
-          //     child: Swiper(
-          //       onIndexChanged: (value) {
-          //         // setState(() {
-          //         //   _currentIndex = value;
-          //         // });
-          //       },
-          //       // pagination: SwiperPagination(
-          //       //   alignment: Alignment.topCenter,
-          //       //   margin: EdgeInsets.only(left: 10, right: 10, top: 40),
-          //       // ),
-          //       control: SwiperControl(
-          //         padding: EdgeInsets.only(bottom: 5000),
-          //       ),
-          //       itemWidth: 300,
-          //       itemBuilder: (BuildContext context, int index) {
-          //         return Column(
-          //           children: [
-          //             Text(
-          //               "Video 1",
-          //               style: Theme.of(context).textTheme.headline3,
-          //             ),
-          //             // Padding(
-          //             //   padding: EdgeInsets.only(top: 30),
-          //             //   child: YoutubePlayer(
-          //             //     controller: _controller,
-          //             //     showVideoProgressIndicator: true,
-          //             //     progressIndicatorColor: Colors.amber,
-          //             //     progressColors: ProgressBarColors(
-          //             //       playedColor: Colors.amber,
-          //             //       handleColor: Colors.amberAccent,
-          //             //     ),
-          //             //     onReady: () {
-          //             //       // _controller.addListener();
-          //             //     },
-          //             //   ),
-          //             // ),
-          //           ],
-          //         );
-          //       },
-          //       itemCount: 3,
-          //       viewportFraction: 1,
-          //       scale: 0.5,
-          //     ),
-          //   ),
-          // ),
+          Visibility(
+            visible: cityDetails["tours"].length > 0,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 50),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Tours and Tickets",
+                        style: Theme.of(context).textTheme.headline3,
+                      ),
+                      AnimatedButton(
+                        callback: () {
+                          Navigator.push(
+                            context,
+                            PageTransition(
+                              type: PageTransitionType.bottomToTop,
+                              child: ToursPage(
+                                tours: cityDetails["tours"],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "See All",
+                          style: Theme.of(context).textTheme.headline2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: 20,
+                  ),
+                  child: Container(
+                    height: 350,
+                    child: MediaQuery.removePadding(
+                      context: context,
+                      removeTop: true,
+                      child: ListView.builder(
+                        primary: false,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 10,
+                        // itemExtent: 100,
+                        // shrinkWrap: true,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                                bottom: 20, left: 10, right: 10, top: 10),
+                            child: TourListOption(
+                              tour: cityDetails["tours"][index],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Padding(
             padding: EdgeInsets.only(top: 50),
             child: Text(
@@ -1200,6 +1195,200 @@ class SimilarDestinationOption extends StatelessWidget {
   }
 }
 
+class TourListOption extends StatefulWidget {
+  final Map tour;
+  TourListOption({this.tour});
+  @override
+  State<StatefulWidget> createState() {
+    return TourListOptionState(tour: tour);
+  }
+}
+
+class TourListOptionState extends State<TourListOption> {
+  final Map tour;
+  TourListOptionState({this.tour});
+
+  void clickActivity() {
+    getTourDetails(tour["id"]).then((details) {
+      Map newTour = tour;
+      newTour["images"].addAll(details["images"]);
+      newTour["pois"] = details["pois"];
+      Navigator.push(
+        context,
+        PageTransition(
+          type: PageTransitionType.bottomToTop,
+          child: TourDetails(
+            tour: newTour,
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedButton(
+      callback: clickActivity,
+      child: Container(
+        width: 250,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.4),
+              blurRadius: 10.0,
+              spreadRadius: 0,
+              offset: Offset(0, 0),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            Stack(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 0, bottom: 0, right: 0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                    child: CachedNetworkImage(
+                      height: 150,
+                      width: 250,
+                      placeholder: (context, url) => Container(
+                        color: CustomColors.lightGrey,
+                      ),
+                      errorWidget: (context, url, error) =>
+                          Image.asset("assets/images/mountains.jpg"),
+                      imageUrl: tour["images"][0],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 10,
+                  top: 10,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(5),
+                      child: Text(
+                        tour["category"].toUpperCase(),
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                        // textWidthBasis: TextWidthBasis.longestLine,
+                        maxLines: 2,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headline2
+                            .copyWith(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 20, right: 10, top: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Text(
+                        tour["name"],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.headline2,
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 5),
+                        child: Text(
+                          tour["description"],
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 3,
+                          style: Theme.of(context).textTheme.bodyText2,
+                        ),
+                      ),
+                    ),
+                    // Padding(
+                    //   padding: EdgeInsets.only(top: 5),
+                    //   child: Row(
+                    //     children: [
+                    //       RatingBarIndicator(
+                    //         rating: tour["rating"],
+                    //         itemBuilder: (context, index) => Icon(
+                    //           Icons.star,
+                    //           color: Colors.amber,
+                    //         ),
+                    //         itemCount: 5,
+                    //         itemSize: 20.0,
+                    //         direction: Axis.horizontal,
+                    //       ),
+                    //       Padding(
+                    //         padding: EdgeInsets.only(left: 5),
+                    //         child: Text(
+                    //           tour["rating"].toString(),
+                    //           style: Theme.of(context).textTheme.headline1,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 20, right: 20, bottom: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        FontAwesomeIcons.clock,
+                        size: 20,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 5),
+                        child: Text(
+                          tour["duration"]
+                              .substring(2, tour["duration"].length),
+                          style: Theme.of(context).textTheme.headline1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    NumberFormat.currency(
+                            name: "GBP",
+                            symbol: suggestions.getCurrencySuggestions()["GBP"]
+                                ["symbol"])
+                        .format(tour["price"]),
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline3
+                        .copyWith(color: Theme.of(context).primaryColor),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ActivityListOption extends StatefulWidget {
   final Map activity;
   ActivityListOption({this.activity});
@@ -1214,22 +1403,17 @@ class ActivityListOptionState extends State<ActivityListOption> {
   ActivityListOptionState({this.activity});
 
   void clickActivity() {
-    showGeneralDialog(
-      context: context,
-      barrierColor: CustomColors.dialogBackground,
-      transitionDuration: Duration(milliseconds: 100),
-      barrierDismissible: true,
-      barrierLabel: '',
-      transitionBuilder: (context, a1, a2, widget) {
-        return Transform.scale(
-          scale: a1.value,
+    getActivityDetailsFromId(activity["id"]).then((a) {
+      Navigator.push(
+        context,
+        PageTransition(
+          type: PageTransitionType.bottomToTop,
           child: ActivityDetails(
-            activity: activity,
+            activity: a,
           ),
-        );
-      },
-      pageBuilder: (context, animation1, animation2) {},
-    );
+        ),
+      );
+    });
   }
 
   @override
@@ -1265,7 +1449,7 @@ class ActivityListOptionState extends State<ActivityListOption> {
                       height: 100,
                       color: CustomColors.lightGrey,
                     ),
-                    imageUrl: activity["bestPhoto"],
+                    imageUrl: activity["images"][0],
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -1323,14 +1507,20 @@ class ActivityListOptionState extends State<ActivityListOption> {
                       padding: EdgeInsets.only(top: 5),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.star,
-                            color: Colors.yellow,
+                          RatingBarIndicator(
+                            rating: activity["rating"],
+                            itemBuilder: (context, index) => Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                            ),
+                            itemCount: 5,
+                            itemSize: 20.0,
+                            direction: Axis.horizontal,
                           ),
                           Padding(
                             padding: EdgeInsets.only(left: 5),
                             child: Text(
-                              activity["rating"].toString() + "/5",
+                              activity["rating"].toString(),
                               style: Theme.of(context).textTheme.headline1,
                             ),
                           ),

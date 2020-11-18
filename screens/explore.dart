@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:blimp/configurations.dart';
+import 'package:blimp/model/destination.dart';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/routes.dart';
-import 'package:blimp/screens/details.dart';
+import 'package:blimp/screens/details/activityDetails.dart';
+import 'package:blimp/screens/details/details.dart';
+import 'package:blimp/screens/results/accommodationDetails.dart';
 import 'package:blimp/screens/results/results.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';
@@ -123,30 +126,30 @@ class ExplorePage extends StatelessWidget {
                   ),
                   Padding(
                     padding: EdgeInsets.only(
-                        left: 30, right: 30, bottom: 0, top: 10),
+                        left: 20, right: 20, bottom: 0, top: 10),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         QuickExploreBox(
-                          text: "Flight",
+                          text: "Map",
                           color: Theme.of(context).primaryColor,
-                          icon: FontAwesomeIcons.plane,
+                          icon: FontAwesomeIcons.map,
                         ),
                         QuickExploreBox(
-                          text: "Hotel",
+                          text: "Community",
                           color: Colors.blue,
-                          icon: FontAwesomeIcons.hotel,
-                        ),
-                        QuickExploreBox(
-                          text: "Attraction",
-                          color: Color.fromRGBO(46, 204, 113, 1),
-                          icon: FontAwesomeIcons.umbrellaBeach,
+                          icon: FontAwesomeIcons.users,
                         ),
                         QuickExploreBox(
                           text: "Inspiration",
                           color: Colors.orange,
                           icon: FontAwesomeIcons.lightbulb,
                         ),
+                        // QuickExploreBox(
+                        //   text: "Inspiration",
+                        //   color: Colors.orange,
+                        //   icon: FontAwesomeIcons.lightbulb,
+                        // ),
                       ],
                     ),
                   ),
@@ -165,10 +168,18 @@ class ExplorePage extends StatelessWidget {
                         itemBuilder: (BuildContext context, int index) {
                           return AnimatedButton(
                             callback: () {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return LoadingIndicator();
+                                },
+                              );
                               getCityDetailsFromId(suggestions
                                           .getExploreSuggestions()["For You"]
                                       [index]["id"])
                                   .then((details) {
+                                Navigator.pop(context);
                                 Map cityDetails = details;
                                 Navigator.push(
                                   context,
@@ -278,11 +289,19 @@ class ExplorePage extends StatelessWidget {
                                       (BuildContext context, int index) {
                                     return AnimatedButton(
                                       callback: () {
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (BuildContext context) {
+                                            return LoadingIndicator();
+                                          },
+                                        );
                                         getCityDetailsFromId(suggestions
                                                     .getExploreSuggestions()[
                                                 _continents[
                                                     contIndex]][index]["id"])
                                             .then((details) {
+                                          Navigator.pop(context);
                                           Map cityDetails = details;
                                           Navigator.push(
                                             context,
@@ -293,6 +312,8 @@ class ExplorePage extends StatelessWidget {
                                               ),
                                             ),
                                           );
+                                        }).catchError((e) {
+                                          Navigator.pop(context);
                                         });
                                       },
                                       child: DestinationOption(
@@ -330,9 +351,27 @@ class ExplorePage extends StatelessWidget {
                           scrollDirection: Axis.horizontal,
                           physics: BouncingScrollPhysics(),
                           itemBuilder: (BuildContext context, int index) {
-                            return AttractionsOption(
+                            return AnimatedButton(
+                              callback: () {
+                                getActivityDetailsFromId(suggestions
+                                            .getAttractionSuggestions()[index]
+                                        ["id"])
+                                    .then((activity) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ActivityDetails(
+                                        activity: activity,
+                                      ),
+                                    ),
+                                  );
+                                });
+                              },
+                              child: AttractionsOption(
                                 attraction: suggestions
-                                    .getAttractionSuggestions()[index]);
+                                    .getAttractionSuggestions()[index],
+                              ),
+                            );
                           },
                         ),
                       ),
@@ -670,27 +709,27 @@ class QuickExploreBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // width: 80,
+      width: 90,
       child: Column(
         children: [
           Container(
             height: 55,
             width: 55,
             decoration: BoxDecoration(
-              color: color,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.2),
+                  color: Colors.grey.withOpacity(0.5),
                   blurRadius: 10,
-                  offset: Offset(5, 5),
+                  offset: Offset(0, 0),
                 ),
               ],
             ),
             child: Center(
               child: FaIcon(
                 icon,
-                color: Colors.white,
+                color: color,
               ),
             ),
           ),
@@ -716,6 +755,50 @@ class ExploreSearchBar extends StatefulWidget {
 
 class ExploreSearchBarState extends State<ExploreSearchBar> {
   TextEditingController typeAheadController = TextEditingController();
+
+  void _openSuggestionPage(Map suggestion) {
+    if (suggestion["type"] == "destination") {
+      getCityDetailsFromId(suggestion["suggestion"]["id"]).then((details) {
+        Navigator.pop(context);
+        Map cityDetails = details;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailsPage(
+              cityDetails: cityDetails,
+              quickView: false,
+            ),
+          ),
+        );
+      });
+    } else if (suggestion["type"] == "hotel") {
+      getHotelDetailsFromId(suggestion["suggestion"]["id"]).then((details) {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AccommodationDetails(
+              details: details,
+              quickView: true,
+            ),
+          ),
+        );
+      });
+    } else if (suggestion["type"] == "attraction") {
+      getActivityDetailsFromId(suggestion["suggestion"]["id"]).then((activity) {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ActivityDetails(
+              activity: activity,
+            ),
+          ),
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var parser = EmojiParser();
@@ -775,73 +858,127 @@ class ExploreSearchBarState extends State<ExploreSearchBar> {
                   getImmediateSuggestions: true,
                   suggestionsBoxController: CupertinoSuggestionsBoxController(),
                   itemBuilder: (context, suggestion) {
-                    return Padding(
-                      padding: EdgeInsets.only(
-                          left: 30, right: 20, top: 20, bottom: 20),
-                      child: Row(
-                        children: <Widget>[
-                          suggestion["type"] == "destination"
-                              ? Text(
-                                  parser
-                                      .get("flag-" +
-                                          suggestion["suggestion"]
-                                                  ["countryCode"]
-                                              .toLowerCase())
-                                      .code,
-                                  style: Theme.of(context).textTheme.headline4,
-                                )
-                              : suggestion["type"] == "attraction"
-                                  ? CachedNetworkImage(
-                                      imageUrl: suggestion["suggestion"]
-                                              ["cat_icon"] +
-                                          "64.png",
-                                      width: 35,
-                                      height: 35,
-                                      color: Colors.black,
-                                    )
-                                  : Icon(
-                                      Icons.hotel,
-                                      size: 30,
-                                    ),
-                          Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                  left: suggestion["type"] == "attraction"
-                                      ? 20
-                                      : 25),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    suggestion["suggestion"]["name"],
+                    return GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return LoadingIndicator();
+                          },
+                        );
+                        _openSuggestionPage(suggestion);
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            left: 30, right: 20, top: 20, bottom: 20),
+                        child: Row(
+                          children: <Widget>[
+                            suggestion["type"] == "destination"
+                                ? Text(
+                                    parser
+                                        .get("flag-" +
+                                            suggestion["suggestion"]
+                                                    ["countryCode"]
+                                                .toLowerCase())
+                                        .code,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headline4
+                                        .copyWith(fontSize: 50),
+                                  )
+                                : suggestion["type"] == "attraction"
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(15),
+                                        child: Container(
+                                          width: 50,
+                                          height: 50,
+                                          child: CachedNetworkImage(
+                                            // imageUrl: suggestion["suggestion"]
+                                            //         ["cat_icon"] +
+                                            //     "64.png",
+                                            imageUrl: suggestion["suggestion"]
+                                                ["image"],
+                                            fit: BoxFit.cover,
+                                            // color: Colors.black,
+                                          ),
+                                        ),
+                                      )
+                                    : ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Container(
+                                          width: 50,
+                                          height: 50,
+                                          child: CachedNetworkImage(
+                                            // imageUrl: suggestion["suggestion"]
+                                            //         ["cat_icon"] +
+                                            //     "64.png",
+                                            imageUrl: suggestion["suggestion"]
+                                                ["image"],
+                                            fit: BoxFit.cover,
+                                            // color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: suggestion["type"] == "attraction"
+                                        ? 20
+                                        : 25),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      suggestion["suggestion"]["name"],
 
-                                    style:
-                                        Theme.of(context).textTheme.bodyText1,
-                                    // overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 5),
-                                    child: Text(
-                                      suggestion["type"] == "destination"
-                                          ? suggestion["suggestion"]
-                                              ["countryName"]
-                                          : parser
-                                                  .get("flag-" +
-                                                      suggestion["suggestion"]
-                                                              ["countryCode"]
-                                                          .toLowerCase())
-                                                  .code +
-                                              " " +
-                                              suggestion["suggestion"]["city"],
                                       style:
-                                          Theme.of(context).textTheme.bodyText2,
+                                          Theme.of(context).textTheme.bodyText1,
+                                      // overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                ],
+                                    Padding(
+                                      padding: EdgeInsets.only(top: 5),
+                                      child: Text(
+                                        suggestion["type"] == "destination"
+                                            ? suggestion["suggestion"]
+                                                ["countryName"]
+                                            : suggestion["type"] == "hotel"
+                                                ? "Hotel in " +
+                                                    suggestion["suggestion"]
+                                                        ["city"] +
+                                                    " " +
+                                                    parser
+                                                        .get("flag-" +
+                                                            suggestion["suggestion"]
+                                                                    [
+                                                                    "countryCode"]
+                                                                .toLowerCase())
+                                                        .code
+                                                : suggestion["suggestion"]
+                                                        ["cat_name"] +
+                                                    " in " +
+                                                    suggestion["suggestion"]
+                                                        ["city"] +
+                                                    " " +
+                                                    parser
+                                                        .get("flag-" +
+                                                            suggestion["suggestion"]
+                                                                    [
+                                                                    "countryCode"]
+                                                                .toLowerCase())
+                                                        .code,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyText2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -991,19 +1128,15 @@ class RandomHolidayButton extends StatelessWidget {
             builder: (BuildContext context) {
               return LoadingIndicator();
             });
-        Preferences prefs = prefsConfig[0];
-        prefs.constraints.removeWhere((c) => c.property == "departure_date");
-        prefs.constraints.removeWhere((c) => c.property == "return_date");
-        prefs.constraints.removeWhere((c) => c.property == "destination");
-        prefs.constraints.add(Constraint("departure_date", "2020-08-27"));
-        prefs.constraints.add(Constraint("return_date", "2020-08-30"));
-        getHoliday(prefs).then((holiday) {
-          print(holiday);
+        getRandomDestination().then((details) {
           Navigator.pop(context);
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ResultsPageRoute(holiday, prefs).page(),
+              builder: (context) => DetailsPage(
+                cityDetails: details,
+                quickView: false,
+              ),
             ),
           );
         }).catchError((e) {

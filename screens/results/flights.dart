@@ -64,40 +64,50 @@ class FlightsScreenState extends State<FlightsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        centerTitle: false,
         elevation: 0,
-        shape: ContinuousRectangleBorder(
-          side: BorderSide(
-            color: CustomColors.lightGrey,
-            width: 4,
-          ),
-        ),
-        title: Column(
-          children: [
-            Text(
-              'Flights',
-              style: Theme.of(context).textTheme.headline3,
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 5, bottom: 5),
-              child: Text(
-                shownFlights.length.toString() + " options",
-                style: Theme.of(context).textTheme.headline1,
+        toolbarHeight: kToolbarHeight + 20,
+        // shape: ContinuousRectangleBorder(
+        //   side: BorderSide(
+        //     color: CustomColors.lightGrey,
+        //     width: 4,
+        //   ),
+        // ),
+        title: Padding(
+          padding: EdgeInsets.only(left: 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Flights',
+                style: Theme.of(context)
+                    .textTheme
+                    .headline4
+                    .copyWith(color: Theme.of(context).primaryColor),
               ),
-            ),
-          ],
-        ),
-        leading: Padding(
-          padding: EdgeInsets.only(left: 10),
-          child: IconButton(
-            icon: Icon(Icons.close),
-            color: Theme.of(context).primaryColor,
-            iconSize: 30,
-            onPressed: () {
-              Navigator.pop(context);
-            },
+              Padding(
+                padding: EdgeInsets.only(top: 5),
+                child: Text(
+                  shownFlights.length.toString() + " options",
+                  style: Theme.of(context).textTheme.headline1,
+                ),
+              ),
+            ],
           ),
         ),
+        // leading: Padding(
+        //   padding: EdgeInsets.only(left: 10),
+        //   child: IconButton(
+        //     icon: Icon(Icons.close),
+        //     color: Theme.of(context).primaryColor,
+        //     iconSize: 30,
+        //     onPressed: () {
+        //       Navigator.pop(context);
+        //     },
+        //   ),
+        // ),
         actions: <Widget>[
           Padding(
             padding: EdgeInsets.only(right: 10),

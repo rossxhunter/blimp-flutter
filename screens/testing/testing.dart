@@ -1,4 +1,4 @@
-import 'package:blimp/screens/holidayItineraryEvaluation.dart';
+import 'package:blimp/screens/testing/holidayItineraryEvaluation.dart';
 import 'package:blimp/services/clicks.dart';
 import 'package:blimp/services/http.dart';
 import 'package:blimp/services/suggestions.dart';

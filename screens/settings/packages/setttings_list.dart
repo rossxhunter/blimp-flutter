@@ -1,4 +1,4 @@
-import 'package:blimp/screens/settings/settings_section.dart';
+import 'package:blimp/screens/settings/packages/settings_section.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:flutter/material.dart';
 

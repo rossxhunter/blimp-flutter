@@ -1,16 +1,25 @@
+import 'package:after_layout/after_layout.dart';
 import 'package:async/async.dart';
 import 'package:blimp/screens/explore.dart';
 import 'package:blimp/screens/search.dart';
-import 'package:blimp/screens/settings.dart';
-import 'package:blimp/screens/testing.dart';
+import 'package:blimp/screens/settings/settings.dart';
+import 'package:blimp/screens/testing/testing.dart';
 import 'package:blimp/screens/user/trips.dart';
 import 'package:blimp/screens/user/user.dart';
 import 'package:blimp/services/suggestions.dart';
+import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/buttons.dart';
+import 'package:blimp/widgets/loading.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:introduction_screen/introduction_screen.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stripe_payment/stripe_payment.dart';
 
 void main() => runApp(BlimpApp());
 
@@ -43,7 +52,7 @@ class ErrorScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "An error has occured 😢",
+              "Something went wrong 😢",
               textDirection: TextDirection.ltr,
               style: Theme.of(context)
                   .textTheme
@@ -85,13 +94,9 @@ class LoadingDataScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: Center(
-        child: Text(
-          'Loading App Data...',
-          textDirection: TextDirection.ltr,
-          style: Theme.of(context)
-              .textTheme
-              .headline3
-              .copyWith(color: Colors.white),
+        child: SpinKitDoubleBounce(
+          color: Colors.white,
+          size: 60,
         ),
       ),
     );
@@ -112,6 +117,12 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
     super.initState();
 
     _future = suggestions.getSuggestions();
+    StripePayment.setOptions(
+      StripeOptions(
+        publishableKey: 'pk_test_K12DQ53LJmA1a3iVswAArWMw00IU5SbUD1',
+        merchantId: 'ross98hunter@gmail.com',
+      ),
+    );
   }
 
   void tryAgain() {
@@ -124,6 +135,7 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Blimp',
+      debugShowCheckedModeBanner: false,
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()], //
       theme: ThemeData(
@@ -188,9 +200,388 @@ class BlimpMaterialAppState extends State<BlimpMaterialApp> {
               if (snapshot.hasError)
                 return ErrorScreen(callback: tryAgain);
               else
-                return BlimpScaffold();
+                return Splash();
           }
         },
+      ),
+    );
+  }
+}
+
+class Splash extends StatefulWidget {
+  @override
+  SplashState createState() => new SplashState();
+}
+
+class SplashState extends State<Splash> with AfterLayoutMixin<Splash> {
+  Future checkFirstSeen() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool _seen = (prefs.getBool('seen') ?? false);
+
+    if (_seen) {
+      Navigator.of(context).pushReplacement(
+          new MaterialPageRoute(builder: (context) => BlimpScaffold()));
+    } else {
+      await prefs.setBool('seen', true);
+      Navigator.of(context).pushReplacement(
+          new MaterialPageRoute(builder: (context) => IntroScreen()));
+    }
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) => checkFirstSeen();
+
+  @override
+  Widget build(BuildContext context) {
+    return LoadingDataScreen();
+  }
+}
+
+class IntroScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final introScreenKey = GlobalKey<IntroductionScreenState>();
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Image.asset(
+              "assets/images/logowithtext.png",
+              height: 80,
+            ),
+            Expanded(
+              child: IntroductionScreen(
+                key: introScreenKey,
+                pages: [
+                  PageViewModel(
+                    title: "Welcome to Blimp",
+                    body: "Find your next adventure, without the hassle",
+                    image: Center(
+                      child: Container(
+                          height: 200,
+                          width: 200,
+                          decoration: BoxDecoration(
+                            // border: Border.all(width: 2, color: Colors.grey),
+                            shape: BoxShape.circle,
+                            color: CustomColors.lightGrey,
+                          ),
+                          child: Image.asset(
+                            "assets/icons/location.png",
+                            width: 80,
+                          )),
+                    ),
+                    footer: Padding(
+                      padding: EdgeInsets.only(left: 20, right: 20),
+                      child: AnimatedButton(
+                        callback: () {
+                          introScreenKey.currentState.next();
+                        },
+                        child: BlimpClassicButton(
+                          text: "Let's Go!",
+                          primary: true,
+                        ),
+                      ),
+                    ),
+                    decoration: PageDecoration(
+                      titleTextStyle: Theme.of(context).textTheme.headline4,
+                      bodyTextStyle: Theme.of(context)
+                          .textTheme
+                          .headline2
+                          .copyWith(color: Colors.black54),
+                    ),
+                  ),
+                  PageViewModel(
+                    title: "Flights, Hotels, Activities",
+                    body: "Search and book 1000s of available holiday products",
+                    image: Center(
+                      child: Container(
+                        height: 200,
+                        width: 200,
+                        decoration: BoxDecoration(
+                          // border: Border.all(width: 2, color: Colors.grey),
+                          shape: BoxShape.circle,
+                          color: CustomColors.lightGrey,
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            "assets/icons/plane-tickets.png",
+                            width: 120,
+                            height: 120,
+                            // fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    decoration: PageDecoration(
+                      titleTextStyle: Theme.of(context).textTheme.headline4,
+                      bodyTextStyle: Theme.of(context)
+                          .textTheme
+                          .headline2
+                          .copyWith(color: Colors.black54),
+                    ),
+                  ),
+                  PageViewModel(
+                    title: "Holiday planning, but easy",
+                    body:
+                        "Powerful holiday planning tools make the process super easy. Automatic selection, itinerary planning and Facebook integration.",
+                    image: Center(
+                      child: Container(
+                        height: 200,
+                        width: 200,
+                        decoration: BoxDecoration(
+                          // border: Border.all(width: 2, color: Colors.grey),
+                          shape: BoxShape.circle,
+                          color: CustomColors.lightGrey,
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            "assets/icons/006-magic-wand-3.png",
+                            width: 120,
+                            height: 120,
+                          ),
+                        ),
+                      ),
+                    ),
+                    decoration: PageDecoration(
+                      titleTextStyle: Theme.of(context).textTheme.headline4,
+                      bodyTextStyle: Theme.of(context)
+                          .textTheme
+                          .headline2
+                          .copyWith(color: Colors.black54),
+                    ),
+                  ),
+                  PageViewModel(
+                    title: "Travel to help the world",
+                    body:
+                        "10% of Blimp's profits go direcly to charitable organisations across the world",
+                    image: Center(
+                      child: Container(
+                        height: 200,
+                        width: 200,
+                        decoration: BoxDecoration(
+                          // border: Border.all(width: 2, color: Colors.grey),
+                          shape: BoxShape.circle,
+                          color: CustomColors.lightGrey,
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            "assets/icons/like.png",
+                            width: 120,
+                            height: 120,
+                          ),
+                        ),
+                      ),
+                    ),
+                    decoration: PageDecoration(
+                      titleTextStyle: Theme.of(context).textTheme.headline4,
+                      bodyTextStyle: Theme.of(context)
+                          .textTheme
+                          .headline2
+                          .copyWith(color: Colors.black54),
+                    ),
+                  ),
+                  // PageViewModel(
+                  //   title: "Stay in the loop",
+                  //   body:
+                  //       "We'll keep you updated with price drops and information about your bookings",
+                  //   image: Center(
+                  //     child: Container(
+                  //       height: 200,
+                  //       width: 200,
+                  //       decoration: BoxDecoration(
+                  //         // border: Border.all(width: 2, color: Colors.grey),
+                  //         shape: BoxShape.circle,
+                  //         color: CustomColors.lightGrey,
+                  //       ),
+                  //       child: Icon(
+                  //         FontAwesomeIcons.bell,
+                  //         color: Theme.of(context).primaryColor,
+                  //         size: 80,
+                  //       ),
+                  //     ),
+                  //   ),
+                  //   footer: Padding(
+                  //     padding: EdgeInsets.only(left: 20, right: 20),
+                  //     child: Column(
+                  //       children: [
+                  //         BlimpClassicButton(
+                  //           text: "Enable Notifications",
+                  //           primary: true,
+                  //         ),
+                  //         Padding(
+                  //           padding: EdgeInsets.only(top: 15),
+                  //           child: Text(
+                  //             "NOT NOW",
+                  //             style: Theme.of(context)
+                  //                 .textTheme
+                  //                 .headline2
+                  //                 .copyWith(
+                  //                   color: Theme.of(context).primaryColor,
+                  //                 ),
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  //   decoration: PageDecoration(
+                  //     titleTextStyle: Theme.of(context).textTheme.headline4,
+                  //     bodyTextStyle: Theme.of(context)
+                  //         .textTheme
+                  //         .headline2
+                  //         .copyWith(color: Colors.black54),
+                  //   ),
+                  // ),
+                  PageViewModel(
+                    title: "The World is Yours",
+                    body:
+                        "Create an account to take advantage of all the features",
+                    image: Center(
+                      child: Container(
+                        height: 200,
+                        width: 200,
+                        decoration: BoxDecoration(
+                          // border: Border.all(width: 2, color: Colors.grey),
+                          shape: BoxShape.circle,
+                          color: CustomColors.lightGrey,
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            "assets/icons/018-travel.png",
+                            // width: 120,
+                            // height: 120,
+                          ),
+                        ),
+                      ),
+                    ),
+                    footer: AnimatedButton(
+                      callback: () {
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.bottomToTop,
+                            child: UserPage(intro: true),
+                          ),
+                        ).then((value) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BlimpScaffold(),
+                            ),
+                          );
+                        });
+                      },
+                      child: BlimpClassicButton(
+                        text: "Create Account",
+                        primary: true,
+                      ),
+                    ),
+                    decoration: PageDecoration(
+                      titleTextStyle: Theme.of(context).textTheme.headline4,
+                      bodyTextStyle: Theme.of(context)
+                          .textTheme
+                          .headline2
+                          .copyWith(color: Colors.black54),
+                    ),
+                  ),
+                ],
+                onDone: () {
+                  // When done button is press
+                },
+                // onSkip: () {
+                //   // You can also override onSkip callback
+                // },
+                showSkipButton: false,
+                skip: Text(
+                  "Skip",
+                  style: Theme.of(context).textTheme.headline1,
+                ),
+                next: Icon(
+                  FontAwesomeIcons.arrowRight,
+                  size: 20,
+                  color: Colors.grey,
+                ),
+                done: Text(
+                  "Skip",
+                  style: Theme.of(context).textTheme.headline1,
+                ),
+                dotsDecorator: DotsDecorator(
+                    size: const Size.square(10.0),
+                    activeSize: const Size(20.0, 10.0),
+                    activeColor: Theme.of(context).accentColor,
+                    color: Colors.black26,
+                    spacing: const EdgeInsets.symmetric(horizontal: 3.0),
+                    activeShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25.0))),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ImageFade extends StatelessWidget {
+  final Widget image;
+  ImageFade({this.image});
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (rect) {
+        return LinearGradient(
+          begin: Alignment.center,
+          end: Alignment.topCenter,
+          colors: [Colors.black, Colors.transparent],
+        ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
+      },
+      blendMode: BlendMode.dstIn,
+      child: ShaderMask(
+        shaderCallback: (rect) {
+          return LinearGradient(
+            begin: Alignment.center,
+            end: Alignment.bottomCenter,
+            colors: [Colors.black, Colors.transparent],
+          ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
+        },
+        blendMode: BlendMode.dstIn,
+        child: image,
+      ),
+    );
+  }
+}
+
+class BlimpClassicButton extends StatelessWidget {
+  final String text;
+  final bool primary;
+  BlimpClassicButton({this.text, this.primary});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: primary ? Theme.of(context).primaryColor : Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        border: !primary
+            ? Border.all(width: 3, color: Theme.of(context).primaryColor)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withOpacity(0.2),
+            blurRadius: 10.0,
+            offset: Offset(0, 10),
+          )
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Center(
+          child: Text(
+            text,
+            style: Theme.of(context)
+                .textTheme
+                .button
+                .copyWith(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ),
       ),
     );
   }

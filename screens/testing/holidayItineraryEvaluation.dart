@@ -167,7 +167,7 @@ class ItineraryOptionState extends State<ItineraryOption> {
                   Navigator.push(
                     context,
                     PageTransition(
-                      type: PageTransitionType.downToUp,
+                      type: PageTransitionType.bottomToTop,
                       child: ChangeActivitiesScreen(
                         itinerary: itinerary,
                         day: _currentIndex,

@@ -60,6 +60,20 @@ class Suggestions {
     }
   }
 
+  List getCitySuggestions(String query) {
+    List sug = [];
+    destinationSuggestions.forEach((destSug) {
+      if (destSug["type"] == "city") {
+        if (destSug["cityName"].contains(RegExp(query, caseSensitive: false)) ||
+            destSug["countryName"]
+                .contains(RegExp(query, caseSensitive: false))) {
+          sug.add(destSug);
+        }
+      }
+    });
+    return sug;
+  }
+
   List getDestinationSuggestionsForQuery(
       String query, String point, int originId, int destId) {
     List sug = [];
@@ -187,5 +201,9 @@ class Suggestions {
 
   List getCountrySuggestions() {
     return countrySuggestions;
+  }
+
+  List getActivitySuggestions() {
+    return activitySuggestions;
   }
 }

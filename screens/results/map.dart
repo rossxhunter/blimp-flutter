@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:blimp/screens/activityDetails.dart';
+import 'package:blimp/screens/details/activityDetails.dart';
 import 'package:blimp/styles/colors.dart';
 import 'package:blimp/widgets/buttons.dart';
 import 'package:blimp/widgets/map.dart';
@@ -302,7 +302,7 @@ class BottomSheetDetails extends StatelessWidget {
           children: [
             SingleChildScrollView(
               physics: ClampingScrollPhysics(),
-              child: ActivityDetailsOption(
+              child: ActivityDetailsOptionSnapshot(
                 activity: details,
               ),
             ),

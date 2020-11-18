@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:blimp/screens/settings/cupertino_settings_section.dart';
-import 'package:blimp/screens/settings/settings_tile.dart';
+import 'package:blimp/screens/settings/packages/cupertino_settings_section.dart';
+import 'package:blimp/screens/settings/packages/settings_tile.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';

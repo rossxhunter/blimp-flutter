@@ -1,4 +1,4 @@
-import 'package:blimp/screens/settings/settings_tile.dart';
+import 'package:blimp/screens/settings/packages/settings_tile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 

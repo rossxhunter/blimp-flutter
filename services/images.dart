@@ -28,7 +28,7 @@ void preloadImages(BuildContext context, List allAccommodation, Map itinerary,
 
   for (List day in itinerary.values) {
     for (Map activity in day) {
-      String activityURL = activity["bestPhoto"];
+      String activityURL = activity["images"][0];
       if (activityURL != null) {
         urls.add(activityURL);
       }

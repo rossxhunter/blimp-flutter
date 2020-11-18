@@ -14,6 +14,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:recase/recase.dart';
 
@@ -21,7 +22,9 @@ class AccommodationDetails extends StatefulWidget {
   final Map details;
   final int index;
   final Function callback;
-  AccommodationDetails({this.details, this.index, this.callback});
+  final bool quickView;
+  AccommodationDetails(
+      {this.details, this.index, this.callback, this.quickView});
   @override
   State<StatefulWidget> createState() {
     return AccommodationDetailsState(details: details);
@@ -115,7 +118,7 @@ class AccommodationDetailsState extends State<AccommodationDetails> {
                   //       ? BorderSide(color: CustomColors.lightGrey, width: 4)
                   //       : BorderSide.none,
                   // ),
-                  titleSpacing: 0.0,
+                  // titleSpacing: 0.0,
                   leading: _showTitle
                       ? Padding(
                           padding: EdgeInsets.only(left: 10, bottom: 10),
@@ -148,7 +151,9 @@ class AccommodationDetailsState extends State<AccommodationDetails> {
 
                   backgroundColor: Colors.white,
                   stretch: true,
-                  elevation: 15,
+                  elevation: 0,
+                  centerTitle: false,
+                  automaticallyImplyLeading: false,
                   pinned: true,
                   floating: false,
                   onStretchTrigger: () {
@@ -164,17 +169,23 @@ class AccommodationDetailsState extends State<AccommodationDetails> {
                           StretchMode.zoomBackground,
                           StretchMode.fadeTitle,
                         ],
-                        centerTitle: true,
+                        centerTitle: false,
                         title: _showTitle
                             ? Padding(
                                 padding: EdgeInsets.only(
-                                    top: 0, left: 50, right: 10, bottom: 0),
+                                    top: 0, left: 0, right: 20, bottom: 0),
                                 child: AutoSizeText(
                                   ReCase(details["name"]).titleCase,
                                   maxLines: 1,
+                                  // textAlign: TextAlign.center,
                                   overflow: TextOverflow.ellipsis,
-                                  minFontSize: 20,
-                                  style: Theme.of(context).textTheme.headline3,
+                                  minFontSize: 30,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headline4
+                                      .copyWith(
+                                          color:
+                                              Theme.of(context).primaryColor),
                                 ),
                               )
                             : null,
@@ -202,13 +213,12 @@ class AccommodationDetailsState extends State<AccommodationDetails> {
                                         (BuildContext context, int index) {
                                       return CachedNetworkImage(
                                         fit: BoxFit.cover,
-                                        imageUrl: details["images"][index],
+                                        imageUrl: details["images"][index]
+                                            ["url"],
                                         errorWidget: (context, url, error) =>
                                             Image(
-                                          image: NetworkImage(details["images"]
-                                                  [index] +
-                                              "G.JPEG"),
-                                          fit: BoxFit.cover,
+                                          image: AssetImage(
+                                              "assets/images/mountain.jpg"),
                                         ),
                                         placeholder: (context, url) =>
                                             Container(
@@ -259,6 +269,7 @@ class AccommodationDetailsState extends State<AccommodationDetails> {
                             stars: details["stars"],
                             distance: details["hotelDistance"],
                             address: details["address"],
+                            quickView: widget.quickView,
                           ),
                           details["description"] != null
                               ? Padding(
@@ -271,12 +282,17 @@ class AccommodationDetailsState extends State<AccommodationDetails> {
                                   width: 0,
                                   height: 0,
                                 ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 20),
-                            child: HotelRatingsSection(
-                              ratings: details["rating"],
-                            ),
-                          ),
+                          details["rating"] != null
+                              ? Padding(
+                                  padding: EdgeInsets.only(top: 20),
+                                  child: HotelRatingsSection(
+                                    ratings: details["rating"],
+                                  ),
+                                )
+                              : Container(
+                                  width: 0,
+                                  height: 0,
+                                ),
                           Padding(
                             padding: EdgeInsets.only(top: 20),
                             child: AmenitiesSection(
@@ -300,15 +316,20 @@ class AccommodationDetailsState extends State<AccommodationDetails> {
               ],
             ),
           ),
-          Positioned.fill(
-            top: null,
-            child: PriceAndRoomsBar(
-              price: details["selectedOffer"]["price"],
-              offers: details["offers"],
-              selectedOfferId: details["selectedOffer"]["id"],
-              callback: updateRoom,
-            ),
-          ),
+          widget.quickView == null || !widget.quickView
+              ? Positioned.fill(
+                  top: null,
+                  child: PriceAndRoomsBar(
+                    price: details["selectedOffer"]["price"],
+                    offers: details["offers"],
+                    selectedOfferId: details["selectedOffer"]["id"],
+                    callback: updateRoom,
+                  ),
+                )
+              : Container(
+                  height: 0,
+                  width: 0,
+                ),
         ],
       ),
     );
@@ -344,7 +365,9 @@ class HotelRatingsSection extends StatelessWidget {
                     return Padding(
                       padding: EdgeInsets.only(bottom: 10),
                       child: HotelRatingBar(
-                          ratingType: r[index][0], rating: r[index][1]),
+                        ratingType: r[index][0],
+                        rating: r[index][1],
+                      ),
                     );
                   },
                   itemCount: r.length,
@@ -364,32 +387,71 @@ class HotelRatingBar extends StatelessWidget {
   final String ratingType;
   final int rating;
   HotelRatingBar({this.ratingType, this.rating});
+
+  Color _getProgressColor() {
+    if (rating > 90) {
+      return Colors.green;
+    } else if (rating > 80) {
+      return Colors.lightGreen;
+    } else {
+      return Colors.yellow;
+    }
+  }
+
+  Map ratingIcons = {
+    "catering": FontAwesomeIcons.utensils,
+    "facilities": FontAwesomeIcons.hotel,
+    "internet": FontAwesomeIcons.wifi,
+    "location": FontAwesomeIcons.mapMarkerAlt,
+    "overall": FontAwesomeIcons.solidStar,
+    "points_of_interest": FontAwesomeIcons.mapMarkedAlt,
+    "room_comforts": FontAwesomeIcons.bed,
+    "service": FontAwesomeIcons.conciergeBell,
+    "room_comforts": FontAwesomeIcons.tv,
+    "sleep_quality": FontAwesomeIcons.bed,
+    "staff": FontAwesomeIcons.userTie,
+    "swimming_pool": FontAwesomeIcons.swimmingPool,
+    "value_for_money": FontAwesomeIcons.coins,
+  };
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              ReCase(ratingType).titleCase,
-              style: Theme.of(context).textTheme.headline2,
-            ),
-            Padding(
-              padding: EdgeInsets.only(right: 10),
-              child: Text(
-                rating.toString(),
-                style: Theme.of(context).textTheme.headline2,
-              ),
-            ),
-          ],
+        Icon(
+          ratingIcons[ratingType] ?? FontAwesomeIcons.star,
+          color: Theme.of(context).primaryColor,
+          size: 24,
         ),
-        Padding(
-          padding: EdgeInsets.only(top: 5),
-          child: LinearPercentIndicator(
-            percent: rating / 100,
-            lineHeight: 10,
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: 5),
+                  child: AutoSizeText(
+                    ReCase(ratingType).titleCase,
+                    style: Theme.of(context).textTheme.headline2,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                  ),
+                ),
+                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                LinearPercentIndicator(
+                  percent: rating / 100,
+                  // lineWidth: 10,
+                  // radius: 50,
+                  // circularStrokeCap: CircularStrokeCap.round,
+                  trailing: Text(
+                    rating.toString(),
+                    style: Theme.of(context).textTheme.headline1,
+                  ),
+                  progressColor: _getProgressColor(),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -420,9 +482,6 @@ class HotelLocationSection extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  // decoration: BoxDecoration(
-                  //   borderRadius: BorderRadius.circular(20),
-                  // ),
                   height: 300,
                   child: GoogleMap(
                     mapType: MapType.normal,
@@ -547,7 +606,7 @@ class PriceAndRoomsBar extends StatelessWidget {
                     Navigator.push(
                       context,
                       PageTransition(
-                        type: PageTransitionType.downToUp,
+                        type: PageTransitionType.bottomToTop,
                         child: AccommodationRooms(
                           offers: offers,
                           selectedOption: selectedOfferId,
@@ -611,13 +670,16 @@ class AmenitiesSection extends StatelessWidget {
                 removeTop: true,
                 child: GridView.builder(
                   itemCount: amenities.length,
-                  itemBuilder: (context, index) {
-                    return AmenityBox(amenity: amenities[index]);
-                  },
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 2,
+                    childAspectRatio: 4,
                   ),
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: AmenityBox(amenity: amenities[index]),
+                    );
+                  },
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
                 ),
@@ -651,19 +713,24 @@ class AmenityBox extends StatelessWidget {
     "Fitness Center": FontAwesomeIcons.dumbbell,
     "Room Service": FontAwesomeIcons.conciergeBell,
     "Wifi in Room": FontAwesomeIcons.wifi,
+    "Baby Sitting": FontAwesomeIcons.baby,
+    "Guarded Parking": FontAwesomeIcons.parking,
+    "Kitchen": FontAwesomeIcons.utensils,
+    "Valet Parking": FontAwesomeIcons.car,
+    "Pets Allowed": FontAwesomeIcons.dog,
   };
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
         Icon(
           amenityIcon[amenity],
-          size: 30,
+          size: 24,
           color: Theme.of(context).primaryColor,
         ),
         Padding(
-          padding: EdgeInsets.only(top: 10),
+          padding: EdgeInsets.only(top: 0, left: 15),
           child: Text(
             amenity,
             style: Theme.of(context).textTheme.headline2,
@@ -679,7 +746,9 @@ class AccommodationInfo extends StatelessWidget {
   final int stars;
   final Map distance;
   final Map address;
-  AccommodationInfo({this.name, this.stars, this.distance, this.address});
+  final bool quickView;
+  AccommodationInfo(
+      {this.name, this.stars, this.distance, this.address, this.quickView});
 
   String _formatStreetAddress(String streetAddress) {
     String formattedAddress = "";
@@ -725,28 +794,33 @@ class AccommodationInfo extends StatelessWidget {
                 ],
               ),
             ),
-            Padding(
-              padding: EdgeInsets.only(top: 10),
-              child: Row(
-                children: [
-                  Icon(
-                    FontAwesomeIcons.mapMarkerAlt,
-                    size: 20,
-                    color: Colors.blue,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      distance["distance"].toString() +
-                          " " +
-                          distance["distanceUnit"].toLowerCase() +
-                          " from center",
-                      style: Theme.of(context).textTheme.headline1,
+            quickView == null || !quickView
+                ? Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          FontAwesomeIcons.mapMarkerAlt,
+                          size: 20,
+                          color: Colors.blue,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Text(
+                            distance["distance"].toString() +
+                                " " +
+                                distance["distanceUnit"].toLowerCase() +
+                                " from center",
+                            style: Theme.of(context).textTheme.headline1,
+                          ),
+                        ),
+                      ],
                     ),
+                  )
+                : Container(
+                    width: 0,
+                    height: 0,
                   ),
-                ],
-              ),
-            ),
             Padding(
               padding: EdgeInsets.only(top: 10),
               child: Row(

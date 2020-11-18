@@ -69,10 +69,10 @@ class HotelOption extends StatelessWidget {
                             itemBuilder: (BuildContext context, int index) {
                               return CachedNetworkImage(
                                 fit: BoxFit.cover,
-                                imageUrl: hotelDetails["images"][index],
+                                imageUrl: hotelDetails["images"][index]["url"],
                                 errorWidget: (context, url, error) => Image(
-                                  image: NetworkImage(
-                                      hotelDetails["images"][index] + "G.JPEG"),
+                                  image:
+                                      AssetImage("assets/images/mountain.jpg"),
                                   fit: BoxFit.cover,
                                 ),
                               );
@@ -87,7 +87,9 @@ class HotelOption extends StatelessWidget {
                     top: 10,
                     child: hotelDetails["rating"] != null
                         ? RatingBox(
-                            rating: hotelDetails["rating"]["overall"] / 10)
+                            rating: hotelDetails["rating"]["overall"] / 10,
+                            max: 10,
+                          )
                         : Container(
                             height: 0,
                             width: 0,
@@ -140,16 +142,17 @@ class HotelOption extends StatelessWidget {
 
 class RatingBox extends StatelessWidget {
   final double rating;
-  RatingBox({this.rating});
+  final int max;
+  RatingBox({this.rating, this.max});
 
   Color _getRatingColor() {
-    if (rating >= 9) {
+    if (rating >= 0.9 * max) {
       return Color.fromRGBO(87, 227, 44, 0.9);
-    } else if (rating >= 8) {
+    } else if (rating >= 0.8 * max) {
       return Color.fromRGBO(183, 221, 41, 0.9);
-    } else if (rating >= 7) {
+    } else if (rating >= 0.7 * max) {
       return Color.fromRGBO(255, 226, 52, 1);
-    } else if (rating >= 6) {
+    } else if (rating >= 0.6 * max) {
       return Color.fromRGBO(255, 165, 52, 0.9);
     } else {
       return Color.fromRGBO(255, 69, 69, 0.9);

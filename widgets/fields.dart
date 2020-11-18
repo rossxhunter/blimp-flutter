@@ -346,28 +346,52 @@ class CustomCheckboxState extends State<CustomCheckbox> {
 }
 
 class CustomTextFormField extends StatelessWidget {
-  String initialValue;
-  String labelText;
-  IconData prefixIcon;
-  Function onSaved;
-  Function validator;
+  final String field;
+  final String initialValue;
+  final String labelText;
+  final bool obscureText;
+  final TextCapitalization textCapitalization;
+  final IconData prefixIcon;
+  final Widget suffixIcon;
+  final Color backgroundColor;
+  final Function onSaved;
+  final Function validator;
+  final TextInputType keyboardType;
+  final Function onTap;
+  final Function onChanged;
   CustomTextFormField({
+    this.field,
     this.initialValue,
     this.labelText,
     this.prefixIcon,
+    this.textCapitalization,
+    this.suffixIcon,
+    this.backgroundColor,
+    this.obscureText,
     this.onSaved,
+    this.keyboardType,
+    this.onTap,
     this.validator,
+    this.onChanged,
   });
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      autocorrect: false,
       initialValue: initialValue,
+      onTap: onTap,
+      keyboardType: keyboardType,
+      textCapitalization: textCapitalization ?? TextCapitalization.none,
+      obscureText: obscureText ?? false,
+      onChanged: onChanged,
+      style: Theme.of(context).textTheme.bodyText2,
       decoration: InputDecoration(
         labelText: labelText,
         prefixIcon: Icon(
           prefixIcon,
           size: 20,
         ),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.all(
             Radius.circular(15.0),
@@ -385,10 +409,10 @@ class CustomTextFormField extends StatelessWidget {
           borderSide: BorderSide(
             width: 1,
             style: BorderStyle.solid,
-            color: Colors.grey,
+            color: backgroundColor ?? CustomColors.lightGrey,
           ),
         ),
-        fillColor: Colors.white,
+        fillColor: backgroundColor ?? CustomColors.lightGrey,
         filled: true,
       ),
       onSaved: onSaved,
@@ -397,13 +421,78 @@ class CustomTextFormField extends StatelessWidget {
   }
 }
 
+class CustomTypeAheadField extends StatelessWidget {
+  final String field;
+  final TextEditingController controller;
+  final Function callback;
+  final Function suggestionsCallback;
+  final String placeholder;
+  final Function itemBuilder;
+  final double offset;
+  CustomTypeAheadField(
+      {this.field,
+      this.controller,
+      this.callback,
+      this.suggestionsCallback,
+      this.placeholder,
+      this.itemBuilder,
+      this.offset});
+
+  @override
+  Widget build(BuildContext context) {
+    var parser = EmojiParser();
+    return CupertinoTypeAheadField(
+      textFieldConfiguration: CupertinoTextFieldConfiguration(
+        onChanged: (var value) {},
+        maxLines: 1,
+        prefix: Padding(
+          padding: EdgeInsets.only(left: 10, right: 10),
+          child: Icon(FontAwesomeIcons.city, size: 20),
+        ),
+        placeholder: placeholder,
+        onTap: () {
+          controller.clear();
+        },
+        padding: EdgeInsets.only(left: 10, right: 10, top: 20, bottom: 20),
+        controller: controller,
+        autofocus: false,
+        style: Theme.of(context).textTheme.headline2,
+        decoration: BoxDecoration(
+          color: CustomColors.lightGrey,
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+      suggestionsCallback: suggestionsCallback,
+      suggestionsBoxDecoration: CupertinoSuggestionsBoxDecoration(
+        offsetX: offset,
+        borderRadius: BorderRadius.circular(15),
+        constraints:
+            BoxConstraints(minWidth: MediaQuery.of(context).size.width),
+      ),
+      hideOnLoading: true,
+      hideSuggestionsOnKeyboardHide: true,
+      hideOnEmpty: true,
+      hideOnError: true,
+      getImmediateSuggestions: true,
+      suggestionsBoxController: CupertinoSuggestionsBoxController(),
+      itemBuilder: itemBuilder,
+      onSuggestionSelected: (suggestion) {
+        this.controller.text = suggestion["cityName"];
+        // callback(suggestion);
+      },
+    );
+  }
+}
+
 class CustomDropdownButtonFormField extends StatelessWidget {
-  String initialValue;
-  String labelText;
-  IconData prefixIcon;
-  Function onSaved;
-  List items;
+  final String field;
+  final String initialValue;
+  final String labelText;
+  final IconData prefixIcon;
+  final Function onSaved;
+  final List items;
   CustomDropdownButtonFormField({
+    this.field,
     this.initialValue,
     this.labelText,
     this.prefixIcon,
@@ -416,6 +505,8 @@ class CustomDropdownButtonFormField extends StatelessWidget {
       isExpanded: true,
       value: initialValue,
       onSaved: onSaved,
+      isDense: false,
+      style: Theme.of(context).textTheme.bodyText2,
       decoration: InputDecoration(
         labelText: labelText,
         prefixIcon: Icon(
@@ -439,49 +530,15 @@ class CustomDropdownButtonFormField extends StatelessWidget {
           borderSide: BorderSide(
             width: 1,
             style: BorderStyle.solid,
-            color: Colors.grey,
+            color: CustomColors.lightGrey,
           ),
         ),
-        fillColor: Colors.white,
+        fillColor: CustomColors.lightGrey,
         filled: true,
       ),
       onChanged: (value) {},
-      items: _getItems(context),
+      items: items,
     );
-  }
-
-  List<DropdownMenuItem> _getItems(BuildContext context) {
-    var parser = EmojiParser();
-    List<DropdownMenuItem> dropdownItems = [];
-    for (Map item in items) {
-      dropdownItems.add(
-        DropdownMenuItem(
-          value: item["name"],
-          child: IntrinsicWidth(
-            child: Row(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  parser.get("flag-" + item["code"].toLowerCase()).code,
-                  style: Theme.of(context).textTheme.headline3,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      item["name"],
-                      maxLines: 2,
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    return dropdownItems;
   }
 }
 
@@ -505,4 +562,4 @@ class CustomField {
   });
 }
 
-enum CustomFieldType { text, dropdown }
+enum CustomFieldType { text, dropdown, typeAhead }

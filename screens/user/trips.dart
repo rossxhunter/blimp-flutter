@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 class TripsPage extends StatefulWidget {
   @override
@@ -18,17 +19,47 @@ class TripsPage extends StatefulWidget {
 }
 
 class TripsPageState extends State<TripsPage> {
+  int currentTripIndex;
+
+  List<String> tripTypes = ["Saved", "Upcoming", "Past"];
+
+  @override
+  void initState() {
+    currentTripIndex = 0;
+    super.initState();
+  }
+
+  void updateState(int index) {
+    currentTripIndex = index;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        centerTitle: false,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).primaryColor,
+        ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(
+            FontAwesomeIcons.arrowLeft,
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
         title: Text(
           "Trips",
           style: Theme.of(context)
               .textTheme
-              .headline3
-              .copyWith(color: Colors.white),
+              .headline4
+              .copyWith(color: Theme.of(context).primaryColor),
         ),
       ),
       body: SafeArea(
@@ -36,17 +67,49 @@ class TripsPageState extends State<TripsPage> {
           onTap: () {
             FocusScope.of(context).requestFocus(FocusNode());
           },
-          child: SingleChildScrollView(
-            // physics: AlwaysScrollableScrollPhysics(),
-            child: Container(
-              color: Colors.white,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 0,
-                  right: 0,
+          child: Padding(
+            padding: EdgeInsets.only(top: 20),
+            child: Column(
+              children: [
+                ToggleSwitch(
+                  minWidth: 300.0,
+                  cornerRadius: 20.0,
+                  activeBgColor: Theme.of(context).primaryColor,
+                  activeFgColor: Colors.white,
+                  inactiveBgColor: CustomColors.lightGrey,
+                  inactiveFgColor: Colors.grey,
+                  labels: tripTypes,
+                  initialLabelIndex: currentTripIndex,
+                  icons: [
+                    FontAwesomeIcons.heart,
+                    FontAwesomeIcons.ticketAlt,
+                    FontAwesomeIcons.solidClock
+                  ],
+                  onToggle: (index) {
+                    setState(() {
+                      currentTripIndex = index;
+                    });
+                  },
                 ),
-                child: TripsSection(),
-              ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20, bottom: 0),
+                    child: Container(
+                      color: Colors.white,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: 0,
+                          right: 0,
+                        ),
+                        child: TripsSection(
+                          type: tripTypes[currentTripIndex],
+                          key: Key("tripsection" + currentTripIndex.toString())
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -56,177 +119,55 @@ class TripsPageState extends State<TripsPage> {
 }
 
 class TripsSection extends StatefulWidget {
+  final String type;
+  final Key key;
+  TripsSection({this.type, this.key});
   @override
   State<StatefulWidget> createState() {
-    return TripsSectionState();
+    return TripsSectionState(type: type);
   }
 }
 
 class TripsSectionState extends State<TripsSection> {
+  final String type;
+  TripsSectionState({this.type});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(bottom: 30),
-          child: Container(
-            width: double.infinity,
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: 20,
-                    right: 20,
-                    top: 30,
-                    // bottom: 30,
-                  ),
-                  child: Text(
-                      currentUser["trips"]["saved"].length == 0
-                          ? "No Saved Trips"
-                          : "Saved Trips",
-                      style: Theme.of(context).textTheme.headline3),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 20),
-                  child: currentUser["trips"]["saved"].length == 0
-                      ? Container(
-                          height: 0,
-                          width: 0,
-                        )
-                      : Container(
-                          height: 300,
-                          child: ListView.builder(
-                            itemCount: currentUser["trips"]["saved"].length,
-                            scrollDirection: Axis.horizontal,
-                            physics: AlwaysScrollableScrollPhysics(),
-                            itemBuilder: (BuildContext itemContext, int index) {
-                              bool savedSelected = true;
-                              return Stack(
-                                children: [
-                                  TripOption(
-                                    trip: currentUser["trips"]["saved"][index],
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: AnimatedButton(
-                                      callback: () async {
-                                        currentUser["trips"]["saved"] =
-                                            await deleteHoliday(
-                                                currentUser["id"],
-                                                currentUser["trips"]["saved"]
-                                                    [index]["id"],
-                                                "saved");
-                                        setState(() {
-                                          savedSelected = false;
-                                        });
-                                        showSuccessToast(context,
-                                            "Removed from Saved Trips");
-                                      },
-                                      child: SaveTripButton(
-                                        selected: savedSelected,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                ),
-              ],
+    return ListView.builder(
+      itemCount: currentUser["trips"][type.toLowerCase()].length,
+      scrollDirection: Axis.vertical,
+      shrinkWrap: true,
+      physics: AlwaysScrollableScrollPhysics(),
+      itemBuilder: (BuildContext itemContext, int index) {
+        bool savedSelected = true;
+        return Stack(
+          children: [
+            TripOption(
+              trip: currentUser["trips"][type.toLowerCase()][index],
             ),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(bottom: 30),
-          child: Container(
-            width: double.infinity,
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: 20,
-                    right: 20,
-                    top: 0,
-                    // bottom: 30,
-                  ),
-                  child: Text(
-                      currentUser["trips"]["upcoming"].length == 0
-                          ? "No Upcoming Trips"
-                          : "Upcoming Trips",
-                      style: Theme.of(context).textTheme.headline3),
+            Positioned(
+              top: 0,
+              right: 20,
+              child: AnimatedButton(
+                callback: () async {
+                  currentUser["trips"][type.toLowerCase()] =
+                      await deleteHoliday(
+                          currentUser["id"],
+                          currentUser["trips"][type.toLowerCase()][index]["id"],
+                          type.toLowerCase());
+                  setState(() {
+                    savedSelected = false;
+                  });
+                  showSuccessToast(context, "Removed from $type Trips");
+                },
+                child: SaveTripButton(
+                  selected: savedSelected,
                 ),
-                Padding(
-                  padding: EdgeInsets.only(top: 20),
-                  child: currentUser["trips"]["upcoming"].length == 0
-                      ? Container(
-                          height: 0,
-                          width: 0,
-                        )
-                      : Container(
-                          height: 300,
-                          child: ListView.builder(
-                            itemCount: currentUser["trips"]["upcoming"].length,
-                            scrollDirection: Axis.horizontal,
-                            physics: BouncingScrollPhysics(),
-                            itemBuilder: (BuildContext context, int index) {
-                              return TripOption();
-                            },
-                          ),
-                        ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          color: Colors.white,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 0,
-                  // bottom: 30,
-                ),
-                child: Text(
-                    currentUser["trips"]["past"].length == 0
-                        ? "No Past Trips"
-                        : "Past Trips",
-                    style: Theme.of(context).textTheme.headline3),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: currentUser["trips"]["past"].length == 0
-                    ? Container(
-                        height: 0,
-                        width: 0,
-                      )
-                    : Container(
-                        height: 300,
-                        child: ListView.builder(
-                          itemCount: currentUser["trips"]["past"].length,
-                          scrollDirection: Axis.horizontal,
-                          physics: BouncingScrollPhysics(),
-                          itemBuilder: (BuildContext context, int index) {
-                            return TripOption();
-                          },
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -260,9 +201,8 @@ class TripOption extends StatelessWidget {
   Widget build(BuildContext context) {
     var parser = EmojiParser();
     return Padding(
-      padding: EdgeInsets.only(left: 20, bottom: 20),
+      padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
       child: Container(
-        width: 240,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
@@ -275,14 +215,14 @@ class TripOption extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 10),
+          padding: EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 20),
           child: Column(
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 // width: 170,
-                height: 180,
+                // height: 180,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                 ),

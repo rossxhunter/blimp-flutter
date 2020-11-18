@@ -19,7 +19,7 @@ class ReferralsPageState extends State<ReferralsPage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-      elevation: 0.0,
+      elevation: 10.0,
       // backgroundColor: Colors.transparent,
       child: Padding(
         padding: EdgeInsets.only(top: 30, left: 10, right: 10, bottom: 30),

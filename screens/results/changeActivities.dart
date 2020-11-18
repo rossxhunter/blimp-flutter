@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:blimp/model/preferences.dart';
 import 'package:blimp/screens/results/activitiesOptions.dart';
 import 'package:blimp/screens/explore.dart';
+import 'package:blimp/screens/results/browseActivities.dart';
 import 'package:blimp/screens/results/flights.dart';
 import 'package:blimp/screens/results/newActivity.dart';
 import 'package:blimp/screens/results/results.dart';
@@ -16,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dash/flutter_dash.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:popup_menu/popup_menu.dart';
 // import 'package:reorderables/reorderables.dart';
 
@@ -297,7 +299,10 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
               leading: Padding(
                 padding: EdgeInsets.only(left: 20),
                 child: IconButton(
-                  icon: Icon(Icons.close),
+                  icon: FaIcon(
+                    FontAwesomeIcons.times,
+                    size: 24,
+                  ),
                   color: Theme.of(context).primaryColor,
                   iconSize: 30,
                   onPressed: () {
@@ -330,16 +335,28 @@ class ChangeActivitiesScreenState extends State<ChangeActivitiesScreen>
                 Padding(
                   padding: EdgeInsets.only(right: 20),
                   child: IconButton(
-                    icon: Icon(Icons.add),
+                    icon: Icon(
+                      FontAwesomeIcons.plus,
+                      size: 22,
+                    ),
                     color: Theme.of(context).primaryColor,
                     iconSize: 30,
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
-                        builder: (BuildContext context) => NewActivity(
-                          allActivities: allActivities,
-                          callback: addNewActivity,
+                      // showDialog(
+                      //   context: context,
+                      //   barrierColor: Color.fromRGBO(40, 40, 40, 0.2),
+                      //   builder: (BuildContext context) => NewActivity(
+                      //     allActivities: allActivities,
+                      //     callback: addNewActivity,
+                      //   ),
+                      // );
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.bottomToTop,
+                          child: BrowseActivities(
+                            allActivities: allActivities,
+                          ),
                         ),
                       );
                     },
